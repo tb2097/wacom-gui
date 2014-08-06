@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<padsettings graphicwidth="284">
+	<button name="Button 1" number="1" callsign="Button1">
+		<x1>62</x1>
+		<y1>189</y1>
+		<x2>106</x2>
+		<y2>232</y2>
+	</button>
+	<button name="Button 2" number="2" callsign="Button2">
+		<x1>25</x1>
+		<y1>20</y1>
+		<x2>81</x2>
+		<y2>46</y2>
+	</button>
+	<button name="Button 3" number="3" callsign="Button3">
+		<x1>25</x1>
+		<y1>47</y1>
+		<x2>81</x2>
+		<y2>72</y2>
+	</button>
+	<button name="Button 4" number="4" callsign="Button4">
+		<x1>25</x1>
+		<y1>73</y1>
+		<x2>81</x2>
+		<y2>97</y2>
+	</button>
+	<button name="Button 5" number="5" callsign="Button5">
+		<x1>25</x1>
+		<y1>98</y1>
+		<x2>81</x2>
+		<y2>122</y2>
+	</button>
+	<button name="Button 6" number="6" callsign="Button6">
+		<x1>25</x1>
+		<y1>300</y1>
+		<x2>81</x2>
+		<y2>325</y2>
+	</button>
+	<button name="Button 7" number="7" callsign="Button7">
+		<x1>25</x1>
+		<y1>326</y1>
+		<x2>81</x2>
+		<y2>351</y2>
+	</button>
+	<button name="Button 8" number="8" callsign="Button8">
+		<x1>25</x1>
+		<y1>352</y1>
+		<x2>81</x2>
+		<y2>376</y2>
+	</button>
+	<button name="Button 9" number="9" callsign="Button9">
+		<x1>25</x1>
+		<y1>377</y1>
+		<x2>81</x2>
+		<y2>400</y2>
+	</button>
+	<button name="Scroll Wheel Up" number="10" callsign="AbsWUp">
+		<x1>62</x1>
+		<y1>155</y1>
+		<x2>106</x2>
+		<y2>188</y2>
+	</button>
+	<button name="Scroll Wheel Down" number="11" callsign="AbsWDn">
+		<x1>62</x1>
+		<y1>236</y1>
+		<x2>106</x2>
+		<y2>266</y2>
+	</button>
+</padsettings>

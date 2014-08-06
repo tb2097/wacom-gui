@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<padsettings graphicwidth="165">
+	<button name="Button 1" number="1" callsign="Button1">
+		<x1>13</x1>
+		<y1>9</y1>
+		<x2>40</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 2" number="2" callsign="Button2">
+		<x1>123</x1>
+		<y1>10</y1>
+		<x2>150</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 3" number="3" callsign="Button3">
+		<x1>18</x1>
+		<y1>38</y1>
+		<x2>45</x2>
+		<y2>65</y2>
+	</button>
+	<button name="Button 4" number="4" callsign="Button4">
+		<x1>118</x1>
+		<y1>38</y1>
+		<x2>145</x2>
+		<y2>66</y2>
+	</button>
+	<button name="Vertical Strip Up" number="5" callsign="striplup">
+		<x1>73</x1>
+		<y1>14</y1>
+		<x2>90</x2>
+		<y2>31</y2>
+	</button>
+	<button name="Vertical Strip Down" number="6" callsign="stripldn">
+		<x1>73</x1>
+		<y1>41</y1>
+		<x2>90</x2>
+		<y2>58</y2>
+	</button>
+</padsettings>

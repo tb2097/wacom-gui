@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<padsettings graphicwidth="213">
+	<button name="Button 1" number="1" callsign="Button1">
+		<x1>40</x1>
+		<y1>7</y1>
+		<x2>66</x2>
+		<y2>50</y2>
+	</button>
+	<button name="Button 2" number="2" callsign="Button2">
+		<x1>40</x1>
+		<y1>53</y1>
+		<x2>66</x2>
+		<y2>95</y2>
+	</button>
+	<button name="Button 3" number="3" callsign="Button3">
+		<x1>8</x1>
+		<y1>7</y1>
+		<x2>35</x2>
+		<y2>95</y2>
+	</button>
+	<button name="Button 4" number="4" callsign="Button4">
+		<x1>8</x1>
+		<y1>99</y1>
+		<x2>66</x2>
+		<y2>129</y2>
+	</button>
+	<button name="Button 5" number="5" callsign="Button5">
+		<x1>158</x1>
+		<y1>7</y1>
+		<x2>184</x2>
+		<y2>50</y2>
+	</button>
+	<button name="Button 6" number="6" callsign="Button6">
+		<x1>158</x1>
+		<y1>53</y1>
+		<x2>184</x2>
+		<y2>95</y2>
+	</button>
+	<button name="Button 7" number="7" callsign="Button7">
+		<x1>189</x1>
+		<y1>7</y1>
+		<x2>216</x2>
+		<y2>95</y2>
+	</button>
+	<button name="Button 8" number="8" callsign="Button8">
+		<x1>158</x1>
+		<y1>99</y1>
+		<x2>216</x2>
+		<y2>129</y2>
+	</button>
+	<button name="L Vertical Strip Up" number="9" callsign="striplup">
+		<x1>78</x1>
+		<y1>6</y1>
+		<x2>104</x2>
+		<y2>68</y2>
+	</button>
+	<button name="L Vertical Strip Down" number="10" callsign="stripldn">
+		<x1>78</x1>
+		<y1>69</y1>
+		<x2>104</x2>
+		<y2>132</y2>
+	</button>
+	<button name="R Vertical Strip Up" number="11" callsign="striprup">
+		<x1>120</x1>
+		<y1>6</y1>
+		<x2>146</x2>
+		<y2>68</y2>
+	</button>
+	<button name="R Vertical Strip Down" number="12" callsign="striprdn">
+		<x1>120</x1>
+		<y1>69</y1>
+		<x2>146</x2>
+		<y2>132</y2>
+	</button>
+</padsettings>
