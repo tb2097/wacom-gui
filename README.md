@@ -16,4 +16,4 @@ Features:
 - pressure curve and test area for pen/eraser
 
 To Install:
-Place wacom-gui directory where you'd like, run wacom-gui.  As long as the wacom daemon is running and properly detecting it should work.
+Place wacom-gui directory where you'd like, run wacom-gui.py.  As long as the wacom daemon is running and properly detecting it should work.
