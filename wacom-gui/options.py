@@ -3,11 +3,12 @@
 #code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
 
 from PyQt4 import QtCore,QtGui
-import time, sys, os, re
+import sys, os, re
 
 class otherOptions(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
+        self.tabletName=tabletName
 
         self.initUI()
 
@@ -68,13 +69,13 @@ class otherOptions(QtGui.QWidget):
         flipLayout.addWidget(self.tabletLeft)
         flipLayout.addStretch(1)
         
-        getCommand = os.popen("xsetwacom --get Pad Rotate").readlines()
+        getCommand = os.popen("xsetwacom --get \""+self.tabletName+" pad\" Rotate").readlines()
         #check correct button for orientation
         if getCommand[0] == "none\n":
-            self.orient = "xsetwacom --set Pad Rotate none" 
+            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate none"
             self.tabletRight.setChecked(1)
         elif getCommand[0] == "half\n":
-            self.orient = "xsetwacom --set Pad Rotate half" 
+            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate half"
             self.tabletLeft.setChecked(1)
 
         self.tabletFlipGroup.buttonClicked.connect(self.tabletFlipChange)
@@ -85,9 +86,9 @@ class otherOptions(QtGui.QWidget):
 
     def tabletFlipChange(self, buttonId):
         if buttonId.text() == "Right-Handed":
-            self.orient = "xsetwacom --set Pad Rotate none" 
+            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate none"
         elif buttonId.text() == "Left-Handed":
-            self.orient = "xsetwacom --set Pad Rotate half" 
+            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate half"
         flipTablet = os.popen(self.orient)
 
     def screenChange(self,buttonId):
@@ -96,8 +97,8 @@ class otherOptions(QtGui.QWidget):
         if buttonId.text() == "Both Monitors":
             self.tabletActiveArea = "1 0 0 0 1 0 0 0 1"
             for device in self.devices:
-                if device != "Pad":
-                    setCommand = os.popen("xinput set-prop \"" + device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
+                if device != self.tabletName+" pad":
+                    setCommand = os.popen("xinput set-prop \"" + self.tabletName+ " " + device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
                     #for i in range(len(self.otherOptionSettings)):
                     #    if self.otherOptionSettings[i].find("xinput set-prop") != -1 and self.otherOptionSettings[i].find(device) != -1:
                     #        self.otherOptionSettings[i] =  "xinput set-prop \"" + device + "\" --type=float \"Coordinate Transformation Matrix\" 1 0 0 0 1 0 0 0 1"
@@ -125,15 +126,15 @@ class otherOptions(QtGui.QWidget):
                     self.tabletActiveArea = self.tabletActiveArea + " " + str(display[x][y])
             
             for device in self.devices:
-                if device != "Pad":
-                    setCommand = os.popen("xinput set-prop \"" + device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
+                if device != self.tabletName+" pad":
+                    setCommand = os.popen("xinput set-prop \"" + self.tabletName+ " " + device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
                     #for i in range(len(self.otherOptionSettings)): 
                     #    if self.otherOptionSettings[i].find("xinput set-prop") != -1 and self.otherOptionSettings[i].find(device) != -1:
                     #        self.otherOptionSettings[i] =  "xinput set-prop \"" + device + "\" " + coordset
 
     def getTabletArea(self):
         #get current tablet area
-        tabletInfo = os.popen("xinput list-props Stylus | grep Coordinate").readlines()
+        tabletInfo = os.popen("xinput list-props \""+ self.tabletName+ " stylus\" | grep Coordinate").readlines()
         tabletInfo[0] = tabletInfo[0][41:].rstrip('\n') 
         tabletInfo[0] = re.sub(",","",tabletInfo[0])
         tabletScreenCoords = {}
@@ -210,11 +211,11 @@ class otherOptions(QtGui.QWidget):
 
     def getCurrentScreen(self):
         #check if we actually have more that 1 screen
-        if QtGui.QDesktopWidget().screenCount() < 2 or QtGui.QDesktopWidget().screenCount() > 2:
+        if QtGui.QDesktopWidget().numScreens() < 2 or QtGui.QDesktopWidget().numScreens() > 2:
             self.screenLeft.enabled = False 
             self.screenRight.enabled = False 
             self.screenFull.enabled = False 
-            if QtGui.QDesktopWidget().screenCount() > 2:
+            if QtGui.QDesktopWidget().numScreens() > 2:
                 print "More that 2 monitors; this isn't available yet.  Disabling tablet area option"
         #set correct check box for active area... if it is valid
         else:
@@ -222,13 +223,14 @@ class otherOptions(QtGui.QWidget):
     
     def setDevices(self, devices):
         for device in devices:
-            self.devices.append(device.split(" ")[0])
+            device = device.split("\t")[0].strip().split(" ")
+            self.devices.append(device[len(device)-1])
 
     def getScreenArea(self):
         setCommands = []
         for device in self.devices:
-            if device != "Pad":
-                setCommands.append("xinput set-prop \"" + device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
+            if device != "pad":
+                setCommands.append("xinput set-prop \""+self.tabletName+" "+ device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
         return setCommands
 
     def getFlip(self):
@@ -237,7 +239,7 @@ class otherOptions(QtGui.QWidget):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     form = otherOptions()
-    form.setDevices(['Eraser','Stylus','Cursor','Pad'])
+    form.setDevices(['eraser','stylus','cursor','pad'])
     #form.resize(650,300)
     form.show()
     form.getFlip()

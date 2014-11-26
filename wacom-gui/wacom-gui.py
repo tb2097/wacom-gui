@@ -3,10 +3,8 @@
 
 #code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
 
-
 import sys
 import os
-import re
 from os.path import expanduser
 from PyQt4 import QtCore,QtGui
 
@@ -24,10 +22,10 @@ class WacomGui(QtGui.QWidget):
     def initUI(self):
         #get tablet name/type
         self.pad           = Pad()
-        self.stylusControl = pressure()
-        self.eraserControl = pressure()
-        self.cursorControl = pressure()
-        self.options       = otherOptions()
+        self.stylusControl = pressure(self.pad.Tablet.Name)
+        self.eraserControl = pressure(self.pad.Tablet.Name)
+        self.cursorControl = pressure(self.pad.Tablet.Name)
+        self.options       = otherOptions(self.pad.Tablet.Name)
 
 
         self.setMaximumSize(800,500)
@@ -35,8 +33,8 @@ class WacomGui(QtGui.QWidget):
         self.setWindowTitle('Wacom GUI')
 
         #set stylus/eraser sensors up
-        self.stylusControl.setSensor("Stylus")
-        self.eraserControl.setSensor("Eraser")
+        self.stylusControl.setSensor("stylus")
+        self.eraserControl.setSensor("eraser")
 
         opPath = os.path.dirname(os.path.realpath(__file__)) 
         self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg')) 
@@ -46,8 +44,8 @@ class WacomGui(QtGui.QWidget):
         self.Devices.itemClicked.connect(self.itemSelectAction)
         self.options.setDevices(devices)
         for device in devices:
-            device = device.split(" ")[0]
-            self.Devices.addItem(device)
+            device = device.split("\t")[0].strip().split(" ")
+            self.Devices.addItem(device[len(device)-1].title())
         self.Devices.addItem("Other Settings")
         self.Devices.setMaximumWidth(180)
 

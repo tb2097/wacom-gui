@@ -8,13 +8,14 @@
 #    QTabletEvent, QLabel, QSplitter, QRadialGradient, QImage
 #from PyQt4.QtCore import QObject, SIGNAL, SLOT, QPointF, Qt, QRectF, QPointF, QString, QRect
 from PyQt4 import QtCore,QtGui
-import time, sys, os
+import sys, os
 
 class pressureSettings(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, tabletName,parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(300,300)
 
+        self.tabletName=tabletName
         mainLayout = QtGui.QHBoxLayout()
         mainLayout.setAlignment(QtCore.Qt.AlignLeft)
         self.setLayout(mainLayout)
@@ -55,8 +56,8 @@ class pressureSettings(QtGui.QWidget):
     def setSensor(self,sensor):
         self.sensor = sensor
         #print self.sensor
-        curPressure = os.popen("xsetwacom --get " + self.sensor + " PressureCurve").readlines()
-        self.setCommand = "xsetwacom --set " + self.sensor + " PressureCurve \"" + curPressure[0].rstrip('\n') + "\""
+        curPressure = os.popen("xsetwacom --get \""+self.tabletName+" "+self.sensor + "\" PressureCurve").readlines()
+        self.setCommand = "xsetwacom --set \""+self.tabletName+" "+self.sensor + "\" PressureCurve \"" + curPressure[0].rstrip('\n') + "\""
 
     #================================================================
     # And this one too
@@ -94,7 +95,7 @@ class pressureSettings(QtGui.QWidget):
         else:
             accuratePts = str((self.points[0][0] - 50)/2) + " " + str(100 - ((self.points[0][1] -50)/2)) + \
             " " + str((self.points[1][0] - 50)/2) + " " + str(100 - ((self.points[1][1] -50)/2))  
-            self.setCommand = "xsetwacom --set " + self.sensor + " PressureCurve \"" + accuratePts + "\""
+            self.setCommand = "xsetwacom --set \""+self.tabletName+" "+self.sensor.lower() + "\" PressureCurve \"" + accuratePts + "\""
             os.system(self.setCommand)
 
     def getSetCommand(self):
@@ -113,7 +114,7 @@ class pressureSettings(QtGui.QWidget):
 #================================================================================================
 
 class pressureTest(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, tabletName,parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(250,300)
         self.scene = QtGui.QGraphicsScene()
@@ -121,7 +122,8 @@ class pressureTest(QtGui.QWidget):
         self.view = QtGui.QGraphicsView(self.scene)
         self.view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.info = pressureInfo()
+        self.tabletName=tabletName
+        self.info = pressureInfo(self.tabletName)
 
         splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
         splitter.addWidget(self.view)
@@ -141,11 +143,11 @@ class pressureTest(QtGui.QWidget):
 
     def tabletEvent(self,event):
         senId = ""
-        if self.sensor == "Stylus":
+        if self.sensor == "stylus" :
             senId = QtGui.QTabletEvent.Pen
-        elif self.sensor == "Eraser":
+        elif self.sensor == "eraser":
             senId = QtGui.QTabletEvent.Eraser
-        elif self.sensor == "Cursor":
+        elif self.sensor == "cursor":
             senId = QtGui.QTabletEvent.Cursor
         if event.pointerType() == senId:
             amp = int(event.pressure() * 50)
@@ -176,10 +178,11 @@ class pressureTest(QtGui.QWidget):
 #================================================================================================
 
 class pressureInfo(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
         row1 = QtGui.QHBoxLayout()
         row2 = QtGui.QHBoxLayout()
+        self.tabletName=tabletName
         self.xTilt = QtGui.QLabel("XTilt: 0.0")
         self.yTilt = QtGui.QLabel("YTilt: 0.0")
         self.amp = QtGui.QLabel("Amplitude: 0")
@@ -200,10 +203,11 @@ class pressureInfo(QtGui.QWidget):
         self.amp.setText("Amplitude: " + str(amp))
 
 class penOptions(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(250, 100)
 
+        self.tabletName=tabletName
         self.buttons = QtGui.QCheckBox("Inverse Buttons")
         self.buttons.stateChanged.connect(self.buttonChange)
         #layout code
@@ -215,11 +219,11 @@ class penOptions(QtGui.QWidget):
        
     def buttonChange(self):
         if self.buttons.isChecked():
-            but1 = os.popen("xsetwacom --set Stylus Button 2 3")
-            but2 = os.popen("xsetwacom --set Stylus Button 3 2")
+            but1 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 3")
+            but2 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 2")
         else:
-            but1 = os.popen("xsetwacom --set Stylus Button 2 2")
-            but2 = os.popen("xsetwacom --set Stylus Button 3 3")
+            but1 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 2")
+            but2 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 3")
 
     def penSettings(self):
         groupBox = QtGui.QGroupBox("Mode")
@@ -236,17 +240,17 @@ class penOptions(QtGui.QWidget):
         penLayout.addWidget(self.penRel)
         penLayout.addStretch(1)
 
-        getCommand = os.popen("xsetwacom --get Stylus Mode").readlines()
+        getCommand = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Mode").readlines()
         #check stylus mode
         if getCommand[0] == "Absolute\n":
-            self.penMode = "xsetwacom --set Stylus mode Absolute" 
+            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Absolute"
             self.penAbs.setChecked(1)
         elif getCommand[0] == "Relative\n":
-            self.penMode = "xsetwacom --set Stylus mode Relative" 
+            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Relative"
             self.penRel.setChecked(1)
         #for buttons
-        but1 = os.popen("xsetwacom --get Stylus Button 2").readlines()
-        but2 = os.popen("xsetwacom --get Stylus Button 3").readlines()
+        but1 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 2").readlines()
+        but2 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 3").readlines()
         if but1[0].find('3') != -1 and but2[0].find('2') != -1:
             self.buttons.setChecked(True)
 
@@ -258,31 +262,32 @@ class penOptions(QtGui.QWidget):
 
     def penChange(self, buttonId):
         if buttonId.text() == "Absolute":
-            self.penMode = "xsetwacom --set Stylus mode Absolute" 
+            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Absolute"
         elif buttonId.text() == "Relative":
-            self.penMode = "xsetwacom --set Stylus mode Relative" 
+            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Relative"
         flipTablet = os.popen(self.penMode)
 
     def getPenInfo(self):
         info = []
-        but1 = os.popen("xsetwacom --get Stylus Button 2").readlines()
-        but2 = os.popen("xsetwacom --get Stylus Button 3").readlines()
+        but1 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 2").readlines()
+        but2 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 3").readlines()
         info.append(self.penMode)
-        info.append("xsetwacom --set Stylus Button 2 " + but1[0].rstrip('\n'))
-        info.append("xsetwacom --set Stylus Button 3 " + but2[0].rstrip('\n'))
+        info.append("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 " + but1[0].rstrip('\n'))
+        info.append("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 " + but2[0].rstrip('\n'))
         return info
 
     def hideButtons(self):
         self.buttons.hide()
 
 class pressure(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, name, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(650, 400)
 
-        self.settings = pressureSettings()
-        self.test = pressureTest()
-        self.pen  = penOptions()
+        self.tabletName=name
+        self.settings = pressureSettings(self.tabletName)
+        self.test = pressureTest(self.tabletName)
+        self.pen  = penOptions(self.tabletName)
 
         #vbox = QtGui.QVBoxLayout()
         #vbox.addWidget(self.settings)
@@ -303,10 +308,10 @@ class pressure(QtGui.QWidget):
         self.settings.setSensor(sensor)
         self.test.setSensor(sensor)
 
-        if sensor != "Stylus":
+        if sensor != "stylus":
             self.pen.hideButtons()
 
-        curPressure = os.popen("xsetwacom --get Stylus PressureCurve").readlines()
+        curPressure = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" PressureCurve").readlines()
         split = curPressure[0].split(' ')
         self.settings.setCurPoints([[int(split[0]),int(split[1])],[int(split[2]),int(split[3])]])
 
@@ -319,7 +324,7 @@ class pressure(QtGui.QWidget):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     form = pressure()
-    form.setSensor("Stylus")
+    form.setSensor("stylus")
     #form.resize(650,300)
     form.show()
     sys.exit(app.exec_())

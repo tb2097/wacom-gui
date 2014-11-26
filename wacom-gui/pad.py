@@ -6,7 +6,6 @@
 
 import sys
 import os
-import re
 from os.path import expanduser
 from PyQt4 import QtCore,QtGui
 from wacom_data import tabletidentities
@@ -87,15 +86,15 @@ class Pad(QtGui.QWidget):
 
         self.buttonMapper = QtCore.QSignalMapper(self)
 
-
         for i in range(len(self.Tablet.Buttons)):
-            getCommand = os.popen("xsetwacom --get Pad Button "+self.Tablet.Buttons[i].Number).readlines()
-            if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1: 
+            getCommand = os.popen("xsetwacom --get \""+self.Tablet.Name+" pad\" Button "+self.Tablet.Buttons[i].Number).readlines()
+            if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1:
                 self.padButtons[(i,0)] = QtGui.QLabel("UNDEFINED")
             else:    
                 self.padButtons[(i,0)] = QtGui.QLabel(self.wacomToHuman(getCommand[0]))
             self.padButtons[(i,1)] = QtGui.QPushButton(self.Tablet.Buttons[i].Name)
-            self.padButtons[(i,1)].clicked.connect(self.buttonMapper.map)
+
+            self.padButtons[(i,1)].clicked[()].connect(self.buttonMapper.map)
             self.padButtons[(i,2)] = self.Tablet.Buttons[i].Number
             self.padButtons[(i,3)] = getCommand[0].rstrip('\n')
             self.buttonMapper.setMapping(self.padButtons[(i,1)],i)
@@ -129,7 +128,7 @@ class Pad(QtGui.QWidget):
     def getCommands(self):
         buttons = []
         for i in range(len(self.Tablet.Buttons)):
-            buttons.append("xsetwacom --set Pad Button " + self.padButtons[(i,2)] + " \"" + self.padButtons[(i,3)] + "\"")
+            buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i,2)] + " \"" + self.padButtons[(i,3)] + "\"")
 
         return buttons
 
@@ -149,7 +148,7 @@ class Pad(QtGui.QWidget):
             else:    
                 setCommand = self.wacomToHuman(userInput)
                 self.padButtons[(button,0)].setText(setCommand)
-                setCommand = os.popen("xsetwacom --set Pad Button "+self.padButtons[(button,2)] + " \"" + userInput + "\"") 
+                setCommand = os.popen("xsetwacom --set \""+self.Tablet.Name+" pad\" Button "+self.padButtons[(button,2)] + " \"" + userInput + "\"")
                 self.padButtons[(button,3)] = userInput
 
     def event(self,event):
