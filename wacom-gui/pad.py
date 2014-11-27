@@ -40,6 +40,9 @@ class Pad(QtGui.QWidget):
             code = tablets[0]
             code = code.split(" ")[5] 
             self.Tablet = self.IdentifyByUSBId(code.split(":")[0],code.split(":")[1])
+            if self.Tablet.Name=='generic':
+                name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ",1)[0]
+                self.Tablet.Name=name
             label = self.Tablet.Name + ": " + self.Tablet.Model
 
 
@@ -52,7 +55,7 @@ class Pad(QtGui.QWidget):
 
         opPath = os.path.dirname(os.path.realpath(__file__)) 
 
-        self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg')) 
+        self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg'))
         self.TabletImg = opPath + "/images/" + self.Tablet.Model  + ".png"
         self.TabletLayout = opPath + "/images/pad/" + self.Tablet.Model  + ".png"
 
@@ -71,9 +74,25 @@ class Pad(QtGui.QWidget):
         pen.setWidth(3)
         painter.setPen(pen)
         for i in range(len(self.Tablet.Buttons)):
-            box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
-            painter.drawRect(box)
-            painter.drawText(box,QtCore.Qt.AlignCenter,self.Tablet.Buttons[i].Number)
+           # if self.Tablet.Buttons[i].Callsign == 'AbsWheelUp':
+           #     box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
+           #     painter.drawArc(box,-45*16,90*16)
+           #     font.setPointSize(8)
+           #     painter.setFont(font)
+           #     box2 = QtCore.QRectF(self.Tablet.Buttons[i].X1 + self.Tablet.Buttons[i].X2 -10, self.Tablet.Buttons[i].Y1 -20, 40, 40)
+           #     painter.drawText(box2,QtCore.Qt.AlignCenter,"Touch\nUp")
+           # elif self.Tablet.Buttons[i].Callsign == 'AbsWheelDown':
+           #     box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
+           #     painter.drawArc(box,225*16,-90*16)
+           #     font.setPointSize(8)
+           #     painter.setFont(font)
+           #     box2 = QtCore.QRectF(self.Tablet.Buttons[i].X1 -30, self.Tablet.Buttons[i].Y1 -20, 40, 40)
+           #     painter.drawText(box2,QtCore.Qt.AlignCenter,"Touch\nDown")
+           # else:
+            if (self.Tablet.Buttons[i].Callsign != 'AbsWheelUp' and self.Tablet.Buttons[i].Callsign != 'AbsWheelDown'):
+                box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
+                painter.drawRect(box)
+                painter.drawText(box,QtCore.Qt.AlignCenter,self.Tablet.Buttons[i].Number)
         painter.end()
 
         #self.tabletIcon = QtGui.QLabel(self)
@@ -87,7 +106,10 @@ class Pad(QtGui.QWidget):
         self.buttonMapper = QtCore.QSignalMapper(self)
 
         for i in range(len(self.Tablet.Buttons)):
-            getCommand = os.popen("xsetwacom --get \""+self.Tablet.Name+" pad\" Button "+self.Tablet.Buttons[i].Number).readlines()
+            buttonType = "Button "+self.Tablet.Buttons[i].Number
+            if (self.Tablet.Buttons[i].Callsign == 'AbsWheelUp' or self.Tablet.Buttons[i].Callsign == 'AbsWheelDown'):
+                buttonType = self.Tablet.Buttons[i].Callsign
+            getCommand = os.popen("xsetwacom --get \""+self.Tablet.Name+" pad\" "+buttonType).readlines()
             if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1:
                 self.padButtons[(i,0)] = QtGui.QLabel("UNDEFINED")
             else:    
@@ -97,6 +119,7 @@ class Pad(QtGui.QWidget):
             self.padButtons[(i,1)].clicked[()].connect(self.buttonMapper.map)
             self.padButtons[(i,2)] = self.Tablet.Buttons[i].Number
             self.padButtons[(i,3)] = getCommand[0].rstrip('\n')
+            self.padButtons[(i,4)] = self.Tablet.Buttons[i].Callsign
             self.buttonMapper.setMapping(self.padButtons[(i,1)],i)
             self.padButtonsLayout.addWidget(self.padButtons[i,0],i,0)
             self.padButtonsLayout.addWidget(self.padButtons[i,1],i,1)
@@ -118,6 +141,7 @@ class Pad(QtGui.QWidget):
         for item in self.TabletIds.Tablets:
             if item.ProductId == int(DevId,16) and int(VendId,16) == int("056a",16):
                 return item
+        return self.TabletIds.Tablets[len(self.TabletIds.Tablets)-1]
 
     def getTabletName(self):
         return self.Tablet.Name
@@ -128,7 +152,11 @@ class Pad(QtGui.QWidget):
     def getCommands(self):
         buttons = []
         for i in range(len(self.Tablet.Buttons)):
-            buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i,2)] + " \"" + self.padButtons[(i,3)] + "\"")
+            if (( i < 9 and len(self.padButtons[(i,3)])>1) or ( i >= 9 and len(self.padButtons[(i,3)])>2)):
+                if (self.padButtons[(i,4)] == 'AbsWheelUp' or self.padButtons[(i,4)] == 'AbsWheelDown'):
+                    buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" " + self.padButtons[(i,4)] + " \"" + self.padButtons[(i,3)] + "\"")
+                else:
+                    buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i,2)] + " \"" + self.padButtons[(i,3)] + "\"")
 
         return buttons
 
@@ -148,7 +176,12 @@ class Pad(QtGui.QWidget):
             else:    
                 setCommand = self.wacomToHuman(userInput)
                 self.padButtons[(button,0)].setText(setCommand)
-                setCommand = os.popen("xsetwacom --set \""+self.Tablet.Name+" pad\" Button "+self.padButtons[(button,2)] + " \"" + userInput + "\"")
+                #this is hack-y but should be simplified; need to completely remove the number as I don't think it's necessary...
+                buttonType = "Button "+ self.padButtons[(button,2)]
+                if (self.padButtons[(button,4)] == 'AbsWheelUp' or self.padButtons[(button,4)] == 'AbsWheelDown'):
+                    buttonType = self.padButtons[(button,4)]
+                #end of hackey shit.  Why did they do this originally??!???
+                setCommand = os.popen("xsetwacom --set \""+self.Tablet.Name+" pad\" "+buttonType + " \"" + userInput + "\"")
                 self.padButtons[(button,3)] = userInput
 
     def event(self,event):
@@ -274,7 +307,16 @@ class Pad(QtGui.QWidget):
                 item = "CTRL"
             elif item == "+Tab":
                 item = "TAB"
-            elif item == "-Alt_L" or item == "-Alt_R" or item == "-Control_L" or item == "-Control_R" or item == "-Tab":
+            elif item == "+equal":
+                item = "+"
+            elif item == "+minus":
+                item = "-"
+            elif item == "+90":
+                item = "Ctrl +"
+            elif item == "+91":
+                item = "Ctrl -"
+            elif item == "-Alt_L" or item == "-Alt_R" or item == "-Control_L" or item == "-Control_R" \
+                or item == "-Tab" or item == "-equal" or item == "-minus":
                 item = ""
             elif item.find("button") != -1:
                 mouseButton = True

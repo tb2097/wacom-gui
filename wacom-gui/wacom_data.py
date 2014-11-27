@@ -70,6 +70,7 @@ class tabletidentities:
 		self.Tablets.append(tablet("CTH-661", "Wacom BambooFun 2FG 6x8", 0xD3))
 		self.Tablets.append(tablet("CTL-460", "Wacom BambooFun 2FG 4x5", 0xD4))
 		self.Tablets.append(tablet("CTH-460K", "Wacom BambooPT 2FG 4x5", 0xD6))
+		self.Tablets.append(tablet("generic", "generic", 0xFF))
 		
 		#self.Tablets.append(tablet("PTK-540WL", "Wacom Intuos4 Wireless Bluetooth", 0x00)) # Stub, this needs special support
 		 

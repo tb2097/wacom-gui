@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <padsettings graphicwidth="284">
-	<button name="Button 1" number="1" callsign="Button1">
+	<button name="Button 1" number="1" callsign="Button 1">
 		<x1>62</x1>
 		<y1>189</y1>
 		<x2>44</x2>
 		<y2>44</y2>
 	</button>
-	<button name="Button 2" number="2" callsign="Button2">
+	<button name="Button 2" number="2" callsign="Button 2">
 		<x1>25</x1>
 		<y1>20</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 3" number="3" callsign="Button3">
+	<button name="Button 3" number="3" callsign="Button 3">
 		<x1>25</x1>
 		<y1>47</y1>
 		<x2>58</x2>
@@ -44,40 +44,52 @@
 		<y2>351</y2>
     </button>
     -->
-	<button name="Button 8" number="8" callsign="Button8">
+	<button name="Button 8" number="8" callsign="Button 8">
 		<x1>25</x1>
 		<y1>73</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 9" number="9" callsign="Button9">
+	<button name="Button 9" number="9" callsign="Button 9">
 		<x1>25</x1>
 		<y1>98</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 10" number="10" callsign="Button10">
+	<button name="Button 10" number="10" callsign="Button 10">
 		<x1>25</x1>
 		<y1>300</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 11" number="11" callsign="Button11">
+	<button name="Button 11" number="11" callsign="Button 11">
 		<x1>25</x1>
 		<y1>326</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 12" number="12" callsign="Button12">
+	<button name="Button 12" number="12" callsign="Button 12">
 		<x1>25</x1>
 		<y1>352</y1>
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
-	<button name="Button 13" number="13" callsign="Button13">
+	<button name="Button 13" number="13" callsign="Button 13">
 		<x1>25</x1>
 		<y1>377</y1>
 		<x2>58</x2>
 		<y2>26</y2>
+    </button>
+    	<button name="Touch Wheel Up" number="14" callsign="AbsWheelUp">
+		<x1>30</x1>
+		<y1>175</y1>
+		<x2>100</x2>
+		<y2>100</y2>
+    </button>
+	<button name="Touch Wheel Down" number="15" callsign="AbsWheelDown">
+		<x1>30</x1>
+		<y1>175</y1>
+		<x2>100</x2>
+		<y2>100</y2>
     </button>
 </padsettings>

@@ -6,7 +6,7 @@
 import sys
 import os
 from os.path import expanduser
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtCore, QtGui
 
 #internal widgets
 from pressure import pressure
