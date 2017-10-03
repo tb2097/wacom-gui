@@ -54,13 +54,13 @@
 		<x2>81</x2>
 		<y2>400</y2>
 	</button>
-	<button name="Scroll Wheel Up" number="10" callsign="AbsWUp">
+	<button name="Scroll Wheel Up" number="10" callsign="AbsWheelUp">
 		<x1>62</x1>
 		<y1>155</y1>
 		<x2>106</x2>
 		<y2>188</y2>
 	</button>
-	<button name="Scroll Wheel Down" number="11" callsign="AbsWDn">
+	<button name="Scroll Wheel Down" number="11" callsign="AbsWheelDn">
 		<x1>62</x1>
 		<y1>236</y1>
 		<x2>106</x2>

@@ -68,4 +68,16 @@
 		<x2>58</x2>
 		<y2>26</y2>
 	</button>
+    <button name="Touch Wheel Up" number="14" callsign="AbsWheelUp">
+        <x1>30</x1>
+        <y1>175</y1>
+        <x2>100</x2>
+        <y2>100</y2>
+    </button>
+    <button name="Touch Wheel Down" number="15" callsign="AbsWheelDown">
+        <x1>30</x1>
+        <y1>175</y1>
+        <x2>100</x2>
+        <y2>100</y2>
+    </button>
 </padsettings>
