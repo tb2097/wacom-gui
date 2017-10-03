@@ -1,25 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-#code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
-
-
 import sys
 import os
 from os.path import expanduser
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtCore, QtGui
 from wacom_data import tabletidentities
 
 
 class Pad(QtGui.QWidget):
-   
-
     buttonClicked = QtCore.pyqtSignal(int)
 
     def __init__(self):
         super(Pad, self).__init__()
        
-        signalMapper = QtCore.QSignalMapper(self)
+        # signalMapper = QtCore.QSignalMapper(self)
         self.initUI()
         
     def initUI(self):
@@ -28,24 +23,24 @@ class Pad(QtGui.QWidget):
         self.TabletIds = tabletidentities()
 
         label = ''
-        if len(tablets) > 1:
-            label = "Multiple tablets detected. Please connect only one at a time"
-            print label
-            sys.exit()
         if len(tablets) == 0:
             label = "No tablet detected"
             print label
             sys.exit()
+        #if len(tablets) > 1:
+            # no longer checking for multiple tablets; only the first is configured
+        #    label = "Multiple tablets detected. Please connect only one at a time"
+        #    print label
+        #    sys.exit()
         else:
+            #for (tab in tablets):
             code = tablets[0]
-            code = code.split(" ")[5] 
-            self.Tablet = self.IdentifyByUSBId(code.split(":")[0],code.split(":")[1])
-            if self.Tablet.Name=='generic':
+            code = code.split(" ")[5]
+            self.Tablet = self.IdentifyByUSBId(code.split(":")[0], code.split(":")[1])
+            if self.Tablet.Name == 'generic':
                 name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ",1)[0]
-                self.Tablet.Name=name
+                self.Tablet.Name = name
             label = self.Tablet.Name + ": " + self.Tablet.Model
-
-
         #read in previous config file, if exists
         home = expanduser("~") + "/.wacom-gui.sh"
         if os.path.exists(home) and os.access(home, os.X_OK):
@@ -56,8 +51,8 @@ class Pad(QtGui.QWidget):
         opPath = os.path.dirname(os.path.realpath(__file__)) 
 
         self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg'))
-        self.TabletImg = opPath + "/images/" + self.Tablet.Model  + ".png"
-        self.TabletLayout = opPath + "/images/pad/" + self.Tablet.Model  + ".png"
+        self.TabletImg = opPath + "/images/" + self.Tablet.Model + ".png"
+        self.TabletLayout = opPath + "/images/pad/" + self.Tablet.Model + ".png"
 
         self.pixmap = QtGui.QPixmap(self.TabletImg)
         pixmap2= QtGui.QPixmap(self.TabletLayout)
@@ -66,7 +61,7 @@ class Pad(QtGui.QWidget):
 
         #trying to draw on pixmap...
         painter = QtGui.QPainter (pixmap2)
-        pen = QtGui.QPen(QtGui.QColor(160,160,180,255))
+        pen = QtGui.QPen(QtGui.QColor(160, 160, 180, 255))
         font = QtGui.QFont(painter.font())
         font.setPointSize(16)
         #font.setWeight(QtGui.QFont.DemiBold)
@@ -107,22 +102,27 @@ class Pad(QtGui.QWidget):
 
         for i in range(len(self.Tablet.Buttons)):
             buttonType = "Button "+self.Tablet.Buttons[i].Number
-            if (self.Tablet.Buttons[i].Callsign == 'AbsWheelUp' or self.Tablet.Buttons[i].Callsign == 'AbsWheelDown'):
+            if self.Tablet.Buttons[i].Callsign == 'AbsWheelUp' or self.Tablet.Buttons[i].Callsign == 'AbsWheelDown':
                 buttonType = self.Tablet.Buttons[i].Callsign
-            getCommand = os.popen("xsetwacom --get \""+self.Tablet.Name+" pad\" "+buttonType).readlines()
+            getCommand = os.popen("xsetwacom --get \"" + self.Tablet.Name + " pad\" " + buttonType).readlines()
             if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1:
-                self.padButtons[(i,0)] = QtGui.QLabel("UNDEFINED")
+                self.padButtons[(i, 0)] = QtGui.QLabel("UNDEFINED")
+            elif getCommand[0] == "button +0 \n":
+                self.padButtons[(i, 0)] = QtGui.QLabel("None")
             else:    
-                self.padButtons[(i,0)] = QtGui.QLabel(self.wacomToHuman(getCommand[0]))
-            self.padButtons[(i,1)] = QtGui.QPushButton(self.Tablet.Buttons[i].Name)
+                self.padButtons[(i, 0)] = QtGui.QLabel(self.wacomToHuman(getCommand[0]))
+            self.padButtons[(i, 1)] = QtGui.QPushButton(self.Tablet.Buttons[i].Name)
 
-            self.padButtons[(i,1)].clicked[()].connect(self.buttonMapper.map)
-            self.padButtons[(i,2)] = self.Tablet.Buttons[i].Number
-            self.padButtons[(i,3)] = getCommand[0].rstrip('\n')
-            self.padButtons[(i,4)] = self.Tablet.Buttons[i].Callsign
-            self.buttonMapper.setMapping(self.padButtons[(i,1)],i)
-            self.padButtonsLayout.addWidget(self.padButtons[i,0],i,0)
-            self.padButtonsLayout.addWidget(self.padButtons[i,1],i,1)
+            self.padButtons[(i, 1)].clicked[()].connect(self.buttonMapper.map)
+            self.padButtons[(i, 2)] = self.Tablet.Buttons[i].Number
+            if getCommand[0] == "button +0 \n":
+                self.padButtons[(i, 3)] = 0
+            else:
+                self.padButtons[(i, 3)] = getCommand[0].rstrip('\n')
+            self.padButtons[(i, 4)] = self.Tablet.Buttons[i].Callsign
+            self.buttonMapper.setMapping(self.padButtons[(i, 1)], i)
+            self.padButtonsLayout.addWidget(self.padButtons[i, 0], i, 0)
+            self.padButtonsLayout.addWidget(self.padButtons[i, 1], i, 1)
 
         self.buttonMapper.mapped.connect(self.updatePadButton)
 
@@ -152,69 +152,92 @@ class Pad(QtGui.QWidget):
     def getCommands(self):
         buttons = []
         for i in range(len(self.Tablet.Buttons)):
-            if (( i < 9 and len(self.padButtons[(i,3)])>1) or ( i >= 9 and len(self.padButtons[(i,3)])>2)):
-                if (self.padButtons[(i,4)] == 'AbsWheelUp' or self.padButtons[(i,4)] == 'AbsWheelDown'):
-                    buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" " + self.padButtons[(i,4)] + " \"" + self.padButtons[(i,3)] + "\"")
+            if (i < 9 and len(str(self.padButtons[(i, 3)])) > 1) or \
+                    (i >= 9 and len(str(self.padButtons[(i, 3)])) > 2) or self.padButtons[(i, 3)] == 0:
+                cmd = "xsetwacom --set \"" + self.Tablet.Name + " pad\" "
+                if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
+                    cmd += self.padButtons[(i, 4)] + " "
+                    # buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" " + self.padButtons[(i, 4)] +
+                    #               " \"" + str(self.padButtons[(i, 3)]) + "\"")
                 else:
-                    buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i,2)] + " \"" + self.padButtons[(i,3)] + "\"")
-
+                    cmd += "Button " + self.padButtons[(i, 2)]
+                    #buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i, 2)] +
+                    #               " \"" + str(self.padButtons[(i, 3)]) + "\"")
+                if self.padButtons[(i, 3)] == 0:
+                    cmd += ' 0'
+                else:
+                    cmd += " \"" + str(self.padButtons[(i, 3)]) + "\""
+                buttons.append(cmd)
         return buttons
 
     #for pad buttons
-    def updatePadButton(self,button):
+    def updatePadButton(self, button):
         if self.activeButton is None:
-            self.activeButton = self.padButtons[(button,2)]
-            self.padButtons[(button,0)].setText("Recording keypresses... Click button to stop")
+            self.activeButton = self.padButtons[(button, 2)]
+            self.padButtons[(button, 0)].setText("Recording keypresses... Click button to stop")
             self.buttonCommandList[:] = []
-        elif self.activeButton == self.padButtons[(button,2)]:
+        elif self.activeButton == self.padButtons[(button, 2)]:
             self.activeButton = None
             userInput = self.userToWacomKeystrokeTranslate()
             if userInput is None:
-                print self.wacomToHuman(self.padButtons[(button,3)])
-                #self.padButtons[(button,0)].setText(self.padButtons[(button,3)])
-                self.padButtons[(button,0)].setText(self.wacomToHuman(self.padButtons[(button,3)]))
-            else:    
+                print self.wacomToHuman(self.padButtons[(button, 3)])
+                # self.padButtons[(button,0)].setText(self.padButtons[(button,3)])
+                self.padButtons[(button, 0)].setText(self.wacomToHuman(self.padButtons[(button, 3)]))
+            else:
                 setCommand = self.wacomToHuman(userInput)
-                self.padButtons[(button,0)].setText(setCommand)
-                #this is hack-y but should be simplified; need to completely remove the number as I don't think it's necessary...
-                buttonType = "Button "+ self.padButtons[(button,2)]
-                if (self.padButtons[(button,4)] == 'AbsWheelUp' or self.padButtons[(button,4)] == 'AbsWheelDown'):
-                    buttonType = self.padButtons[(button,4)]
-                #end of hackey shit.  Why did they do this originally??!???
-                setCommand = os.popen("xsetwacom --set \""+self.Tablet.Name+" pad\" "+buttonType + " \"" + userInput + "\"")
-                self.padButtons[(button,3)] = userInput
+                self.padButtons[(button, 0)].setText(setCommand)
+                # this is hack-y but should be simplified; need to remove the number as I don't think it's necessary...
+                buttonType = "Button " + self.padButtons[(button, 2)]
+                if self.padButtons[(button, 4)] == 'AbsWheelUp' or self.padButtons[(button, 4)] == 'AbsWheelDown':
+                    buttonType = self.padButtons[(button, 4)]
+                # end of hackey shit.  Why did they do this originally??!???
+                if userInput == 0:
+                    cmd = "xsetwacom --set \"%s pad\" %s %s" % (self.Tablet.Name, buttonType, str(userInput))
+                else:
+                    cmd = "xsetwacom --set \"%s pad\" %s \"%s\"" %(self.Tablet.Name, buttonType, str(userInput))
+                # setCommand = os.popen("xsetwacom --set \"" + self.Tablet.Name + " pad\" " +
+                #                      buttonType + " \"" + str(userInput) + "\"")
+                setCommand = os.popen(cmd)
+                self.padButtons[(button, 3)] = userInput
 
-    def event(self,event):
-        if (event.type() == QtCore.QEvent.ShortcutOverride and (event.key() == QtCore.Qt.Key_Tab or event.key() == QtCore.Qt.Key_Up or \
-            event.key() == QtCore.Qt.Key_Down or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right)) or \
-            event.type() == QtCore.QEvent.KeyPress or event.type() == QtCore.QEvent.MouseButtonPress or event.type() == QtCore.QEvent.MouseButtonDblClick:
-                if(self.editButton() is not None):
-                    #print self.keyTranslate(event.key(),event.text())
-                    if event.type() == QtCore.QEvent.MouseButtonPress or event.type() == QtCore.QEvent.MouseButtonDblClick:
+    def event(self, event):
+        if (event.type() == QtCore.QEvent.ShortcutOverride and
+                (event.key() == QtCore.Qt.Key_Tab or event.key() == QtCore.Qt.Key_Up or
+                         event.key() == QtCore.Qt.Key_Down or event.key() == QtCore.Qt.Key_Left or
+                         event.key() == QtCore.Qt.Key_Right)) or event.type() == QtCore.QEvent.KeyPress or \
+                        event.type() == QtCore.QEvent.MouseButtonPress or \
+                        event.type() == QtCore.QEvent.MouseButtonDblClick:
+                if self.editButton() is not None:
+                    print self.keyTranslate(event.key(), event.text(), '+')
+                    if event.type() == QtCore.QEvent.MouseButtonPress or \
+                                    event.type() == QtCore.QEvent.MouseButtonDblClick:
                         self.buttonCommandList.append("button")
                         self.buttonCommandList.append("+" + str(event.button()))
                         self.buttonCommandList.append("-" + str(event.button()))
                     else:
-                        self.buttonCommandList.append(self.keyTranslate(event.key(),event.text(),'+'))
+                        self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '+'))
                 return False
         elif event.type() == QtCore.QEvent.KeyRelease:
-            if event.key() == QtCore.Qt.Key_Shift or event.key() == QtCore.Qt.Key_Alt or event.key() == QtCore.Qt.Key_Control or event.key() == QtCore.Qt.Key_Meta:
-                self.buttonCommandList.append(self.keyTranslate(event.key(),event.text(),'-'))
+            if event.key() == QtCore.Qt.Key_Shift or event.key() == QtCore.Qt.Key_Alt or \
+                            event.key() == QtCore.Qt.Key_Control:
+                self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '-'))
             return False
         return QtGui.QWidget.event(self, event)
 
-    def keyTranslate(self,keyvalue,keytext,keystate):
+    def keyTranslate(self, keyvalue, keytext, keystate):
         #print "Key value: " + str(keyvalue)
-        if (keyvalue >= 33 and keyvalue <=96) or (keyvalue >=123 and keyvalue <=126):
+        if (33 <= keyvalue <= 96) or (123 <= keyvalue <= 126):
             if keytext != chr(keyvalue):
                 keytext = chr(keyvalue)
             return keytext
         else:
+            # this is a hack; Mate interprets Win key as Meta instead of Hyper by default
+            if keyvalue == 16777250:
+                keyvalue = 16777302
             return {
                 QtCore.Qt.Key_Shift: keystate + 'Shift_L',
                 QtCore.Qt.Key_Alt: keystate + 'Alt_L',
                 QtCore.Qt.Key_Control: keystate + 'Control_L',
-                QtCore.Qt.Key_Meta: keystate + 'Meta',
                 QtCore.Qt.Key_Super_L: '+Super_L',
                 QtCore.Qt.Key_Super_R: '+Super_R',
                 QtCore.Qt.Key_Hyper_L: '+Hyper_L',
@@ -240,10 +263,11 @@ class Pad(QtGui.QWidget):
                 QtCore.Qt.Key_F10: '+F10',
                 QtCore.Qt.Key_F11: '+F11',
                 QtCore.Qt.Key_F12: '+F12',
-            }.get(keyvalue,'')
+                QtCore.Qt.Key_Meta: keystate + 'Hyper_L',
+            }.get(keyvalue, '')
 
     def userToWacomKeystrokeTranslate(self):
-        if len(self.buttonCommandList) !=0:
+        if len(self.buttonCommandList) != 0:
             inputString = ""
             button = False
             shift = False
@@ -254,7 +278,8 @@ class Pad(QtGui.QWidget):
                     inputString += " " + str(item)
                 elif len(inputString) == 0:
                     inputString = "key"
-                if button == True and (item == "+1" or item == "-1" or item == "+2" or item == "-2" or item == "+4" or item == "-4" or item == "button"):
+                if button and (item == "+1" or item == "-1" or item == "+2" or item == "-2" or
+                                       item == "+4" or item == "-4" or item == "button"):
                     if item != "button":
                         #print "currently in a button " + str(item)
                         inputString += " " + str(item)
@@ -277,14 +302,16 @@ class Pad(QtGui.QWidget):
                             inputString += " -shift " + str(item)
                 elif button == False:
                     inputString += " " + str(item)
-
-
-
+            # keycode to set button to "None"
+            if inputString == 'key 0 0 0':
+                inputString = 0
             return inputString
         else:
             return None
 
-    def wacomToHuman(self,command):
+    def wacomToHuman(self, command):
+        if command == 0:
+            return "None"
         values = command.split()
         humanReadable = ""
         shift = False

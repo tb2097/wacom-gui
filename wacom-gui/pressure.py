@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
-
 #from PyQt4.QtGui import QWidget, QPolygonF, QPainter, QPen, QBrush, QColor, \
 #    QApplication, QIcon, QVBoxLayout, QHBoxLayout, QPushButton, QPainterPath,\
 #    QFont, QLayout, QGraphicsScene, QGraphicsView, QPixmap, QGraphicsPixmapItem, \
@@ -205,15 +203,19 @@ class pressureInfo(QtGui.QWidget):
 class penOptions(QtGui.QWidget):
     def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.setFixedSize(250, 100)
+        self.setFixedSize(250, 120)
 
         self.tabletName=tabletName
         self.buttons = QtGui.QCheckBox("Inverse Buttons")
         self.buttons.stateChanged.connect(self.buttonChange)
+        self.tiptouch = QtGui.QCheckBox("Pen Touch")
+        self.tiptouch.setToolTip("When enabled, pen must touch tablet to work.\nWhen disabled, hover will register.")
+        self.tiptouch.stateChanged.connect(self.tipChange)
         #layout code
         self.mainLayout = QtGui.QVBoxLayout()
         self.mainLayout.addWidget(self.penSettings())
         self.mainLayout.addWidget(self.buttons)
+        self.mainLayout.addWidget(self.tiptouch)
         self.mainLayout.setAlignment(QtCore.Qt.AlignCenter)
         self.setLayout(self.mainLayout)
        
@@ -224,6 +226,12 @@ class penOptions(QtGui.QWidget):
         else:
             but1 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 2")
             but2 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 3")
+
+    def tipChange(self):
+        if self.tiptouch.isChecked():
+            but1 = os.popen("xsetwacom --set \"" + self.tabletName + " stylus\" TabletPCButton on")
+        else:
+            but1 = os.popen("xsetwacom --set \"" + self.tabletName + " stylus\" TabletPCButton off")
 
     def penSettings(self):
         groupBox = QtGui.QGroupBox("Mode")
@@ -253,6 +261,10 @@ class penOptions(QtGui.QWidget):
         but2 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 3").readlines()
         if but1[0].find('3') != -1 and but2[0].find('2') != -1:
             self.buttons.setChecked(True)
+        #for tip touch check
+        tip = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" TabletPCButton").readlines()
+        if tip[0].find('on') != -1:
+            self.tiptouch.setChecked(True)
 
         self.penGroup.buttonClicked.connect(self.penChange)
 
@@ -271,9 +283,11 @@ class penOptions(QtGui.QWidget):
         info = []
         but1 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 2").readlines()
         but2 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 3").readlines()
+        tip = os.popen("xsetwacom --get \"" + self.tabletName + " stylus\" TabletPCButton").readlines()
         info.append(self.penMode)
         info.append("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 " + but1[0].rstrip('\n'))
         info.append("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 " + but2[0].rstrip('\n'))
+        info.append("xsetwacom --set \"" + self.tabletName + " stylus\" TabletPCButton " + tip[0].rstrip('\n'))
         return info
 
     def hideButtons(self):

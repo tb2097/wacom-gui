@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-#code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
-
 from PyQt4 import QtCore,QtGui
 import sys, os, re
 
@@ -69,13 +67,15 @@ class otherOptions(QtGui.QWidget):
         flipLayout.addWidget(self.tabletLeft)
         flipLayout.addStretch(1)
         
-        getCommand = os.popen("xsetwacom --get \""+self.tabletName+" pad\" Rotate").readlines()
+        getCommand = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Rotate").readlines()
         #check correct button for orientation
         if getCommand[0] == "none\n":
-            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate none"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate none"
+            self.orient = "xsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
             self.tabletRight.setChecked(1)
         elif getCommand[0] == "half\n":
-            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate half"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate half"
+            self.orient = "xsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
             self.tabletLeft.setChecked(1)
 
         self.tabletFlipGroup.buttonClicked.connect(self.tabletFlipChange)
@@ -86,9 +86,9 @@ class otherOptions(QtGui.QWidget):
 
     def tabletFlipChange(self, buttonId):
         if buttonId.text() == "Right-Handed":
-            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate none"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate none\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
         elif buttonId.text() == "Left-Handed":
-            self.orient = "xsetwacom --set \""+self.tabletName+" pad\" Rotate half"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate half\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
         flipTablet = os.popen(self.orient)
 
     def screenChange(self,buttonId):
@@ -135,7 +135,7 @@ class otherOptions(QtGui.QWidget):
     def getTabletArea(self):
         #get current tablet area
         tabletInfo = os.popen("xinput list-props \""+ self.tabletName+ " stylus\" | grep Coordinate").readlines()
-        tabletInfo[0] = tabletInfo[0][41:].rstrip('\n') 
+        tabletInfo[0] = tabletInfo[0][41:].rstrip('\n')
         tabletInfo[0] = re.sub(",","",tabletInfo[0])
         tabletScreenCoords = {}
         blarg = tabletInfo[0].split()
@@ -229,7 +229,7 @@ class otherOptions(QtGui.QWidget):
     def getScreenArea(self):
         setCommands = []
         for device in self.devices:
-            if device != "pad":
+            if device != "pad" and device !='touch':
                 setCommands.append("xinput set-prop \""+self.tabletName+" "+ device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
         return setCommands
 
@@ -239,7 +239,7 @@ class otherOptions(QtGui.QWidget):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     form = otherOptions()
-    form.setDevices(['eraser','stylus','cursor','pad'])
+    form.setDevices(['eraser', 'stylus', 'cursor', 'pad'])
     #form.resize(650,300)
     form.show()
     form.getFlip()
