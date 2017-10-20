@@ -29,13 +29,13 @@ class pressureSettings(QtGui.QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHints(QtGui.QPainter.Antialiasing)
 
-        painter.fillRect(QtCore.QRectF(50,50,200,200),QtGui.QBrush(QtGui.QColor(QtGui.QColor(110,110,110))))
-        painter.fillRect(QtCore.QRectF(50,50,200,200),QtGui.QBrush(QtCore.Qt.CrossPattern))
+        painter.fillRect(QtCore.QRectF(50, 50, 200, 200), QtGui.QBrush(QtGui.QColor(QtGui.QColor(110, 110, 110))))
+        painter.fillRect(QtCore.QRectF(50, 50, 200, 200), QtGui.QBrush(QtCore.Qt.CrossPattern))
 
         painter.setPen(QtGui.QPen(QtGui.QColor(QtCore.Qt.lightGray), 2, QtCore.Qt.SolidLine))
         path = QtGui.QPainterPath()
-        path.moveTo(50,250)
-        path.cubicTo(self.points[0][0],self.points[0][1],self.points[1][0],self.points[1][1],250,50)
+        path.moveTo(50, 250)
+        path.cubicTo(self.points[0][0], self.points[0][1], self.points[1][0], self.points[1][1], 250, 50)
         painter.drawPath(path)
 
         painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.darkCyan)))
@@ -148,8 +148,11 @@ class pressureTest(QtGui.QWidget):
         elif self.sensor == "cursor":
             senId = QtGui.QTabletEvent.Cursor
         if event.pointerType() == senId:
-            amp = int(event.pressure() * 50)
-            color =  (1 - amp/50.0) * 255
+            curpressure = event.pressure()
+            if curpressure < 0:
+                curpressure += 1
+            amp = int(curpressure * 50)
+            color = (1 - amp/50.0) * 255
             pen = QtGui.QPen(QtGui.QColor(color,color,color,0))
 
             radial = QtGui.QRadialGradient(QtCore.QPointF(event.x(),event.y()),amp,QtCore.QPointF(event.xTilt() * amp/50 ,event.yTilt() * amp))
@@ -201,11 +204,12 @@ class pressureInfo(QtGui.QWidget):
         self.amp.setText("Amplitude: " + str(amp))
 
 class penOptions(QtGui.QWidget):
-    def __init__(self, tabletName, parent=None):
+    def __init__(self, tabletName, sensor, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(250, 120)
 
-        self.tabletName=tabletName
+        self.tabletName = tabletName
+        self.sensor = sensor
         self.buttons = QtGui.QCheckBox("Inverse Buttons")
         self.buttons.stateChanged.connect(self.buttonChange)
         self.tiptouch = QtGui.QCheckBox("Pen Touch")
@@ -221,17 +225,17 @@ class penOptions(QtGui.QWidget):
        
     def buttonChange(self):
         if self.buttons.isChecked():
-            but1 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 3")
-            but2 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 2")
+            but1 = os.popen("xsetwacom --set \"%s %s\" Button 2 3" % (self.tabletName, self.sensor.lower()))
+            but2 = os.popen("xsetwacom --set \"%s %s\" Button 3 2" % (self.tabletName, self.sensor.lower()))
         else:
-            but1 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 2 2")
-            but2 = os.popen("xsetwacom --set \""+self.tabletName+" stylus\" Button 3 3")
+            but1 = os.popen("xsetwacom --set \"%s %s\" Button 2 2" % (self.tabletName, self.sensor.lower()))
+            but2 = os.popen("xsetwacom --set \"%s %s\" Button 3 3" % (self.tabletName, self.sensor.lower()))
 
     def tipChange(self):
         if self.tiptouch.isChecked():
-            but1 = os.popen("xsetwacom --set \"" + self.tabletName + " stylus\" TabletPCButton on")
+            but1 = os.popen("xsetwacom --set \"%s %s\" TabletPCButton on" % (self.tabletName, self.sensor.lower()))
         else:
-            but1 = os.popen("xsetwacom --set \"" + self.tabletName + " stylus\" TabletPCButton off")
+            but1 = os.popen("xsetwacom --set \"%s %s\" TabletPCButton off" % (self.tabletName, self.sensor.lower()))
 
     def penSettings(self):
         groupBox = QtGui.QGroupBox("Mode")
@@ -248,23 +252,26 @@ class penOptions(QtGui.QWidget):
         penLayout.addWidget(self.penRel)
         penLayout.addStretch(1)
 
-        getCommand = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Mode").readlines()
+        getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
         #check stylus mode
         if getCommand[0] == "Absolute\n":
-            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Absolute"
+            self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
             self.penAbs.setChecked(1)
         elif getCommand[0] == "Relative\n":
-            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Relative"
+            self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
             self.penRel.setChecked(1)
         #for buttons
-        but1 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 2").readlines()
-        but2 = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" Button 3").readlines()
+        but1 = os.popen(("xsetwacom --get \"%s %s\" Button 2") % (self.tabletName, self.sensor.lower())).readlines()
+        but2 = os.popen(("xsetwacom --get \"%s %s\" Button 3") % (self.tabletName, self.sensor.lower())).readlines()
         if but1[0].find('3') != -1 and but2[0].find('2') != -1:
             self.buttons.setChecked(True)
         #for tip touch check
-        tip = os.popen("xsetwacom --get \""+self.tabletName+" stylus\" TabletPCButton").readlines()
-        if tip[0].find('on') != -1:
-            self.tiptouch.setChecked(True)
+        if self.sensor == 'stylus':
+            tip = os.popen("xsetwacom --get \"%s %s\" TabletPCButton" % (self.tabletName, self.sensor.lower())).readlines()
+            if tip[0].find('on') != -1:
+                self.tiptouch.setChecked(True)
+        else:
+            self.tiptouch.hide()
 
         self.penGroup.buttonClicked.connect(self.penChange)
 
@@ -274,9 +281,9 @@ class penOptions(QtGui.QWidget):
 
     def penChange(self, buttonId):
         if buttonId.text() == "Absolute":
-            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Absolute"
+            self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
         elif buttonId.text() == "Relative":
-            self.penMode = "xsetwacom --set \""+self.tabletName+" stylus\" mode Relative"
+            self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
         flipTablet = os.popen(self.penMode)
 
     def getPenInfo(self):
@@ -294,14 +301,15 @@ class penOptions(QtGui.QWidget):
         self.buttons.hide()
 
 class pressure(QtGui.QWidget):
-    def __init__(self, name, parent=None):
+    def __init__(self, name, sensor, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(650, 400)
 
-        self.tabletName=name
+        self.tabletName = name
+        self.sensor = sensor
         self.settings = pressureSettings(self.tabletName)
         self.test = pressureTest(self.tabletName)
-        self.pen  = penOptions(self.tabletName)
+        self.pen = penOptions(self.tabletName, sensor)
 
         #vbox = QtGui.QVBoxLayout()
         #vbox.addWidget(self.settings)
@@ -334,6 +342,34 @@ class pressure(QtGui.QWidget):
 
     def getPenInfo(self):
         return self.pen.getPenInfo()
+
+    def resetDefaults(self):
+        # set device to absolute mode
+        self.pen.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
+        self.pen.penAbs.setChecked(True)
+        os.popen(self.pen.penMode)
+        if self.sensor.lower() != 'cursor':
+            # set pressure curve points
+            self.settings.setCurPoints([[0, 0], [100, 100]])
+            self.settings.setCommand = "xsetwacom --set \"%s %s\" PressureCurve 0 0 100 100" % (
+            self.tabletName, self.sensor.lower())
+            os.popen(self.settings.setCommand)
+        if self.sensor.lower() == 'stylus':
+            # disable tip touch; allows hover
+            self.pen.tiptouch.setChecked(False)
+            cmd = "xsetwacom --get \"%s %s\" TabletPCButton off" % (self.tabletName, self.sensor.lower())
+            os.popen(cmd)
+            # set pen buttons to default
+            self.pen.buttons.setChecked(False)
+            cmd = "xsetwacom --set \"%s %s\" Button 2 2" % (self.tabletName, self.sensor.lower())
+            os.popen(cmd)
+            cmd = "xsetwacom --set \"%s %s\" Button 3 3" % (self.tabletName, self.sensor.lower())
+            os.popen(cmd)
+
+
+
+
+        tmp = 1
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

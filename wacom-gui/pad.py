@@ -21,6 +21,9 @@ class Pad(QtGui.QWidget):
         #get tablet name/type
         tablets = os.popen("lsusb | grep -i wacom").readlines()
         self.TabletIds = tabletidentities()
+        # reset button configs button
+        self.buttonReset = QtGui.QPushButton("Button Reset")
+        self.buttonReset.clicked.connect(self.resetButtons)
 
         label = ''
         if len(tablets) == 0:
@@ -85,9 +88,10 @@ class Pad(QtGui.QWidget):
            #     painter.drawText(box2,QtCore.Qt.AlignCenter,"Touch\nDown")
            # else:
             if (self.Tablet.Buttons[i].Callsign != 'AbsWheelUp' and self.Tablet.Buttons[i].Callsign != 'AbsWheelDown'):
-                box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
+                box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1,
+                                    self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
                 painter.drawRect(box)
-                painter.drawText(box,QtCore.Qt.AlignCenter,self.Tablet.Buttons[i].Number)
+                painter.drawText(box, QtCore.Qt.AlignCenter, self.Tablet.Buttons[i].Number)
         painter.end()
 
         #self.tabletIcon = QtGui.QLabel(self)
@@ -129,6 +133,7 @@ class Pad(QtGui.QWidget):
         self.vMaster = QtGui.QHBoxLayout()
         self.vMaster.addLayout(self.padButtonsLayout)
         self.vMaster.addWidget(self.tabletPad)
+        self.vMaster.addWidget(self.buttonReset)
 
         self.setLayout(self.vMaster)
 
@@ -139,7 +144,7 @@ class Pad(QtGui.QWidget):
 
     def IdentifyByUSBId(self,VendId,DevId):
         for item in self.TabletIds.Tablets:
-            if item.ProductId == int(DevId,16) and int(VendId,16) == int("056a",16):
+            if item.ProductId == int(DevId, 16) and int(VendId, 16) == int("056a", 16):
                 return item
         return self.TabletIds.Tablets[len(self.TabletIds.Tablets)-1]
 
@@ -392,6 +397,26 @@ class Pad(QtGui.QWidget):
                 elif len(item) > 0:
                     humanReadable = str(item)
         return humanReadable
+
+    def resetButtons(self):
+        for i in range(self.Tablet.Buttons.__len__()):
+            if 'Abs' in self.padButtons[(i, 4)]:
+                #touch wheel, do other stuff
+                if 'Up' in self.padButtons[(i, 4)]:
+                    bid = 4
+                    self.padButtons[(i, 3)] = 'button +4'
+                else:
+                    bid = 5
+                    self.padButtons[(i, 3)] = 'button +5'
+                cmd = "xsetwacom --set \"%s pad\" %s %i" % (self.Tablet.Name, self.padButtons[(i, 4)], bid)
+            else:
+                bid = int(self.padButtons[(i, 2)])
+                self.padButtons[(i, 3)] = 'button +%i' % bid
+                cmd = "xsetwacom --set \"%s pad\" Button %i %i" % (self.Tablet.Name, bid, bid)
+            setCommand = os.popen(cmd)
+            self.padButtons[(i, 0)].setText("")
+            tmp = 1
+                # update text?
 
 def main():
 

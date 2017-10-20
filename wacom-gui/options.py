@@ -71,11 +71,11 @@ class otherOptions(QtGui.QWidget):
         #check correct button for orientation
         if getCommand[0] == "none\n":
             self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate none"
-            self.orient = "xsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
+            self.orient += "\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
             self.tabletRight.setChecked(1)
         elif getCommand[0] == "half\n":
             self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate half"
-            self.orient = "xsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
+            self.orient += "\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
             self.tabletLeft.setChecked(1)
 
         self.tabletFlipGroup.buttonClicked.connect(self.tabletFlipChange)
@@ -86,9 +86,11 @@ class otherOptions(QtGui.QWidget):
 
     def tabletFlipChange(self, buttonId):
         if buttonId.text() == "Right-Handed":
-            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate none\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate none"
+            self.orient +="\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
         elif buttonId.text() == "Left-Handed":
-            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate half\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
+            self.orient = "xsetwacom --set \""+self.tabletName+" stylus\" Rotate half"
+            self.orient +="\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate half"
         flipTablet = os.popen(self.orient)
 
     def screenChange(self,buttonId):
@@ -230,11 +232,23 @@ class otherOptions(QtGui.QWidget):
         setCommands = []
         for device in self.devices:
             if device != "pad" and device !='touch':
-                setCommands.append("xinput set-prop \""+self.tabletName+" "+ device + "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
+                setCommands.append("xinput set-prop \""+self.tabletName+" " + device +
+                                   "\" --type=float \"Coordinate Transformation Matrix\" " + self.tabletActiveArea)
         return setCommands
 
     def getFlip(self):
         return self.orient
+
+
+    def resetDefaults(self):
+        self.orient = "xsetwacom --set \"" + self.tabletName + " stylus\" Rotate none"
+        self.orient += "\nxsetwacom --set \"" + self.tabletName + " eraser\" Rotate none"
+        self.tabletRight.setChecked(1)
+        os.popen(self.orient)
+        for device in self.devices:
+            if device != self.tabletName + " pad":
+                setCommand = os.popen("xinput set-prop \"" + self.tabletName + " " + device + "\" --type=float \"Coordinate Transformation Matrix\" 1 0 0 0 1 0 0 0 1")
+        self.screenFull.setChecked(True)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

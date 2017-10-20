@@ -46,8 +46,15 @@ class touch(QtGui.QWidget):
                 self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch off"
                 # self.buttons.(1)
 
+
     def getTouchEnable(self):
         if self.tabletName:
             return self.enable
         else:
             return ''
+
+
+    def resetDefaults(self):
+        self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch on"
+        os.popen(self.enable)
+        self.buttons.setChecked(True)
