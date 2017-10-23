@@ -252,21 +252,21 @@ class penOptions(QtGui.QWidget):
         penLayout.addWidget(self.penRel)
         penLayout.addStretch(1)
 
-        getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
-        #check stylus mode
-        if getCommand[0] == "Absolute\n":
-            self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
-            self.penAbs.setChecked(1)
-        elif getCommand[0] == "Relative\n":
-            self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
-            self.penRel.setChecked(1)
-        #for buttons
-        but1 = os.popen(("xsetwacom --get \"%s %s\" Button 2") % (self.tabletName, self.sensor.lower())).readlines()
-        but2 = os.popen(("xsetwacom --get \"%s %s\" Button 3") % (self.tabletName, self.sensor.lower())).readlines()
-        if but1[0].find('3') != -1 and but2[0].find('2') != -1:
-            self.buttons.setChecked(True)
-        #for tip touch check
         if self.sensor == 'stylus':
+            getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
+            #check stylus mode
+            if getCommand[0] == "Absolute\n":
+                self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
+                self.penAbs.setChecked(1)
+            elif getCommand[0] == "Relative\n":
+                self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
+                self.penRel.setChecked(1)
+            #for buttons
+            but1 = os.popen(("xsetwacom --get \"%s %s\" Button 2") % (self.tabletName, self.sensor.lower())).readlines()
+            but2 = os.popen(("xsetwacom --get \"%s %s\" Button 3") % (self.tabletName, self.sensor.lower())).readlines()
+            if but1[0].find('3') != -1 and but2[0].find('2') != -1:
+                self.buttons.setChecked(True)
+            #for tip touch check
             tip = os.popen("xsetwacom --get \"%s %s\" TabletPCButton" % (self.tabletName, self.sensor.lower())).readlines()
             if tip[0].find('on') != -1:
                 self.tiptouch.setChecked(True)

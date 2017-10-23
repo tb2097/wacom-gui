@@ -40,9 +40,12 @@ class Pad(QtGui.QWidget):
             code = tablets[0]
             code = code.split(" ")[5]
             self.Tablet = self.IdentifyByUSBId(code.split(":")[0], code.split(":")[1])
-            if self.Tablet.Name == 'generic':
-                name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ",1)[0]
-                self.Tablet.Name = name
+            #if self.Tablet.Name == 'generic':
+            name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ",1)[0]
+            self.Tablet.Name = name
+            # test if using newer wacom driver, which changed the device name... because they suck
+            #name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ", 1)[0]
+            #tmp = 1
             label = self.Tablet.Name + ": " + self.Tablet.Model
         #read in previous config file, if exists
         home = expanduser("~") + "/.wacom-gui.sh"

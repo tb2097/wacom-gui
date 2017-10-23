@@ -15,6 +15,9 @@ class touch(QtGui.QWidget):
 
     def initUI(self):
         self.devices = []
+        # check if it is even necessary
+        if os.popen("xsetwacom --list devices | grep touch").readlines().__len__() == 0:
+            return None
         # layout code
         self.mainLayout = QtGui.QHBoxLayout()
         self.mainLayout.setAlignment(QtCore.Qt.AlignLeft)
