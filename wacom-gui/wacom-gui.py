@@ -154,22 +154,24 @@ class WacomGui(QtGui.QWidget):
     def saveData(self):
         home = expanduser("~") + "/.wacom-gui.sh"
         config = open(home, 'w')
-        config.write("#!/bin/bash\n")
-        buttons = self.pad.getCommands()
-        for button in buttons:
-            config.write(button + "\n")
-        for screen in self.options.getScreenArea():
-            config.write(screen + "\n")
-        config.write(self.options.getFlip() + "\n")
-        config.write(self.stylusControl.getSetCommand() + "\n")
-        for stylus in self.stylusControl.getPenInfo():
-            config.write(stylus + "\n")
-        config.write(self.eraserControl.getSetCommand() + "\n")
-        config.write(self.eraserControl.pen.penMode + "\n")
-        if self.Devices.findItems("Touch", QtCore.Qt.MatchExactly):
-            config.write(self.touch.getTouchEnable() + "\n")
-        config.close()
-        os.chmod(home, 0774)
+        try:
+            config.write("#!/bin/bash\n")
+            buttons = self.pad.getCommands()
+            for button in buttons:
+                config.write(button + "\n")
+            for screen in self.options.getScreenArea():
+                config.write(screen + "\n")
+            config.write(self.options.getFlip() + "\n")
+            config.write(self.stylusControl.getSetCommand() + "\n")
+            for stylus in self.stylusControl.getPenInfo():
+                config.write(stylus + "\n")
+            config.write(self.eraserControl.getSetCommand() + "\n")
+            config.write(self.eraserControl.pen.penMode + "\n")
+            if self.Devices.findItems("Touch", QtCore.Qt.MatchExactly):
+                config.write(self.touch.getTouchEnable() + "\n")
+        finally:
+            config.close()
+            os.chmod(home, 0774)
 
 def main():
     loadToggleShortcut()

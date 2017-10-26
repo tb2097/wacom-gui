@@ -252,7 +252,7 @@ class penOptions(QtGui.QWidget):
         penLayout.addWidget(self.penRel)
         penLayout.addStretch(1)
 
-        if self.sensor == 'stylus':
+        if self.sensor == 'stylus' or self.sensor == 'eraser':
             getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
             #check stylus mode
             if getCommand[0] == "Absolute\n":
@@ -261,6 +261,7 @@ class penOptions(QtGui.QWidget):
             elif getCommand[0] == "Relative\n":
                 self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
                 self.penRel.setChecked(1)
+        if self.sensor == 'stylus':
             #for buttons
             but1 = os.popen(("xsetwacom --get \"%s %s\" Button 2") % (self.tabletName, self.sensor.lower())).readlines()
             but2 = os.popen(("xsetwacom --get \"%s %s\" Button 3") % (self.tabletName, self.sensor.lower())).readlines()
