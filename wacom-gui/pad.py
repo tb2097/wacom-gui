@@ -28,8 +28,11 @@ class Pad(QtGui.QWidget):
         label = ''
         if len(tablets) == 0:
             label = "No tablet detected"
-            print label
-            sys.exit()
+            w = QtGui.QWidget()
+            QtGui.QMessageBox.warning(w, "Error", "No tablet detected.")
+            w.show()
+            #print label
+            sys.exit(-1)
         #if len(tablets) > 1:
             # no longer checking for multiple tablets; only the first is configured
         #    label = "Multiple tablets detected. Please connect only one at a time"
@@ -185,6 +188,7 @@ class Pad(QtGui.QWidget):
             self.padButtons[(button, 0)].setText("Recording keypresses... Click button to stop")
             self.buttonCommandList[:] = []
         elif self.activeButton == self.padButtons[(button, 2)]:
+            tmp = 1
             self.activeButton = None
             userInput = self.userToWacomKeystrokeTranslate()
             if userInput is None:
@@ -210,11 +214,11 @@ class Pad(QtGui.QWidget):
 
     def event(self, event):
         if (event.type() == QtCore.QEvent.ShortcutOverride and
-                (event.key() == QtCore.Qt.Key_Tab or event.key() == QtCore.Qt.Key_Up or
-                         event.key() == QtCore.Qt.Key_Down or event.key() == QtCore.Qt.Key_Left or
-                         event.key() == QtCore.Qt.Key_Right)) or event.type() == QtCore.QEvent.KeyPress or \
-                        event.type() == QtCore.QEvent.MouseButtonPress or \
-                        event.type() == QtCore.QEvent.MouseButtonDblClick:
+                (event.key() == (QtCore.Qt.Key_Tab or QtCore.Qt.Key_Up or QtCore.Qt.Key_Down
+                                 or QtCore.Qt.Key_Left or QtCore.Qt.Key_Right))) or \
+                        event.type() == (QtCore.QEvent.KeyPress or QtCore.QEvent.MouseButtonPress or
+                                             QtCore.QEvent.MouseButtonDblClick):
+                tmp = 1
                 if self.editButton() is not None:
                     print self.keyTranslate(event.key(), event.text(), '+')
                     if event.type() == QtCore.QEvent.MouseButtonPress or \
@@ -226,10 +230,11 @@ class Pad(QtGui.QWidget):
                         self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '+'))
                 return False
         elif event.type() == QtCore.QEvent.KeyRelease:
-            if event.key() == QtCore.Qt.Key_Shift or event.key() == QtCore.Qt.Key_Alt or \
-                            event.key() == QtCore.Qt.Key_Control:
+            if event.key() == (QtCore.Qt.Key_Shift or QtCore.Qt.Key_Alt or QtCore.Qt.Key_Control):
                 self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '-'))
             return False
+        if event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key_Space:
+            tmp = 1
         return QtGui.QWidget.event(self, event)
 
     def keyTranslate(self, keyvalue, keytext, keystate):
@@ -243,6 +248,7 @@ class Pad(QtGui.QWidget):
             if keyvalue == 16777250:
                 keyvalue = 16777302
             return {
+                QtCore.Qt.Key_Space: keystate + 'Space',
                 QtCore.Qt.Key_Shift: keystate + 'Shift_L',
                 QtCore.Qt.Key_Alt: keystate + 'Alt_L',
                 QtCore.Qt.Key_Control: keystate + 'Control_L',
@@ -330,6 +336,8 @@ class Pad(QtGui.QWidget):
             if item == 'key' and mouseButtonHold != False:
                 item = mouseButtonHold
                 mouseButtonHold = False
+            elif item == "+Space":
+                item = "SPACE"
             elif item == "+Shift_L" or item == "+Shift_R":
                 shift = True
                 item = "SHIFT"
