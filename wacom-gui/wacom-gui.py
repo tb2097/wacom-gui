@@ -247,10 +247,10 @@ def getTabletArea(*args):
     screens = []
     for screen in info:
         screen = screen.split('(')[0].strip().rsplit(' ', 1)
-        screen[1] = screen[1].replace('x','+')
+        screen[1] = screen[1].replace('x', '+')
         screen[1] = screen[1].split('+')
-        screen[1].insert(3,screen[1].pop(0))
-        screen[1].insert(3,screen[1].pop(0))
+        screen[1].insert(3, screen[1].pop(0))
+        screen[1].insert(3, screen[1].pop(0))
         if screen[0].find('primary') == -1:
             screens.append(screen[1])
         else:
@@ -278,7 +278,7 @@ def getTabletArea(*args):
     isLeft = True
     for i in range(0, 3):
         for j in range(0, 3):
-            if float(tabletScreenCoords[(i, j)]) != float(display[i][j]):
+            if round(float(tabletScreenCoords[(i, j)]), 6) != round(float(display[i][j]), 6):
                 isLeft = False
                 break
     if isLeft:
