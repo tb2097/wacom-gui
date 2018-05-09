@@ -6,6 +6,7 @@
 import sys
 import os
 import re
+import subprocess
 from os.path import expanduser
 from PyQt4 import QtCore, QtGui
 
@@ -204,101 +205,11 @@ def toggleScreens():
     devices = os.popen("xsetwacom --list devices").readlines()
     mod = []
     for idx, device in enumerate(devices):
-        tmp = device.split('\t')[0].strip()
-        if tmp.find('pad') == -1:
-            mod.append(tmp)
-    # assume all are set to same area
-    coords = getTabletArea(mod[0])
-    for obj in mod:
-        os.popen("xinput set-prop \"" + obj + "\" --type=float \"Coordinate Transformation Matrix\" " + coords)
-    tmp = 1
+        name = device.split('\t')[0].strip()
+        if name.find('pad') == -1:
+            cmd = "xsetwacom set \"%s\" MapToOutput next" % name
+            subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
 
-
-def getTabletArea(*args):
-    # get current tablet area
-    tabletInfo = os.popen("xinput list-props \"" + args[0] + "\" | grep Coordinate").readlines()
-    tabletInfo[0] = tabletInfo[0][41:].rstrip('\n')
-    tabletInfo[0] = re.sub(",", "", tabletInfo[0])
-    tabletScreenCoords = {}
-    blarg = tabletInfo[0].split()
-    swap = False
-    count = 0
-    tabletActiveArea = ''
-    for i in range(0, 3):
-        for j in range(0, 3):
-            tabletScreenCoords[(i, j)] = blarg[count]
-            tabletActiveArea = tabletActiveArea + " " + blarg[count]
-            count += 1
-
-    # check if "full screen"
-    fullScreen = True
-    for i in range(0, 3):
-        for j in range(0, 3):
-            if i == j and float(tabletScreenCoords[(i, j)]) != 1.0:
-                fullScreen = False
-                break
-            elif i != j and float(tabletScreenCoords[(i, j)]) != 0.0:
-                fullScreen = False
-                break
-    if fullScreen:
-        swap = True
-    # get screen dimensions/coords
-    info = os.popen("xrandr | grep ' connected'").read().strip().split('\n')
-    screens = []
-    for screen in info:
-        screen = screen.split('(')[0].strip().rsplit(' ', 1)
-        screen[1] = screen[1].replace('x', '+')
-        screen[1] = screen[1].split('+')
-        screen[1].insert(3, screen[1].pop(0))
-        screen[1].insert(3, screen[1].pop(0))
-        if screen[0].find('primary') == -1:
-            screens.append(screen[1])
-        else:
-            screens.insert(0, screen[1])
-    totalResolution = os.popen("xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'").read()
-    totalResolution = totalResolution.split()
-
-    display = [[0 for x in xrange(3)] for x in xrange(3)]
-    display[2][2] = 1.0
-
-    display[0][0] = float(screens[0][2]) / float(totalResolution[0])
-    # percent of screen height
-    display[1][1] = float(screens[0][3]) / float(totalResolution[1])
-    # offset in x
-    if float(screens[0][0]) != 0:
-        display[0][2] = float(screens[0][0]) / float(totalResolution[0])
-    # offset in y
-    if float(screens[0][1]) != 0:
-        display[1][2] = float(screens[0][1]) / float(totalResolution[1])
-    if swap == True:
-        coords = []
-        for item in display:
-            coords.extend(item)
-        return " ".join(format(x, "1.6f") for x in coords)
-    isLeft = True
-    for i in range(0, 3):
-        for j in range(0, 3):
-            if round(float(tabletScreenCoords[(i, j)]), 6) != round(float(display[i][j]), 6):
-                isLeft = False
-                break
-    if isLeft:
-        swap = True
-    display[0][0] = float(screens[1][2]) / float(totalResolution[0])
-    # percent of screen height
-    display[1][1] = float(screens[1][3]) / float(totalResolution[1])
-    # offset in x
-    if float(screens[1][0]) != 0:
-        display[0][2] = float(screens[1][0]) / float(totalResolution[0])
-    # offset in y
-    if float(screens[1][1]) != 0:
-        display[1][2] = float(screens[1][1]) / float(totalResolution[1])
-    if swap == True:
-        coords = []
-        for item in display:
-            coords.extend(item)
-        return " ".join(format(x, "1.6f") for x in coords)
-    else:
-        return "1.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 1.000000"
 
 def loadToggleShortcut():
     loadcheck = os.popen("dconf dump /org/mate/desktop/keybindings/ | grep 'wacom toggle'").read()
