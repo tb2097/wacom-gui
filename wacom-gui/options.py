@@ -23,10 +23,9 @@ class otherOptions(QtGui.QWidget):
         screens = self.screenOptions()
         if screens:
             self.mainLayout.addWidget(screens)
+            self.getTabletArea()
         self.mainLayout.addWidget(self.flipOptions())
         self.setLayout(self.mainLayout)
-        # update current active screen area
-        self.getCurrentScreen()
 
 
     def screenOptions(self):
@@ -159,14 +158,6 @@ class otherOptions(QtGui.QWidget):
                 if valid:
                     self.displays[id].setChecked(1)
                     break
-
-
-    def getCurrentScreen(self):
-        # check if we actually have more that 1 screen
-        if QtGui.QDesktopWidget().numScreens() <= 1:
-            self.screenFull.enabled = False
-        else:
-            self.getTabletArea()
 
 
     def setDevices(self, devices):
