@@ -15,6 +15,7 @@ from pressure import pressure
 from options import otherOptions
 from pad import Pad
 from touch import touch
+from help import Help
 
 
 class WacomGui(QtGui.QWidget):
@@ -30,9 +31,9 @@ class WacomGui(QtGui.QWidget):
         self.cursorControl = pressure(self.pad.Tablet.Name, 'cursor')
         self.touch         = touch(self.pad.Tablet.Name)
         self.options       = otherOptions(self.pad.Tablet.Name)
-
-
-        self.setMaximumSize(800,500)
+        self.help = Help()
+        self.setMaximumSize(800, 500)
+        self.setMinimumSize(800, 500)
         self.setGeometry(300, 300, 650, 450)
         self.setWindowTitle('Wacom GUI')
 
@@ -52,6 +53,7 @@ class WacomGui(QtGui.QWidget):
             if device[len(device)-1] != 'cursor':
                 self.Devices.addItem(device[len(device)-1].title())
         self.Devices.addItem("Other Settings")
+        self.Devices.addItem("Help")
         self.Devices.setMaximumWidth(180)
 
         self.tabletIcon = QtGui.QLabel(self)
@@ -76,6 +78,8 @@ class WacomGui(QtGui.QWidget):
         self.vlayout2.addWidget(self.touch)
         self.vlayout2.addWidget(self.pad)
         self.vlayout2.addWidget(self.buttonReset)
+        self.vlayout2.addWidget(self.help)
+
 
         self.vMaster = QtGui.QHBoxLayout()
         self.vMaster.addLayout(self.vlayout1)
@@ -92,6 +96,7 @@ class WacomGui(QtGui.QWidget):
         self.pad.hide()
         self.touch.hide()
         self.buttonReset.hide()
+        self.help.hide()
 
 
     def restoreDefaults(self):
@@ -101,6 +106,7 @@ class WacomGui(QtGui.QWidget):
         self.cursorControl.resetDefaults()
         self.touch.resetDefaults()
         self.options.resetDefaults()
+        self.help.hide()
 
 
     # for Device list => Pad, Stylus, etc
@@ -113,6 +119,7 @@ class WacomGui(QtGui.QWidget):
             self.pad.show()
             self.touch.hide()
             self.buttonReset.hide()
+            self.help.hide()
 
         elif(item.text() == 'Stylus'):
             self.options.hide()
@@ -121,6 +128,7 @@ class WacomGui(QtGui.QWidget):
             self.touch.hide()
             self.buttonReset.hide()
             self.stylusControl.show()
+            self.help.hide()
         
         elif(item.text() == 'Eraser'):
             self.options.hide()
@@ -129,6 +137,7 @@ class WacomGui(QtGui.QWidget):
             self.touch.hide()
             self.buttonReset.hide()
             self.eraserControl.show()
+            self.help.hide()
 
         elif(item.text() == 'Other Settings'):
             self.stylusControl.hide()
@@ -137,6 +146,8 @@ class WacomGui(QtGui.QWidget):
             self.touch.hide()
             self.options.show()
             self.buttonReset.show()
+            self.help.hide()
+
         elif(item.text() == "Touch"):
             self.stylusControl.hide()
             self.eraserControl.hide()
@@ -144,6 +155,17 @@ class WacomGui(QtGui.QWidget):
             self.touch.show()
             self.options.hide()
             self.buttonReset.hide()
+            self.help.hide()
+
+        elif(item.text() == "Help"):
+            self.stylusControl.hide()
+            self.eraserControl.hide()
+            self.pad.hide()
+            self.touch.hide()
+            self.options.hide()
+            self.buttonReset.hide()
+            self.help.show()
+
         else:
             self.options.hide()
             self.stylusControl.hide()
@@ -151,6 +173,7 @@ class WacomGui(QtGui.QWidget):
             self.pad.hide()
             self.touch.hide()
             self.buttonReset.hide()
+            self.help.hide()
 
     def saveData(self):
         home = expanduser("~") + "/.wacom-gui.sh"
