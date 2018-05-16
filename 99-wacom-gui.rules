@@ -1,6 +1,0 @@
-#
-# Load user Wacom settings via systemd wacom-gui.service
-# which runs /usr/local//wacom-gui/wacom-gui-rules.sh
-# to load user Wacom settings
-#
-SUBSYSTEM=="usb", ATTR{idVendor}=="056a" TAG+="systemd", ENV{SYSTEMD_WANTS}+="wacom-gui.service"
