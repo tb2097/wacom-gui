@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<padsettings graphicwidth="132">
+	<button name="Button 1" number="1" callsign="Button1">
+		<x1>38</x1>
+		<y1>163</y1>
+		<x2>33</x2>
+		<y2>33</y2>
+	</button>
+	<button name="Button 2" number="2" callsign="Button2">
+		<x1>30</x1>
+		<y1>20</y1>
+		<x2>50</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 3" number="3" callsign="Button3">
+		<x1>30</x1>
+		<y1>70</y1>
+		<x2>50</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 8" number="8" callsign="Button8">
+		<x1>30</x1>
+		<y1>252</y1>
+		<x2>50</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 9" number="9" callsign="Button9">
+		<x1>30</x1>
+		<y1>302</y1>
+		<x2>50</x2>
+		<y2>36</y2>
+	</button>
+	<button name="Button 10" number="10" callsign="Button10">
+		<x1>71</x1>
+		<y1>163</y1>
+		<x2>33</x2>
+		<y2>33</y2>
+	</button>
+	<button name="Button 11" number="11" callsign="Button11">
+		<x1>38</x1>
+		<y1>130</y1>
+		<x2>33</x2>
+		<y2>33</y2>
+	</button>
+	<button name="Button 12" number="12" callsign="Button12">
+		<x1>5</x1>
+		<y1>163</y1>
+		<x2>33</x2>
+		<y2>33</y2>
+	</button>
+	<button name="Button 13" number="13" callsign="Button13">
+		<x1>38</x1>
+		<y1>196</y1>
+		<x2>33</x2>
+		<y2>33</y2>
+	</button>
+</padsettings>
