@@ -1,0 +1,5 @@
+#!/bin/sh
+
+script="/usr/local/wacom-gui/wacom-gui.py"
+
+exec python "$script" "$@"
