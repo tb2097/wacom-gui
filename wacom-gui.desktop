@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Encoding=UTF-8
-Name=wacom-gui
-Comment=Load Wacom settings
-Exec=wacom-gui --load
-X-MATE-Autostart-enabled=true
-X-GNOME-Autostart-enabled=false
