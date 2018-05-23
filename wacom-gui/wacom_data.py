@@ -52,7 +52,7 @@ class tabletidentities:
         self.Tablets.append(tablet("TPC-09A", "Wacom Tablet PC9A", 0x9A))
         self.Tablets.append(tablet("DTZ-21ux",  "Wacom Cintiq21UX", 0x3F))
         self.Tablets.append(tablet("DTZ-20wsx", "Wacom Cintiq20WSX", 0xC5))
-        self.Tablets.append(tablet("DTK-22hd", "Wacom Cintiq 22HD", 0xF9))
+        self.Tablets.append(tablet("DTK-22hd", "Wacom Cintiq 22HD", 0xFA))
         self.Tablets.append(tablet("DTK-1300", "Wacom Cintiq 13HD", 0x304))
         self.Tablets.append(tablet("DTK-1301", "Wacom Cintiq 13HD", 0x305))
         self.Tablets.append(tablet("DTZ-12wx",  "Wacom Cintiq12WX", 0xC6))

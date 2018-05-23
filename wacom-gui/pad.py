@@ -34,9 +34,6 @@ class Pad(QtGui.QWidget):
         label = ''
         if len(tablets) == 0:
             print "No tablet detected"
-            w = QtGui.QMessageBox()
-            QtGui.QMessageBox.warning(w, "Error", label)
-            w.show()
             sys.exit(-1)
         else:
             self.Tablet = []
@@ -50,11 +47,23 @@ class Pad(QtGui.QWidget):
                     # break
             # if we have multiple tablets, need to figure out which one we use...
             if self.Tablet.__len__() != 1:
-                label = "Multiple Tablets detected; using the first one detected: %s (%s)" % \
-                        (self.Tablet.Name, self.Tablet.Model)
-                w = QtGui.QMessageBox()
-                QtGui.QMessageBox.warning(w, "Information", label)
-                w.show()
+                # check of "generic" tablet exists, if it does we ignore it
+                gen_idx = []
+                for idx, dev in enumerate(self.Tablet):
+                    if dev.Model == 'generic':
+                        gen_idx.append(idx)
+                # make sure we have at least 1 tablet detected...
+                if gen_idx.__len__() < self.Tablet.__len__():
+                    gen_idx = sorted(gen_idx)
+                    count = 0
+                    for idx in gen_idx:
+                        self.Tablet.pop(idx - count)
+                if self.Tablet.__len__() > 1:
+                    label = "Multiple Tablets detected; using the first one detected: %s (%s)" % \
+                        (self.Tablet[0].Name, self.Tablet[0].Model)
+                    w = QtGui.QMessageBox()
+                    QtGui.QMessageBox.warning(w, "Information", label)
+                    w.show()
             self.Tablet = self.Tablet[0]
             # on some tablets each 'device' has a different name ...
             # read in wacom devices into an dict

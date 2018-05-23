@@ -249,7 +249,6 @@ def parseArgs(args):
                     if os.path.exists(conf) and os.access(conf, os.X_OK):
                         os.system(conf)
                     else:
-
                         print "No default config for %s tablet." % name
         exit()
 
@@ -265,9 +264,14 @@ def toggleScreens():
 
 
 def loadToggleShortcut():
-    loadcheck = os.popen("dconf dump /org/mate/desktop/keybindings/ | grep 'wacom toggle'").read()
+    loadcheck = os.popen("dconf dump /org/mate/desktop/keybindings/ | grep 'wacom'").read()
     if loadcheck.__len__() == 0:
         os.popen("dconf load /org/mate/desktop/keybindings/ < /usr/local/wacom-gui/keybind.cfg")
+    else:
+        values = loadcheck.split('\n')
+        if values[0].split('=')[1] != '/usr/local/bin/wacom-gui --toggle' or values[1].split('=')[1] != 'wacom toggle':
+            os.popen(" dconf reset -f /org/mate/desktop/keybindings/custom0/")
+            os.popen("dconf load /org/mate/desktop/keybindings/ < /usr/local/wacom-gui/keybind.cfg")
     keys = os.popen("setxkbmap -query | grep options").read()
     if keys.__len__() == 0:
         os.popen("setxkbmap -option 'altwin:hyper_win'")
