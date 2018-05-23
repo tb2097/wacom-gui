@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# code repo: linuxproc.rhythm.com/src/systems/git/wacom-gui.git
+#
 
 import sys
 import os
-import re
+import time
+import threading
 import subprocess
 from os.path import expanduser
 from PyQt4 import QtCore, QtGui
@@ -26,15 +27,15 @@ class WacomGui(QtGui.QWidget):
     def initUI(self):
         # get tablet name/type
         self.pad           = Pad()
-        self.stylusControl = pressure(self.pad.Tablet.Name, 'stylus')
-        self.eraserControl = pressure(self.pad.Tablet.Name, 'eraser')
-        self.cursorControl = pressure(self.pad.Tablet.Name, 'cursor')
-        self.touch         = touch(self.pad.Tablet.Name)
-        self.options       = otherOptions(self.pad.Tablet.Name)
+        self.stylusControl = pressure(self.pad.Tablet.deviceNames['stylus'], 'stylus')
+        self.eraserControl = pressure(self.pad.Tablet.deviceNames['eraser'], 'eraser')
+        self.cursorControl = pressure(self.pad.Tablet.deviceNames['cursor'], 'cursor')
+        self.touch = touch(self.pad.Tablet.deviceNames['touch'])
+        self.options = otherOptions(self.pad.Tablet.deviceNames)
         self.help = Help()
-        self.setMaximumSize(800, 500)
-        self.setMinimumSize(800, 500)
-        self.setGeometry(300, 300, 650, 450)
+        self.setMaximumSize(1000, 500)
+        self.setMinimumSize(1000, 500)
+        self.setGeometry(300, 300, 1000, 500)
         self.setWindowTitle('Wacom GUI')
 
         # set stylus/eraser sensors up
@@ -54,7 +55,7 @@ class WacomGui(QtGui.QWidget):
                 self.Devices.addItem(device[len(device)-1].title())
         self.Devices.addItem("Other Settings")
         self.Devices.addItem("Help")
-        self.Devices.setMaximumWidth(180)
+        self.Devices.setMaximumWidth(128)
 
         self.tabletIcon = QtGui.QLabel(self)
         self.tabletIcon.setPixmap(self.pad.getIcon())
@@ -176,8 +177,7 @@ class WacomGui(QtGui.QWidget):
             self.help.hide()
 
     def saveData(self):
-        home = expanduser("~") + "/.wacom-gui.sh"
-        config = open(home, 'w')
+        config = open(self.pad.Tablet.config, 'w')
         try:
             config.write("#!/bin/bash\n")
             buttons = self.pad.getCommands()
@@ -195,7 +195,19 @@ class WacomGui(QtGui.QWidget):
                 config.write(self.touch.getTouchEnable() + "\n")
         finally:
             config.close()
-            os.chmod(home, 0774)
+            os.chmod(self.pad.Tablet.config, 0774)
+
+    def closeEvent(self, event):
+        reply = QtGui.QMessageBox.question(self, 'Message',
+                                           "Are you sure to quit and write config file?",
+                                           QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+
+        if reply == QtGui.QMessageBox.Yes:
+            event.accept()
+            tmp = 1
+        else:
+            event.ignore()
+
 
 def main():
     loadToggleShortcut()
@@ -205,7 +217,8 @@ def main():
     window = WacomGui()
     window.show()
     app.aboutToQuit.connect(window.saveData)
-    sys.exit(app.exec_())
+    app.exec_()
+    #sys.exit(app.exec_())
 
 
 def parseArgs(args):
@@ -216,11 +229,28 @@ def parseArgs(args):
             elif arg == "--toggle":
                 toggleScreens()
             elif arg == "--load":
-                home = expanduser("~") + "/.wacom-gui.sh"
-                if os.path.exists(home) and os.access(home, os.X_OK):
-                    os.system(home)
-                else:
-                    print "No config to load"
+                tablets = os.popen("lsusb | grep -i wacom").readlines()
+                if len(tablets) == 0:
+                    print "No tablet found"
+                    exit(1)
+                home = "%s/.wacom-gui" % expanduser("~")
+                from wacom_data import tabletidentities
+                TabletIds = tabletidentities()
+                for tablet in tablets:
+                    usbid = 'generic'
+                    name = 'generic'
+                    DevId = tablet.split(" ")[5].split(":")[1]
+                    for item in TabletIds.Tablets:
+                        if item.ProductId == int(DevId, 16):
+                            usbid = DevId
+                            name = item.Name
+                            break
+                    conf = "%s/%s/default.sh" % (home, usbid)
+                    if os.path.exists(conf) and os.access(conf, os.X_OK):
+                        os.system(conf)
+                    else:
+
+                        print "No default config for %s tablet." % name
         exit()
 
 def toggleScreens():
@@ -249,12 +279,6 @@ def loadToggleShortcut():
         keys = ",".join(map(str,keys))
         os.popen("setxkbmap -option")
         os.popen("setxkbmap -option '" + keys + "'")
-
-    # I'm lazy and don't want to make a new function... makes sure configs are sourced in .bashrc
-    if os.path.isfile(os.path.expanduser('~') + "/.wacom-gui.sh"):
-        bash = os.popen("cat " + os.path.expanduser('~') + "/.bashrc | grep wacom-gui.sh").read()
-        if bash.__len__() == 0:
-            os.popen("echo \"source ~/.wacom-gui.sh\" >>" + os.path.expanduser('~') + "/.bashrc")
 
 
 def help():

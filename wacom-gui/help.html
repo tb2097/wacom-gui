@@ -3,44 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <title>Wacom GUI Help</title>
+    <style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* Navigation */
+nav {
+  width: 120px;
+  position: fixed;
+  top: 0;
+  background: #586470;
+}
+
+nav ul {
+  margin: 0 auto;
+  list-style: none;
+  text-align: center;
+}
+nav ul li {
+  margin: 0 10px;
+}
+
+nav ul li a {
+  padding: 0px 0;
+  color: #fff;
+  font-size: 0.8rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+nav ul li a:hover {
+  color: #87c3ff;
+}
+
+/* Headings */
+h2 {
+  font-size: 1.2rem;
+  color: #34495E;
+}
+
+/* Sections */
+
+section {
+  width: 100%;
+  padding: 20px;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+  font-size: 0.85rem;
+}
+
+section ul {
+  margin: 0px 40px;
+  font-size: 0.85rem;
+ }
+    </style>
 </head>
 <body>
-    <h3>Stylus</h3>
-        <ul>
-            <li>Alter pressure sensitity</li>
-            <li>Switch between Absolute and Relative mode</li>
-            <li>Swap modes of side buttons on stylus</li>
-            <li>Switch between 'hover' or 'touch pad' to click (Pen Touch)</li>
-        </ul>
-    <h3>Eraser</h3>
-        <ul>
-            <li>Alter pressure sensitity</li>
-            <li>Switch between Absolute and Relative mode</li>
-        </ul>
-    <h3>Pad</h3>
-        <ul>
-            <li>Assign key presses to Pad buttons</li>
+    <nav>
+    <ul>
+        <li><a href="#info">Info</a></li>
+        <li><a href="#stylus">Stylus</a></li>
+        <li><a href="#eraser">Eraser</a></li>
+        <li><a href="#pad">Pad</a></li>
+        <li><a href="#touch">Touch</a></li>
+        <li><a href="#other">Other Settings</a></li>
+        <li><a href="#general">General Notes</a></li>
+    </ul>
+    </nav>
+    <div style="margin-left:120px;padding:1px 10px;height:1000px;">
+        <section id="info"><h2>Info</h2>
+        Wacom GUI is a PyQt4-based user interface for setting xsetwacom commands for tablets.  It has been developed
+        primarily on the MATE desktop, however it should work for others as well.  If you have any issues/feature
+            requests, please submit them to the project git page:
+            <a href="https://github.com/tb2097/wacom-gui">Wacom GUI</a></section>
+        <section id="stylus"><h2>Stylus</h2>
+             This page allows you to:
             <ul>
-                <li>Click on a button, press keys and click on same button</li>
+                <li>Alter pressure sensitivity curve</li>
+                <li>Switch pen detection mode between Absolute and Relative</li>
+                <li>Swap side button inputs on the stylus</li>
+                <li>Switch between 'hover' and 'touch pad' mode for input detection (Pen Touch)</li>
             </ul>
-            <li>Disable a button</li>
+        </section>
+        <section id="eraser"><h2>Eraser</h2>
+            This page allows you to:
             <ul>
-                <li>Click on a button, press 'Esc' key then '0' (zero) key and click on same button</li>
+                <li>Alter pressure sensitivity curve</li>
+                <li>Switch pen detection mode between Absolute and Relative</li>
             </ul>
-        </ul>
-    <h3>Touch</h3>
-        <ul>
-            <li>Enable/Disable Finger Touch capability</li>
-        </ul>
-    <h3>Other Settings</h3>
-        <ul>
-            <li>Map tablet to left, right or both monitors (if more that one)</li>
-            <li>Switch between right and left handed operation</li>
-            <li>Restore all settings to the system defaults</li>
-        </ul>
-    <h3>General Notes</h3>
-        <ul>
-            <li>The keys 'Win' plus 'z' (pressed together) toggles the tablet mapping between left, right and both monitors. Can be changed via 'Keyboard Shortcuts'</li>
-        <ul>
+        </section>
+        <section id="pad"><h2>Pad</h2>
+            Will only appear of the tablet has pad buttons available.
+            <ul>
+                <li>Assign key press(es) to Pad Button
+                    <ul><li>Click the button, press the key command you wish to record,
+                        then click the button again to save.</li></ul>
+                </li>
+                <li>Disable Pad Button
+                    <ul><li>Click the green circle next to the button, it will become disabled.</li></ul>
+                </li>
+                <li>Reset All Pad Buttons
+                    <ul><li>Click the reset button to return all buttons to their default state.</li></ul>
+                </li>
+                <li>Disable/Enable All Pad Buttons
+                    <ul><li>Click the enable/disable button to toggle all button's state.</li></ul>
+                </li>
+            </ul>
+        </section>
+        <section id="touch"><h2>Touch</h2>
+            Will only appear of tablet allows for touch input.
+            <ul>
+                <li>Enable/disable Finger Touch capability</li>
+            </ul>
+        </section>
+        <section id="other"><h2>Other Settings</h2>
+            <ul>
+                <li>Map tablet input to a specific monitor or all (if more than one)</li>
+                <li>Switch tablet between left and right orientation</li>
+                <li>Restore tablet to all default settings</li>
+            </ul>
+        </section>
+        <section id="general"><h2>General Notes</h2>
+            <ul>
+                <li>By default, pressing "Win+z" keys together will toggle the tablet mapping between all the monitors
+                then to all monitors.  This can be changed via "Keyboard Shortcuts".</li>
+                <li>Config files are stored and loaded from ~/.wacom-gui/&lt;deviceid&gt;/default.sh</li>
+                <li>Currently only one device can be hooked up at a time to configure; multiple devices of the same
+                type will currently not work.</li>
+            </ul>
+        </section>
+    </div>
 </body>
 </html>

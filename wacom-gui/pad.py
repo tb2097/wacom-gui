@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import errno
+import distutils.dir_util
+import shutil
 import os
+import re
 from os.path import expanduser
 from PyQt4 import QtCore, QtGui
 from wacom_data import tabletidentities
@@ -22,40 +26,83 @@ class Pad(QtGui.QWidget):
         tablets = os.popen("lsusb | grep -i wacom").readlines()
         self.TabletIds = tabletidentities()
         # reset button configs button
-        self.buttonReset = QtGui.QPushButton("Button Reset")
+        self.buttonReset = QtGui.QPushButton("Reset Buttons")
+        self.buttonToggle = QtGui.QPushButton("Disable Buttons")
         self.buttonReset.clicked.connect(self.resetButtons)
+        self.buttonToggle.clicked.connect(self.toggleButtons)
 
         label = ''
         if len(tablets) == 0:
-            label = "No tablet detected"
-            w = QtGui.QWidget()
-            QtGui.QMessageBox.warning(w, "Error", "No tablet detected.")
+            print "No tablet detected"
+            w = QtGui.QMessageBox()
+            QtGui.QMessageBox.warning(w, "Error", label)
             w.show()
-            #print label
             sys.exit(-1)
-        #if len(tablets) > 1:
-            # no longer checking for multiple tablets; only the first is configured
-        #    label = "Multiple tablets detected. Please connect only one at a time"
-        #    print label
-        #    sys.exit()
         else:
-            #for (tab in tablets):
-            code = tablets[0]
-            code = code.split(" ")[5]
-            self.Tablet = self.IdentifyByUSBId(code.split(":")[0], code.split(":")[1])
-            #if self.Tablet.Name == 'generic':
-            name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ",1)[0]
-            self.Tablet.Name = name
-            # test if using newer wacom driver, which changed the device name... because they suck
-            #name = os.popen("xsetwacom --list devices | grep pad").readlines()[0].split("\t")[0].strip().rsplit(" ", 1)[0]
-            #tmp = 1
-            label = self.Tablet.Name + ": " + self.Tablet.Model
-        #read in previous config file, if exists
-        home = expanduser("~") + "/.wacom-gui.sh"
+            self.Tablet = []
+            for idx, tablet in enumerate(tablets):
+                (VendId, DevId) = tablet.split(" ")[5].split(":")
+                self.Tablet.append(self.IdentifyByUSBId(VendId, DevId))
+                if self.Tablet[idx].Model != "generic":
+                    self.Tablet[idx].devID = DevId
+                else:
+                    self.Tablet[idx].devID = "generic"
+                    # break
+            # if we have multiple tablets, need to figure out which one we use...
+            if self.Tablet.__len__() != 1:
+                label = "Multiple Tablets detected; using the first one detected: %s (%s)" % \
+                        (self.Tablet.Name, self.Tablet.Model)
+                w = QtGui.QMessageBox()
+                QtGui.QMessageBox.warning(w, "Information", label)
+                w.show()
+            self.Tablet = self.Tablet[0]
+            # on some tablets each 'device' has a different name ...
+            # read in wacom devices into an dict
+            deviceNames = {'eraser': "", 'stylus': "", 'cursor': "", 'pad': "", 'touch': ""}
+            foundDevs = False
+            with os.popen("xsetwacom --list devices") as f:
+                for line in f:
+                    deviceNames[line.strip().rsplit(" ", 1)[1].lower()] = line.split("\t")[0].strip().rsplit(" ", 1)[0]
+                    foundDevs = True
+
+            if not foundDevs:
+                label = "Tablet not supported"
+                w = QtGui.QMessageBox()
+                QtGui.QMessageBox.warning(w, "Error", label)
+                w.show()
+                # print label
+                sys.exit(-1)
+
+            self.Tablet.deviceNames = deviceNames
+            self.Tablet.padName = deviceNames['pad']
+        # read in previous config file, if exists
+        # old config file move/update code
+        home = "%s/.wacom-gui.sh" % expanduser("~")
+        path = "%s/.wacom-gui/%s" % (expanduser("~"), self.Tablet.devID)
         if os.path.exists(home) and os.access(home, os.X_OK):
-            os.system(home)
+            # check if for existing tablet, if it is move to its new home & rename
+            if self.Tablet.Name in open(home).read():
+
+                try:
+                    shutil.copy(home, "%s/default.sh" % path)
+                except IOError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
+                    distutils.dir_util.mkpath(path)
+                    shutil.copy(home, "%s/default.sh" % path)
+                    shutil.move(home, "%s.bak" % home)
+        # check for updated config
+        self.Tablet.config = "%s/.wacom-gui/%s/default.sh" % (expanduser("~"), self.Tablet.devID)
+        if os.path.exists(self.Tablet.config) and os.access(self.Tablet.config, os.X_OK):
+            os.system(self.Tablet.config)
         else:
-            print "No previous config"
+            # create directory for config
+            if not os.path.exists(path):
+                distutils.dir_util.mkpath(path)
+            label = "No previous config"
+            w = QtGui.QMessageBox()
+            QtGui.QMessageBox.warning(w, "Information", label)
+            w.show()
 
         opPath = os.path.dirname(os.path.realpath(__file__)) 
 
@@ -67,6 +114,9 @@ class Pad(QtGui.QWidget):
         pixmap2= QtGui.QPixmap(self.TabletLayout)
 
         self.tabletName = QtGui.QLabel(self.Tablet.Name)
+        # if no 'pad' found, return None
+        if self.Tablet.padName == '':
+            return
 
         #trying to draw on pixmap...
         painter = QtGui.QPainter (pixmap2)
@@ -78,75 +128,82 @@ class Pad(QtGui.QWidget):
         pen.setWidth(3)
         painter.setPen(pen)
         for i in range(len(self.Tablet.Buttons)):
-           # if self.Tablet.Buttons[i].Callsign == 'AbsWheelUp':
-           #     box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
-           #     painter.drawArc(box,-45*16,90*16)
-           #     font.setPointSize(8)
-           #     painter.setFont(font)
-           #     box2 = QtCore.QRectF(self.Tablet.Buttons[i].X1 + self.Tablet.Buttons[i].X2 -10, self.Tablet.Buttons[i].Y1 -20, 40, 40)
-           #     painter.drawText(box2,QtCore.Qt.AlignCenter,"Touch\nUp")
-           # elif self.Tablet.Buttons[i].Callsign == 'AbsWheelDown':
-           #     box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1, self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
-           #     painter.drawArc(box,225*16,-90*16)
-           #     font.setPointSize(8)
-           #     painter.setFont(font)
-           #     box2 = QtCore.QRectF(self.Tablet.Buttons[i].X1 -30, self.Tablet.Buttons[i].Y1 -20, 40, 40)
-           #     painter.drawText(box2,QtCore.Qt.AlignCenter,"Touch\nDown")
-           # else:
             if (self.Tablet.Buttons[i].Callsign != 'AbsWheelUp' and self.Tablet.Buttons[i].Callsign != 'AbsWheelDown'):
                 box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1,
                                     self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
                 painter.drawRect(box)
                 painter.drawText(box, QtCore.Qt.AlignCenter, self.Tablet.Buttons[i].Number)
         painter.end()
-
-        #self.tabletIcon = QtGui.QLabel(self)
-        #self.tabletIcon.setPixmap(self.pixmap)
         self.tabletPad = QtGui.QLabel(self)
         self.tabletPad.setPixmap(pixmap2)
-
+        self.icons = [QtGui.QPixmap("images/enabled.png"), QtGui.QPixmap("images/disabled.png")]
         self.padButtons = {}
         self.padButtonsLayout = QtGui.QGridLayout()
-
         self.buttonMapper = QtCore.QSignalMapper(self)
-
         for i in range(len(self.Tablet.Buttons)):
             buttonType = "Button "+self.Tablet.Buttons[i].Number
             if self.Tablet.Buttons[i].Callsign == 'AbsWheelUp' or self.Tablet.Buttons[i].Callsign == 'AbsWheelDown':
                 buttonType = self.Tablet.Buttons[i].Callsign
-            getCommand = os.popen("xsetwacom --get \"" + self.Tablet.Name + " pad\" " + buttonType).readlines()
+            getCommand = os.popen("xsetwacom --get \"" + self.Tablet.padName + " pad\" " + buttonType).readlines()
             if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1:
                 self.padButtons[(i, 0)] = QtGui.QLabel("UNDEFINED")
             elif getCommand[0] == "button +0 \n":
-                self.padButtons[(i, 0)] = QtGui.QLabel("None")
+                self.padButtons[(i, 0)] = QtGui.QLabel("")
             else:    
                 self.padButtons[(i, 0)] = QtGui.QLabel(self.wacomToHuman(getCommand[0]))
             self.padButtons[(i, 1)] = QtGui.QPushButton(self.Tablet.Buttons[i].Name)
-
             self.padButtons[(i, 1)].clicked[()].connect(self.buttonMapper.map)
             self.padButtons[(i, 2)] = self.Tablet.Buttons[i].Number
+            # disable button
             if getCommand[0] == "button +0 \n":
-                self.padButtons[(i, 3)] = 0
+                self.padButtons[(i, 3)] = ''
             else:
                 self.padButtons[(i, 3)] = getCommand[0].rstrip('\n')
             self.padButtons[(i, 4)] = self.Tablet.Buttons[i].Callsign
+            # align text
+            self.padButtons[(i, 0)].setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignCenter)
+            # disabled button
+            self.padButtons[(i, 5)] = QtGui.QPushButton('')
+            self.padButtons[(i, 5)].clicked[()].connect(self.buttonMapper.map)
+            if self.padButtons[(i, 3)] == '':
+                self.padButtons[(i, 1)].setEnabled(False)
+                self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[1]))
+            else:
+                self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
             self.buttonMapper.setMapping(self.padButtons[(i, 1)], i)
+            self.buttonMapper.setMapping(self.padButtons[(i, 5)], i + 50)
             self.padButtonsLayout.addWidget(self.padButtons[i, 0], i, 0)
+            self.padButtonsLayout.setColumnMinimumWidth(0, 400)
             self.padButtonsLayout.addWidget(self.padButtons[i, 1], i, 1)
+            self.padButtonsLayout.addWidget(self.padButtons[i, 5], i, 2)
 
         self.buttonMapper.mapped.connect(self.updatePadButton)
-
+        # toggle sanity check
+        swap = True
+        for i in range(len(self.Tablet.Buttons)):
+            if self.padButtons[(i, 1)].isEnabled():
+                swap = False
+                break
+        if swap:
+            self.buttonToggle.setText("Enable Buttons")
+            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[0]))
+        else:
+            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[1]))
+        loc = len(self.Tablet.Buttons) + 1
+        self.padButtonsLayout.addWidget(self.buttonReset, loc, 1, 1, 2)
+        self.padButtonsLayout.addWidget(self.buttonToggle, loc + 1, 1, 1, 2)
         self.vMaster = QtGui.QHBoxLayout()
         self.vMaster.addLayout(self.padButtonsLayout)
         self.vMaster.addWidget(self.tabletPad)
-        self.vMaster.addWidget(self.buttonReset)
+
 
         self.setLayout(self.vMaster)
 
-        #function to check what button has been pressed
+        # function to check what button has been pressed
         self.activeButton = None
-        self.editButton = lambda : self.activeButton
+        self.editButton = lambda: self.activeButton
         self.buttonCommandList = []
+
 
     def IdentifyByUSBId(self,VendId,DevId):
         for item in self.TabletIds.Tablets:
@@ -154,35 +211,86 @@ class Pad(QtGui.QWidget):
                 return item
         return self.TabletIds.Tablets[len(self.TabletIds.Tablets)-1]
 
+
     def getTabletName(self):
         return self.Tablet.Name
+
 
     def getIcon(self):
         return self.pixmap
 
+
     def getCommands(self):
         buttons = []
         for i in range(len(self.Tablet.Buttons)):
-            if (i < 9 and len(str(self.padButtons[(i, 3)])) > 1) or \
-                    (i >= 9 and len(str(self.padButtons[(i, 3)])) > 2) or self.padButtons[(i, 3)] == 0:
-                cmd = "xsetwacom --set \"" + self.Tablet.Name + " pad\" "
-                if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
-                    cmd += self.padButtons[(i, 4)] + " "
-                    # buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" " + self.padButtons[(i, 4)] +
-                    #               " \"" + str(self.padButtons[(i, 3)]) + "\"")
+            cmd = "xsetwacom --set \"%s pad\" " % self.Tablet.padName
+            if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
+                cmd += "%s " % self.padButtons[(i, 4)]
+            else:
+                cmd += "Button %s " % self.padButtons[(i, 2)]
+            # check if enabled
+            if self.padButtons[(i, 1)].isEnabled() == False:
+                cmd += "button +0"
+            else:
+                if len(str(self.padButtons[(i, 3)])) == 0:
+                    if 'Abs' in self.padButtons[(i, 4)]:
+                        if 'Up' in self.padButtons[(i, 4)]:
+                            cmd += "button +4"
+                        elif 'Down' in self.padButtons[(i, 4)]:
+                            cmd += "button +5"
+                    else:
+                        cmd += "button +%s" % self.padButtons[(i, 2)]
                 else:
-                    cmd += "Button " + self.padButtons[(i, 2)]
-                    #buttons.append("xsetwacom --set \""+self.Tablet.Name+" pad\" Button " + self.padButtons[(i, 2)] +
-                    #               " \"" + str(self.padButtons[(i, 3)]) + "\"")
-                if self.padButtons[(i, 3)] == 0:
-                    cmd += ' 0'
-                else:
-                    cmd += " \"" + str(self.padButtons[(i, 3)]) + "\""
-                buttons.append(cmd)
+                    cmd += " \"%s\"" % str(self.padButtons[(i, 3)])
+            buttons.append(cmd)
+            # check if command is legit
+            #if (i < 9 and len(str(self.padButtons[(i, 3)])) > 1) or \
+            #        (i >= 9 and len(str(self.padButtons[(i, 3)])) > 2) or self.padButtons[(i, 3)] == 0:
+            #    cmd = "xsetwacom --set \"" + self.Tablet.padName + " pad\" "
+            #    if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
+            #        cmd += self.padButtons[(i, 4)] + " "
+            #    else:
+            #        cmd += "Button " + self.padButtons[(i, 2)]
+            #    if self.padButtons[(i, 3)] == 0:
+            #        cmd += ' 0'
+            #    else:
+            #        cmd += " \"" + str(self.padButtons[(i, 3)]) + "\""
+            #    buttons.append(cmd)
         return buttons
+
 
     #for pad buttons
     def updatePadButton(self, button):
+        # enable/disable
+        # herp!
+        if button >= 50:
+            if self.padButtons[(button - 50, 4)] == 'AbsWheelUp' or \
+                    self.padButtons[(button - 50, 4)] == 'AbsWheelDown':
+                buttonType = self.padButtons[(button - 50, 4)]
+            else:
+                buttonType = "Button " + self.padButtons[(button - 50, 2)]
+            if self.padButtons[(button - 50, 1)].isEnabled():
+                cmd = "xsetwacom --set \"%s pad\" %s 0" % (self.Tablet.padName, buttonType)
+                setCommand = os.popen(cmd)
+                self.padButtons[(button - 50, 5)].setIcon(QtGui.QIcon(self.icons[1]))
+                self.padButtons[(button - 50, 1)].setEnabled(False)
+                self.padButtons[(button - 50, 3)] = ''
+                self.padButtons[(button - 50, 0)].setText('')
+            else:
+                cmd = "xsetwacom --set \"%s pad\" %s " % (self.Tablet.padName, buttonType)
+                if 'Abs' in self.padButtons[(button - 50, 4)]:
+                    if 'Up' in self.padButtons[(button - 50, 4)]:
+                        cmd += "button +4"
+                    elif 'Down' in self.padButtons[(button - 50, 4)]:
+                        cmd += "button +5"
+                else:
+                    cmd += "button +%s" % self.padButtons[(button - 50, 2)]
+                setCommand = os.popen(cmd)
+                self.padButtons[(button - 50, 5)].setIcon(QtGui.QIcon(self.icons[0]))
+                self.padButtons[(button - 50, 1)].setEnabled(True)
+                self.padButtons[(button - 50, 3)] = 'button +%s' % self.padButtons[(button - 50, 2)]
+                self.padButtons[(button - 50, 0)].setText('<DEFAULT>')
+            return
         if self.activeButton is None:
             self.activeButton = self.padButtons[(button, 2)]
             self.padButtons[(button, 0)].setText("Recording keypresses... Click button to stop")
@@ -204,11 +312,9 @@ class Pad(QtGui.QWidget):
                     buttonType = self.padButtons[(button, 4)]
                 # end of hackey shit.  Why did they do this originally??!???
                 if userInput == 0:
-                    cmd = "xsetwacom --set \"%s pad\" %s %s" % (self.Tablet.Name, buttonType, str(userInput))
+                    cmd = "xsetwacom --set \"%s pad\" %s %s" % (self.Tablet.padName, buttonType, str(userInput))
                 else:
-                    cmd = "xsetwacom --set \"%s pad\" %s \"%s\"" %(self.Tablet.Name, buttonType, str(userInput))
-                # setCommand = os.popen("xsetwacom --set \"" + self.Tablet.Name + " pad\" " +
-                #                      buttonType + " \"" + str(userInput) + "\"")
+                    cmd = "xsetwacom --set \"%s pad\" %s \"%s\"" %(self.Tablet.padName, buttonType, str(userInput))
                 setCommand = os.popen(cmd)
                 self.padButtons[(button, 3)] = userInput
 
@@ -326,6 +432,8 @@ class Pad(QtGui.QWidget):
     def wacomToHuman(self, command):
         if command == 0:
             return "None"
+        if re.match(r'^button \+\d+ \n', command):
+            return "<DEFAULT>"
         values = command.split()
         humanReadable = ""
         shift = False
@@ -411,6 +519,9 @@ class Pad(QtGui.QWidget):
 
     def resetButtons(self):
         for i in range(self.Tablet.Buttons.__len__()):
+            # only reset enabled buttons
+            self.padButtons[(i, 1)].setEnabled(True)
+            self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
             if 'Abs' in self.padButtons[(i, 4)]:
                 #touch wheel, do other stuff
                 if 'Up' in self.padButtons[(i, 4)]:
@@ -419,22 +530,48 @@ class Pad(QtGui.QWidget):
                 else:
                     bid = 5
                     self.padButtons[(i, 3)] = 'button +5'
-                cmd = "xsetwacom --set \"%s pad\" %s %i" % (self.Tablet.Name, self.padButtons[(i, 4)], bid)
+                cmd = "xsetwacom --set \"%s pad\" %s %i" % (self.Tablet.padName, self.padButtons[(i, 4)], bid)
             else:
                 bid = int(self.padButtons[(i, 2)])
                 self.padButtons[(i, 3)] = 'button +%i' % bid
-                cmd = "xsetwacom --set \"%s pad\" Button %i %i" % (self.Tablet.Name, bid, bid)
+                cmd = "xsetwacom --set \"%s pad\" Button %i %i" % (self.Tablet.padName, bid, bid)
             setCommand = os.popen(cmd)
-            self.padButtons[(i, 0)].setText("")
-            tmp = 1
-                # update text?
+            self.padButtons[(i, 0)].setText("<DEFAULT>")
 
-def main():
 
-    app = QtGui.QApplication(sys.argv)
-    window = Pad()
-    window.show()
-    sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()    
+    def toggleButtons(self):
+        for i in range(len(self.Tablet.Buttons)):
+            if self.padButtons[(i, 4)] == 'AbsWheelUp' or \
+                    self.padButtons[(i, 4)] == 'AbsWheelDown':
+                buttonType = self.padButtons[(i, 4)]
+            else:
+                buttonType = "Button %s" % self.padButtons[(i, 2)]
+            if 'Disable' in self.buttonToggle.text():
+                if self.padButtons[(i, 1)].isEnabled():
+                    cmd = "xsetwacom --set \"%s pad\" %s 0" % (self.Tablet.padName, buttonType)
+                    setCommand = os.popen(cmd)
+                    self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[1]))
+                    self.padButtons[(i, 1)].setEnabled(False)
+                    self.padButtons[(i, 3)] = ''
+                    self.padButtons[(i, 0)].setText('')
+            if 'Enable' in self.buttonToggle.text():
+                if self.padButtons[(i, 1)].isEnabled() is False:
+                    cmd = "xsetwacom --set \"%s pad\" %s " % (self.Tablet.padName, buttonType)
+                    if 'Abs' in self.padButtons[(i, 4)]:
+                        if 'Up' in self.padButtons[(i, 4)]:
+                            cmd += "button +4"
+                        elif 'Down' in self.padButtons[(i, 4)]:
+                            cmd += "button +5"
+                    else:
+                        cmd += "button +%s" % self.padButtons[(i, 2)]
+                    setCommand = os.popen(cmd)
+                    self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
+                    self.padButtons[(i, 1)].setEnabled(True)
+                    self.padButtons[(i, 3)] = 'button +%s' % self.padButtons[(i, 2)]
+                    self.padButtons[(i, 0)].setText('<DEFAULT>')
+        if 'Disable' in self.buttonToggle.text():
+            self.buttonToggle.setText("Enable Buttons")
+            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[0]))
+        else:
+            self.buttonToggle.setText("Disable Buttons")
+            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[1]))

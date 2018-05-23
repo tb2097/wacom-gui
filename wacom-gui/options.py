@@ -7,9 +7,16 @@ import re
 
 
 class otherOptions(QtGui.QWidget):
-    def __init__(self, tabletName, parent=None):
+    def __init__(self, deviceNames, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.tabletName = tabletName.replace('Pad', 'Pen')
+        #self.tabletName = tabletName.replace('Pad', 'Pen')
+        # use the detected device names
+        self.tabletStylus = deviceNames['stylus']
+        self.tabletEraser = deviceNames['eraser']
+        self.tabletCursor = deviceNames['cursor']
+        self.tabletTouch = deviceNames['touch']
+        self.tabletPad = deviceNames['pad']
+        self.deviceNames = deviceNames
         self.initUI()
 
 
@@ -65,15 +72,15 @@ class otherOptions(QtGui.QWidget):
         flipLayout.addWidget(self.tabletRight)
         flipLayout.addWidget(self.tabletLeft)
         flipLayout.addStretch(1)
-        getCommand = os.popen("xsetwacom --get \"%s stylus\" Rotate" % self.tabletName).readlines()
+        getCommand = os.popen("xsetwacom --get \"%s stylus\" Rotate" % self.tabletStylus).readlines()
         # check correct button for orientation
         if getCommand[0] == "none\n":
-            self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.tabletName
-            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.tabletName
+            self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.tabletStylus
+            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.tabletEraser
             self.tabletRight.setChecked(1)
         elif getCommand[0] == "half\n":
-            self.orient = "xsetwacom --set \"%s stylus\" Rotate half" % self.tabletName
-            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate half" % self.tabletName
+            self.orient = "xsetwacom --set \"%s stylus\" Rotate half" % self.tabletStylus
+            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate half" % self.tabletEraser
             self.tabletLeft.setChecked(1)
         self.tabletFlipGroup.buttonClicked.connect(self.tabletFlipChange)
         groupBox.setLayout(flipLayout)
@@ -82,11 +89,11 @@ class otherOptions(QtGui.QWidget):
 
     def tabletFlipChange(self, buttonId):
         if buttonId.text() == "Right-Handed":
-            self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.tabletName
-            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.tabletName
+            self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.deviceNames['stylus']
+            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.deviceNames['eraser']
         elif buttonId.text() == "Left-Handed":
-            self.orient = "xsetwacom --set \"%s stylus\" Rotate half" % self.tabletName
-            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate half" % self.tabletName
+            self.orient = "xsetwacom --set \"%s stylus\" Rotate half" % self.deviceNames['stylus']
+            self.orient += "\nxsetwacom --set \"%s eraser\" Rotate half" % self.deviceNames['eraser']
         flipTablet = os.popen(self.orient)
 
 
@@ -96,19 +103,19 @@ class otherOptions(QtGui.QWidget):
             for device in self.devices:
                 if device != "pad":
                     cmd = "xinput set-prop \"%s %s\" --type=float \"Coordinate Transformation Matrix\" %s" \
-                          % (self.tabletName, device, self.tabletActiveArea)
+                          % (self.deviceNames[device], device, self.tabletActiveArea)
                     setCommand = os.popen(cmd)
         else:
             self.tabletActiveArea = "HEAD-%s" % buttonId.text().split(' ')[1]
             for device in self.devices:
                 if device != "pad":
-                    cmd = "xsetwacom set \"%s %s\" MapToOutput %s" % (self.tabletName, device, self.tabletActiveArea)
+                    cmd = "xsetwacom set \"%s %s\" MapToOutput %s" % (self.deviceNames[device], device, self.tabletActiveArea)
                     setCommand = os.popen(cmd)
 
 
     def getTabletArea(self):
         # get current tablet area
-        tabletInfo = os.popen("xinput list-props \"%s stylus\" | grep Coordinate" % self.tabletName).readlines()
+        tabletInfo = os.popen("xinput list-props \"%s stylus\" | grep Coordinate" % self.tabletStylus).readlines()
         tabletInfo[0] = tabletInfo[0][41:].rstrip('\n')
         tabletInfo[0] = re.sub(",", "", tabletInfo[0])
         tabletScreenCoords = {}
@@ -172,10 +179,10 @@ class otherOptions(QtGui.QWidget):
             if device != "pad" and device != 'touch':
                 if 'HEAD' in self.tabletActiveArea:
                     setCommands.append("xsetwacom set \"%s %s\" MapToOutput %s" %
-                                       (self.tabletName, device, self.tabletActiveArea))
+                                       (self.deviceNames[device], device, self.tabletActiveArea))
                 else:
                     setCommands.append("xinput set-prop \"%s %s\" --type=float \"Coordinate Transformation Matrix\" %s"
-                                       % (self.tabletName, device, self.tabletActiveArea))
+                                       % (self.deviceNames[device], device, self.tabletActiveArea))
         return setCommands
 
 
@@ -184,23 +191,13 @@ class otherOptions(QtGui.QWidget):
 
 
     def resetDefaults(self):
-        self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.tabletName
-        self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.tabletName
+        self.orient = "xsetwacom --set \"%s stylus\" Rotate none" % self.deviceNames['stylus']
+        self.orient += "\nxsetwacom --set \"%s eraser\" Rotate none" % self.deviceNames['eraser']
         self.tabletRight.setChecked(1)
         os.popen(self.orient)
         for device in self.devices:
             if device != "pad":
                 cmd = "xinput set-prop \"%s %s\" --type=float \"Coordinate Transformation Matrix\" 1 0 0 0 1 0 0 0 1" \
-                      % (self.tabletName, device)
+                      % (self.deviceNames[device], device)
                 setCommand = os.popen(cmd)
         self.screenFull.setChecked(True)
-
-
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    form = otherOptions()
-    form.setDevices(['eraser', 'stylus', 'cursor', 'pad'])
-    #form.resize(650,300)
-    form.show()
-    form.getFlip()
-    sys.exit(app.exec_())
