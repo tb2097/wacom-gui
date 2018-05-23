@@ -136,7 +136,8 @@ class Pad(QtGui.QWidget):
         painter.end()
         self.tabletPad = QtGui.QLabel(self)
         self.tabletPad.setPixmap(pixmap2)
-        self.icons = [QtGui.QPixmap("images/enabled.png"), QtGui.QPixmap("images/disabled.png")]
+        self.icons = [QtGui.QPixmap("%s/images/enabled.png" % opPath),
+                      QtGui.QPixmap("%s/images/disabled.png" % opPath)]
         self.padButtons = {}
         self.padButtonsLayout = QtGui.QGridLayout()
         self.buttonMapper = QtCore.QSignalMapper(self)
