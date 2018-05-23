@@ -199,7 +199,7 @@ class WacomGui(QtGui.QWidget):
 
     def closeEvent(self, event):
         reply = QtGui.QMessageBox.question(self, 'Message',
-                                           "Are you sure to quit and write config file?",
+                                           "Quit and write config file?",
                                            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 
         if reply == QtGui.QMessageBox.Yes:
