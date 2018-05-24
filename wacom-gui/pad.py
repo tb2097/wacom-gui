@@ -30,10 +30,12 @@ class Pad(QtGui.QWidget):
         self.buttonToggle = QtGui.QPushButton("Disable Buttons")
         self.buttonReset.clicked.connect(self.resetButtons)
         self.buttonToggle.clicked.connect(self.toggleButtons)
-
-        label = ''
         if len(tablets) == 0:
-            print "No tablet detected"
+            label = "No tablet detected"
+            print label
+            w = QtGui.QMessageBox()
+            QtGui.QMessageBox.warning(w, "Error", label)
+            w.show()
             sys.exit(-1)
         else:
             self.Tablet = []
