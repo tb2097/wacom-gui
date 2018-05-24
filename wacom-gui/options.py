@@ -37,6 +37,7 @@ class otherOptions(QtGui.QWidget):
 
     def screenOptions(self):
         if QtGui.QDesktopWidget().numScreens() == 1:
+            self.screenFull = None
             return None
         groupBox = QtGui.QGroupBox("Screen Area")
         groupBox.setAlignment(QtCore.Qt.AlignHCenter)
@@ -45,7 +46,7 @@ class otherOptions(QtGui.QWidget):
         self.displays = []
         for x in range(0, QtGui.QDesktopWidget().numScreens()):
             self.displays.append(QtGui.QRadioButton("Monitor %d" % x))
-        self.screenFull  = QtGui.QRadioButton("All Monitors")
+        self.screenFull = QtGui.QRadioButton("All Monitors")
         for screen in self.displays:
             self.screenGroup.addButton(screen)
         self.screenGroup.addButton(self.screenFull)
@@ -175,10 +176,12 @@ class otherOptions(QtGui.QWidget):
 
     def getScreenArea(self):
         setCommands = []
+        if self.tabletActiveArea == "":
+            self.tabletActiveArea = "HEAD-0"
         for device in self.devices:
             if device != "pad" and device != 'touch':
                 if 'HEAD' in self.tabletActiveArea:
-                    setCommands.append("xsetwacom set \"%s %s\" MapToOutput %s" %
+                    setCommands.append("xsetwacom --set \"%s %s\" MapToOutput %s" %
                                        (self.deviceNames[device], device, self.tabletActiveArea))
                 else:
                     setCommands.append("xinput set-prop \"%s %s\" --type=float \"Coordinate Transformation Matrix\" %s"
@@ -200,4 +203,5 @@ class otherOptions(QtGui.QWidget):
                 cmd = "xinput set-prop \"%s %s\" --type=float \"Coordinate Transformation Matrix\" 1 0 0 0 1 0 0 0 1" \
                       % (self.deviceNames[device], device)
                 setCommand = os.popen(cmd)
-        self.screenFull.setChecked(True)
+        if self.screenFull is not None:
+            self.screenFull.setChecked(True)
