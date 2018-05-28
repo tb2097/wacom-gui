@@ -6,11 +6,13 @@ import sys, os, re
 class touch(QtGui.QWidget):
     def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        if tabletName.find('Pen') == -1:
-            self.tabletName = None
-        else:
-            self.tabletName = tabletName.rsplit(' ', 1)[0] + " Finger"
-            self.enable = None
+        devices = os.popen("xsetwacom --list devices").readlines()
+        self.tabletName = None
+        for device in devices:
+            attr = device.strip().split('\t')
+            if attr[2] == 'type: TOUCH':
+                self.tabletName = attr[0][:-6]
+                self.enable = None
         self.initUI()
 
     def initUI(self):
