@@ -6,7 +6,7 @@
 import sys
 import os
 import time
-import threading
+# import threading
 import subprocess
 from os.path import expanduser
 from PyQt4 import QtCore, QtGui
@@ -203,8 +203,9 @@ class WacomGui(QtGui.QWidget):
                                            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 
         if reply == QtGui.QMessageBox.Yes:
+            self.saveData()
             event.accept()
-            tmp = 1
+            self.deleteLater()
         else:
             event.ignore()
 
@@ -216,9 +217,7 @@ def main():
 
     window = WacomGui()
     window.show()
-    app.aboutToQuit.connect(window.saveData)
-    app.exec_()
-    #sys.exit(app.exec_())
+    sys.exit(app.exec_())
 
 
 def parseArgs(args):
