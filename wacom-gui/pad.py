@@ -73,7 +73,7 @@ class Pad(QtGui.QWidget):
             foundDevs = False
             with os.popen("xsetwacom --list devices") as f:
                 for line in f:
-                    deviceNames[line.strip().rsplit(" ", 1)[1].lower()] = line.split("\t")[0].strip().rsplit(" ", 1)[0]
+                    deviceNames[line.strip().rsplit(" ", 1)[1].lower()] = line.split("\t")[0].strip().rsplit(" ", 1)[0].rstrip()
                     foundDevs = True
 
             if not foundDevs:
