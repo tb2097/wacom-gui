@@ -69,7 +69,7 @@ class Pad(QtGui.QWidget):
             self.Tablet = self.Tablet[0]
             # on some tablets each 'device' has a different name ...
             # read in wacom devices into an dict
-            deviceNames = {'eraser': "", 'stylus': "", 'cursor': "", 'pad': "", 'touch': ""}
+            deviceNames = {'eraser': None, 'stylus': None, 'cursor': None, 'pad': None, 'touch': None}
             foundDevs = False
             with os.popen("xsetwacom --list devices") as f:
                 for line in f:
@@ -316,6 +316,7 @@ class Pad(QtGui.QWidget):
                 # self.padButtons[(button,0)].setText(self.padButtons[(button,3)])
                 self.padButtons[(button, 0)].setText(self.wacomToHuman(self.padButtons[(button, 3)]))
             else:
+
                 setCommand = self.wacomToHuman(userInput)
                 self.padButtons[(button, 0)].setText(setCommand)
                 # this is hack-y but should be simplified; need to remove the number as I don't think it's necessary...
@@ -434,10 +435,11 @@ class Pad(QtGui.QWidget):
                             inputString += " -shift " + str(item)
                 elif button == False:
                     inputString += " " + str(item)
-            # keycode to set button to "None"
-            if inputString == 'key 0 0 0':
-                inputString = 0
-            return inputString
+            # special cases
+            if inputString == 'key +Shift_L -Shift_L':
+                return 'key +Shift_L'
+            else:
+                return inputString
         else:
             return None
 

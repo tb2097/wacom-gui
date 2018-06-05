@@ -6,21 +6,14 @@ import sys, os, re
 class touch(QtGui.QWidget):
     def __init__(self, tabletName, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        devices = os.popen("xsetwacom --list devices").readlines()
-        self.tabletName = None
-        for device in devices:
-            attr = device.strip().split('\t')
-            if attr[2] == 'type: TOUCH':
-                self.tabletName = attr[0][:-6]
-                self.enable = None
+        if tabletName is None:
+            return None
+        self.tabletName = tabletName
+        self.enable = None
         self.initUI()
 
     def initUI(self):
-        self.devices = []
-        # check if it is even necessary
-        if os.popen("xsetwacom --list devices | grep touch").readlines().__len__() == 0:
-            return None
-        # layout code
+        # self.devices = []
         self.mainLayout = QtGui.QHBoxLayout()
         self.mainLayout.setAlignment(QtCore.Qt.AlignLeft)
         self.buttons = QtGui.QCheckBox("Enable Touch")
@@ -44,12 +37,13 @@ class touch(QtGui.QWidget):
         if self.tabletName:
             getCommand = os.popen("xsetwacom --get \"" + self.tabletName + " touch\" Touch").readlines()
             # check correct button for orientation
-            if getCommand[0] == "on\n":
-                self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch on"
-                self.buttons.setChecked(1)
-            else:
-                self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch off"
-                # self.buttons.(1)
+            if getCommand.__len__() != 0:
+                if getCommand[0] == "on\n":
+                    self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch on"
+                    self.buttons.setChecked(1)
+                else:
+                    self.enable = "xsetwacom --set \"" + self.tabletName + " touch\" Touch off"
+                    self.buttons.setChecked(0)
 
 
     def getTouchEnable(self):
