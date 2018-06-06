@@ -1,6 +1,6 @@
 Name: wacom-gui
-Version: 0.2.0
-Release: 1
+Version: 0.2.1
+Release: 3
 Summary: Wacom PyQt4 GUI
 License: GPLv3
 BuildArch: noarch
@@ -61,6 +61,18 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Tue Jun 5 2018 Travis Best <tb2097> - 0.2.1-3
+- Fixed issue with sigsegv exit error 139; was race condition closing UI before config file completed closing on exit
+* Mon Jun 4 2018 Travis Best <tb2097> - 0.2.1
+- Fixed naming issue with PTH-860 (was named PTH-680)
+- Fixed regression with touch detection (Issue #11)
+- Fixed: when shift key is pressed by itself it was not being set as a control modifier.  Shift/Alt/Ctrl should now work as stand-alone shift modifiers
+* Mon May 28 2018 Travis Best <tb2097> - 0.2.0-2
+- Fixed issues with single screen tablet configuration
+- Updated tablet names for PTH-660/PTH-680 to be consistent with naming scheme
+- Fixed issue with touch not being properly detected due to change in device name detection
+* Wed May 23 2018 Travis Best <tb2097> - 0.2.0b-1
+- updated keybind.cfg file to use /usr/local/bin/wacom-gui
 * Wed May 23 2018 Travis Best <tb2097> - 0.2.0-1
 - updated SPEC file to include dependancies, clean up code (fixes provided by jcpearson)
 - Added missing image for PTH-651 (noted missing by jcpearson)
