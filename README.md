@@ -33,6 +33,8 @@ You will require a few packages to get this working on your system:
 - auto-load config on login
 - pressure curve testing area for stylus/eraser
 - pad touch enable/disable (if available)
+- Shift/Alt/Ctrl can be set to a pad button for press-and-hold function, as you would for using a keyboard
+  - ie. holding Alt to zoom/pan/rotate in Maya with the mouse/pen
 
 ## Contributing
 
