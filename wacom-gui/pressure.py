@@ -51,7 +51,7 @@ class pressureSettings(QtGui.QWidget):
         label2 = "("+ str((self.points[1][0] - 50)/2) + "," + str(100 - ((self.points[1][1] -50)/2)) + ")"
         painter.drawText(self.points[1][0] -25, self.points[1][1] + 18, QtCore.QString(label2))
 
-    def setSensor(self,sensor):
+    def setSensor(self, sensor):
         self.sensor = sensor
         #print self.sensor
         curPressure = os.popen("xsetwacom --get \""+self.tabletName+" "+self.sensor + "\" PressureCurve").readlines()
@@ -219,7 +219,8 @@ class penOptions(QtGui.QWidget):
         #layout code
         self.mainLayout = QtGui.QVBoxLayout()
         self.mainLayout.addWidget(self.penSettings())
-        self.mainLayout.addWidget(self.buttons)
+        if sensor == 'stylus':
+            self.mainLayout.addWidget(self.buttons)
         self.mainLayout.addWidget(self.tiptouch)
         self.mainLayout.setAlignment(QtCore.Qt.AlignCenter)
         self.setLayout(self.mainLayout)
@@ -255,15 +256,15 @@ class penOptions(QtGui.QWidget):
         penLayout.addWidget(self.penRel)
         penLayout.addStretch(1)
 
-        if self.sensor == 'stylus' or self.sensor == 'eraser':
-            getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
-            #check stylus mode
-            if getCommand[0] == "Absolute\n":
-                self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
-                self.penAbs.setChecked(1)
-            elif getCommand[0] == "Relative\n":
-                self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
-                self.penRel.setChecked(1)
+        #if self.sensor == 'stylus' or self.sensor == 'eraser':
+        getCommand = os.popen("xsetwacom --get \"%s %s\" Mode" % (self.tabletName, self.sensor.lower())).readlines()
+        #check stylus mode
+        if getCommand[0] == "Absolute\n":
+            self.penMode = "xsetwacom --set \"%s %s\" mode Absolute" % (self.tabletName, self.sensor.lower())
+            self.penAbs.setChecked(1)
+        elif getCommand[0] == "Relative\n":
+            self.penMode = "xsetwacom --set \"%s %s\" mode Relative" % (self.tabletName, self.sensor.lower())
+            self.penRel.setChecked(1)
         if self.sensor == 'stylus':
             #for buttons
             but1 = os.popen(("xsetwacom --get \"%s %s\" Button 2") % (self.tabletName, self.sensor.lower())).readlines()
@@ -308,29 +309,27 @@ class pressure(QtGui.QWidget):
     def __init__(self, name, sensor, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFixedSize(650, 400)
-
+        left = QtGui.QVBoxLayout()
+        if name is None:
+            return
         self.tabletName = name.replace('Pad', 'Pen')
         self.sensor = sensor
-        self.settings = pressureSettings(self.tabletName)
-        self.test = pressureTest(self.tabletName)
+        if self.sensor in ['stylus', 'eraser']:
+            self.settings = pressureSettings(self.tabletName)
+            self.settings.setSensor(self.sensor)
+            self.test = pressureTest(self.tabletName)
+            left.addWidget(self.settings)
         self.pen = penOptions(self.tabletName, sensor)
 
-        #grid = QtGui.QGridLayout()
-        #grid.addWidget(self.settings, 0, 0)
-        #grid.addWidget(self.test, 0, 1)
-        #grid.addWidget(self.pen, 1, 0)
-
-        left = QtGui.QVBoxLayout()
-        left.addWidget(self.settings)
         left.addWidget(self.pen)
         grid = QtGui.QHBoxLayout()
         grid.addLayout(left, QtCore.Qt.AlignTop)
-        grid.addWidget(self.test)
-
+        if self.sensor in ['stylus', 'eraser']:
+            grid.addWidget(self.test)
 
         self.setLayout(grid)
 
-    def setSensor(self,sensor):
+    def setSensor(self, sensor):
         self.settings.setSensor(sensor)
         self.test.setSensor(sensor)
 

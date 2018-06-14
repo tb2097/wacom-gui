@@ -38,10 +38,6 @@ class WacomGui(QtGui.QWidget):
         self.setGeometry(300, 300, 1000, 500)
         self.setWindowTitle('Wacom GUI')
 
-        # set stylus/eraser sensors up
-        self.stylusControl.setSensor("stylus")
-        self.eraserControl.setSensor("eraser")
-
         opPath = os.path.dirname(os.path.realpath(__file__)) 
         self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg')) 
 
@@ -49,10 +45,11 @@ class WacomGui(QtGui.QWidget):
         self.Devices = QtGui.QListWidget(self)
         self.Devices.itemClicked.connect(self.itemSelectAction)
         self.options.setDevices(devices)
-        for device in devices:
-            device = device.split("\t")[0].strip().split(" ")
-            if device[len(device)-1] != 'cursor':
-                self.Devices.addItem(device[len(device)-1].title())
+        for key, name in self.pad.Tablet.deviceNames.iteritems():
+            if name is not None and key != 'cursor':
+                self.Devices.addItem(key.title())
+        if self.pad.Tablet.deviceNames['cursor'] is not None:
+            self.Devices.addItem('Cursor')
         self.Devices.addItem("Other Settings")
         self.Devices.addItem("Help")
         self.Devices.setMaximumWidth(128)
@@ -117,6 +114,7 @@ class WacomGui(QtGui.QWidget):
             self.options.hide()
             self.stylusControl.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.show()
             self.touch.hide()
             self.buttonReset.hide()
@@ -125,6 +123,7 @@ class WacomGui(QtGui.QWidget):
         elif(item.text() == 'Stylus'):
             self.options.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.hide()
             self.buttonReset.hide()
@@ -134,6 +133,7 @@ class WacomGui(QtGui.QWidget):
         elif(item.text() == 'Eraser'):
             self.options.hide()
             self.stylusControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.hide()
             self.buttonReset.hide()
@@ -143,6 +143,7 @@ class WacomGui(QtGui.QWidget):
         elif(item.text() == 'Other Settings'):
             self.stylusControl.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.hide()
             self.options.show()
@@ -152,6 +153,7 @@ class WacomGui(QtGui.QWidget):
         elif(item.text() == "Touch"):
             self.stylusControl.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.show()
             self.options.hide()
@@ -161,16 +163,26 @@ class WacomGui(QtGui.QWidget):
         elif(item.text() == "Help"):
             self.stylusControl.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.hide()
             self.options.hide()
             self.buttonReset.hide()
             self.help.show()
-
+        elif (item.text() == "Cursor"):
+            self.stylusControl.hide()
+            self.eraserControl.hide()
+            self.cursorControl.show()
+            self.pad.hide()
+            self.touch.hide()
+            self.options.hide()
+            self.buttonReset.hide()
+            self.help.hide()
         else:
             self.options.hide()
             self.stylusControl.hide()
             self.eraserControl.hide()
+            self.cursorControl.hide()
             self.pad.hide()
             self.touch.hide()
             self.buttonReset.hide()
@@ -191,6 +203,8 @@ class WacomGui(QtGui.QWidget):
                 config.write(stylus + "\n")
             config.write(self.eraserControl.getSetCommand() + "\n")
             config.write(self.eraserControl.pen.penMode + "\n")
+            if self.pad.Tablet.deviceNames['cursor'] is not None:
+                config.write(self.cursorControl.pen.penMode + "\n")
             if self.Devices.findItems("Touch", QtCore.Qt.MatchExactly):
                 config.write(self.touch.getTouchEnable() + "\n")
         finally:
