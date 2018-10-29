@@ -1,0 +1,7 @@
+{
+	"lhyper z": {
+		"label": "Toggle Screen (Wacom)",
+		"run": "/usr/local/bin/wacom-gui --toggle",
+		"protected": 1
+	}
+}
