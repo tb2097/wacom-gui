@@ -2,7 +2,7 @@
 
 Python/PyQt Wacom GUI for MATE/KDE
 
-![Screenshots](https://i.imgur.com/zIMibIR.gif)
+![Screenshots](https://i.imgur.com/OJW4j4Y.gif)
 
 ## Getting Started
 These instructions will help you get a copy of the project up and running on yoru local machine for development/testing purposes.
