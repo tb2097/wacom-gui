@@ -17,6 +17,7 @@ import os
 import xml.etree.ElementTree as ET
 import math
 import copy
+import sys
 
 
 class Tablets:
@@ -24,6 +25,10 @@ class Tablets:
         self.tablets = {}
         self.device_data = {}
         self.db_path = "%s/data" % os.path.dirname(os.path.realpath(__file__))
+        if not os.path.exists(self.db_path):
+            self.db_path = "/usr/share/libwacom"
+            if not os.path.exists(self.db_path):
+                sys.exit("Error: libwacom not installed")
         self.get_connected_tablets()
 
     def get_connected_tablets(self):
