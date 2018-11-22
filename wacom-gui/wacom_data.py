@@ -14,8 +14,8 @@
 
 import subprocess
 import os
-import sys
-import xml.dom.minidom
+import xml.etree.ElementTree as ET
+import math
 import copy
 
 
@@ -74,6 +74,14 @@ class Tablets:
                 for instance in sorted(detected[device][dev_input]['id']):
                     self.tablets[devID][idx][dev_input]['id'] = instance
                     idx = idx + 1
+        # remove devices that are not available
+        for dev in self.tablets.keys():
+            for device in self.tablets[dev]:
+                for id in ['touch', 'stylus', 'eraser', 'cursor', 'pad']:
+                    if id in device.keys():
+                        if 'id' not in device[id].keys():
+                            del device[id]
+
 
     def __get_libwacom_data(self):
         p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
@@ -113,26 +121,21 @@ class Tablets:
                         else:
                             self.device_data[cur_device]['pad']['attr']['rotate'] = False
                     elif "Ring=true" in line:
-                        self.device_data[cur_device]['pad']['buttons']['RingUp'] = {'cmd': 'AbsWheelUp'}
-                        self.device_data[cur_device]['pad']['buttons']['RingDown'] = {'cmd': 'AbsWheelDown'}
+                        self.device_data[cur_device]['pad']['buttons']['RingUp'] = \
+                            {'bid': 'AbsWheelUp', 'orient': 'Left'}
+                        self.device_data[cur_device]['pad']['buttons']['RingDown'] = \
+                            {'bid': 'AbsWheelDown', 'orient': 'Left'}
                     elif "Ring2=true" in line:
-                        self.device_data[cur_device]['pad']['buttons']['Ring2Up'] = {'cmd': 'AbsWheel2Up'}
-                        self.device_data[cur_device]['pad']['buttons']['Ring2Down'] = {'cmd': 'AbsWheel2Down'}
+                        self.device_data[cur_device]['pad']['buttons']['Ring2Up'] = \
+                            {'bid': 'AbsWheel2Up', 'orient': 'Right'}
+                        self.device_data[cur_device]['pad']['buttons']['Ring2Down'] = \
+                            {'bid': 'AbsWheel2Down', 'orient': 'Right'}
                     elif "Touch=" in line:
                         if "true" in line:
                             self.device_data[cur_device]['pad']['attr']['touch'] = True
                         else:
                             self.device_data[cur_device]['pad']['attr']['touch'] = False
                             del self.device_data[cur_device]['touch']
-                    elif "NumStrips=" in line:
-                        if line.split('=')[1] == '1':
-                            self.device_data[cur_device]['pad']['buttons']['StripUp'] = {}
-                            self.device_data[cur_device]['pad']['buttons']['StripDown'] = {}
-                        if line.split('=')[1] == '2':
-                            self.device_data[cur_device]['pad']['buttons']['StripUp'] = {}
-                            self.device_data[cur_device]['pad']['buttons']['StripDown'] = {}
-                            self.device_data[cur_device]['pad']['buttons']['Strip2Up'] = {}
-                            self.device_data[cur_device]['pad']['buttons']['Strip2Down'] = {}
                     # get button info now...
                     elif '[Buttons]' == line:
                         buttons = True
@@ -146,26 +149,30 @@ class Tablets:
                                 if butid > 3:
                                     butid = butid + 4
                                 self.device_data[cur_device]['pad']['buttons']['Button%s' % but] = {
-                                    'cmd': 'Button %d' % butid,
+                                    'bid': 'Button %d' % butid,
                                     'orient': dir}
                         except Exception:
                             pass
-                    if 'TouchStrip' in line:
+                    if 'Touchstrip' in line:
                         touch_but = line.split("=")[1].split(';')
                         try:
                             for but in touch_but:
                                 side = self.device_data[cur_device]['pad']['buttons']['Button%s' % but]['orient']
-                                del self.device_data[cur_device]['pad']['buttons']['Button%s' % but]
+                                # del self.device_data[cur_device]['pad']['buttons']['Button%s' % but]
                                 if line.split('=')[0][-1:] == '2':
-                                    self.device_data[cur_device]['pad']['buttons']['Strip2Up'][
-                                        'cmd'] = "Strip%sUp" % side
-                                    self.device_data[cur_device]['pad']['buttons']['Strip2Down'][
-                                        'cmd'] = "Strip%sDown" % side
+                                    self.device_data[cur_device]['pad']['buttons']['Strip2Up'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                                    self.device_data[cur_device]['pad']['buttons']['Strip2Down'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
                                 else:
-                                    self.device_data[cur_device]['pad']['buttons']['StripUp'][
-                                        'cmd'] = "Strip%sUp" % side
-                                    self.device_data[cur_device]['pad']['buttons']['StripDown'][
-                                        'cmd'] = "Strip%sDown" % side
+                                    self.device_data[cur_device]['pad']['buttons']['StripUp'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                                    self.device_data[cur_device]['pad']['buttons']['StripDown'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
                         except Exception:
                             pass
 
@@ -174,16 +181,205 @@ class Tablets:
             if data['pad']['buttons'].__len__() == 0:
                 del data['pad']['buttons']
             else:
-                try:  # Attempt to load button map
-                    XML = xml.dom.minidom.parse("%s/layouts/%s" % (self.db_path, self.device_data[device]['svg']))
-                    XBase = XML.getElementsByTagName("svg")
-                    data['pad']['buttons']['width'] = int(XBase[0].attributes["width"].value)
-                    data['pad']['buttons']['height'] = int(XBase[0].attributes["height"].value)
+                self.pretty_svg(device)
 
-                    YBase = XBase[0].getElementsByTagName("g")
-                    tmp = 1
-                except Exception:
-                    tmp = 1
-        tmp = 1
 
-# tablet_test = tablet_data()
+    def pretty_svg(self, device):
+        try:  # Attempt to load button map from SVG
+                # trying to optimize SVG file
+                tree = ET.parse("%s/layouts/%s" % (self.db_path, self.device_data[device]['svg']))
+                root = tree.getroot()
+                svg = ''
+                xmin = 99999
+                ymin = 99999
+                xmax = 0
+                ymax = 0
+                for elem in root.iter():
+                    if elem.tag.split('}')[1] == 'g':
+                        if svg == '':
+                            svg = '\n\t<g>'
+                        else:
+                            svg = '%s\n\t</g>\n\t<g>' % svg
+                    elif elem.tag.split('}')[1] == 'rect':
+                        svg = '%s\n\t\t<rect' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                        if xmin > float(elem.attrib['x']):
+                            xmin = float(elem.attrib['x'])
+                        if ymin > float(elem.attrib['y']):
+                            ymin = float(elem.attrib['y'])
+                        if xmax < float(elem.attrib['x']) + float(elem.attrib['width']):
+                            xmax = float(elem.attrib['x']) + float(elem.attrib['width'])
+                        if ymax < float(elem.attrib['y']) + float(elem.attrib['height']):
+                            ymax = float(elem.attrib['y']) + float(elem.attrib['height'])
+                    elif elem.tag.split('}')[1] == 'path':
+                        svg = '%s\n\t\t<path' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s\n\t\t\tfill=\"none\" />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                    elif elem.tag.split('}')[1] == 'circle':
+                        svg = '%s\n\t\t<circle' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['cy'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['cx'])
+                        if xmin > float(elem.attrib['cx']) - math.ceil(float(elem.attrib['r'])):
+                            xmin = float(elem.attrib['cx']) - math.ceil(float(elem.attrib['r']))
+                        if ymin > float(elem.attrib['cy']) - math.ceil(float(elem.attrib['r'])):
+                            ymin = float(elem.attrib['cy']) - math.ceil(float(elem.attrib['r']))
+                        if xmax < float(elem.attrib['cx']) + math.ceil(float(elem.attrib['r'])):
+                            xmax = float(elem.attrib['cx']) + math.ceil(float(elem.attrib['r']))
+                        if ymax < float(elem.attrib['cy']) + math.ceil(float(elem.attrib['r'])):
+                            ymax = float(elem.attrib['cy']) + math.ceil(float(elem.attrib['r']))
+                    elif elem.tag.split('}')[1] == 'text':
+                        svg = '%s\n\t\t<text' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        label = elem.attrib['id'].split('Label')[1]
+                        label = label.replace('CCW', "Up")
+                        label = label.replace('CW', "Down")
+                        if label in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][label]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][label]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][label]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                        svg = """%s
+                            stroke="none"
+                            fill="#6DD7E8">%s</text>""" % (svg, label)
+                        if xmin > float(elem.attrib['x']):
+                            xmin = float(elem.attrib['x'])
+                        if ymin > float(elem.attrib['y']):
+                            ymin = float(elem.attrib['y'])
+                        if xmax < float(elem.attrib['x']):
+                            xmax = float(elem.attrib['x'])
+                        if ymax < float(elem.attrib['y']):
+                            ymax = float(elem.attrib['y'])
+                svg = '%s\n\t</g>\n</svg>' % svg
+                # TODO: fix this documentation
+                if True:
+                # if not os.path.isfile("/tmp/%s" % self.device_data[device]['svg']):
+                    # shift every line to eliminate extra vertical whitespace...
+                    yshift = ymin - 20
+                    if yshift > 0:
+                        svg_write = ''
+                        for line in svg.split('\n'):
+                            if 'y="' in line and 'ry' not in line:
+                                val = line.split('"')
+                                svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - yshift)
+                            elif 'd="' in line and 'id="' not in line:
+                                val = line.split('"')
+                                points = val[1].split()
+                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                d = "%s\"" % val[0]
+                                for sub in subs:
+                                    if sub[0] == 'M' or sub[0] == 'L':
+                                        attrs = sub.split()
+                                        attrs[2] = str(float(attrs[2]) - float(yshift))
+                                        d = "%s %s" % (d, " ".join(attrs))
+                                    else:
+                                        d = "%s %s" % (d, sub)
+                                d = "%s\"" % d
+                                svg_write = "%s\n%s" % (svg_write, d)
+                            else:
+                                svg_write = "%s\n%s" % (svg_write, line)
+                    svg = svg_write
+                    # shift x values if it is too wide
+                    if xmax >= 500:
+                        xshift = 300  # shift over by 200 units in the x coord
+                        svg_write = ''
+                        for line in svg.split('\n'):
+                            if 'x="' in line and 'rx' not in line:
+                                val = line.split('"')
+                                if float(val[1]) >= 500.0:
+                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - xshift)
+                                else:
+                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]))
+                            elif 'd="' in line and 'id="' not in line:
+                                val = line.split('"')
+                                points = val[1].split()
+                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                d = "%s\"" % val[0]
+                                for sub in subs:
+                                    if sub[0] == 'M' or sub[0] == 'L':
+                                        attrs = sub.split()
+                                        if float(attrs[1]) >= 500.0:
+                                            attrs[1] = str(float(attrs[1]) - float(xshift))
+                                        d = "%s %s" % (d, " ".join(attrs))
+                                    else:
+                                        d = "%s %s" % (d, sub)
+                                d = "%s\"" % d
+                                svg_write = "%s\n%s" % (svg_write, d)
+                            else:
+                                svg_write = "%s\n%s" % (svg_write, line)
+                    # write top of svg file
+                    if xmax >= 500:
+                        svg = """<svg
+                           style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
+                           width="%s"
+                           height="%s">
+                           <g>
+                               <rect
+                                   rx="0"
+                                   ry="0"
+                                   x="0"
+                                   y="0"
+                                   width="%s"
+                                   height="%s"
+                                   stroke="none"
+                                   fill="#111111"/>
+                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
+                    else:
+                        svg = """<svg
+                           style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
+                           width="%s"
+                           height="%s">
+                           <g>
+                               <rect
+                                   rx="0"
+                                   ry="0"
+                                   x="0"
+                                   y="0"
+                                   width="%s"
+                                   height="%s"
+                                   stroke="none"
+                                   fill="#111111"/>
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
+                    f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
+                    f.write(svg)
+                    f.close()
+
+        except Exception as e:
+            print (e)
+
+tablet_test = Tablets()

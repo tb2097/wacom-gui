@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'wacom_menu.ui'
 #
-# Created: Thu Sep 20 15:13:55 2018
+# Created: Wed Nov 14 16:02:43 2018
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,19 +27,19 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.setEnabled(True)
-        MainWindow.resize(600, 900)
+        MainWindow.resize(900, 900)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QtCore.QSize(600, 800))
-        MainWindow.setMaximumSize(QtCore.QSize(600, 900))
+        MainWindow.setMinimumSize(QtCore.QSize(900, 900))
+        MainWindow.setMaximumSize(QtCore.QSize(900, 900))
         MainWindow.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.formLayoutWidget = QtGui.QWidget(self.centralwidget)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 0, 581, 301))
+        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 0, 881, 301))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
         self.controlLayout = QtGui.QFormLayout(self.formLayoutWidget)
         self.controlLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
@@ -97,7 +97,7 @@ class Ui_MainWindow(object):
         self.toolScroll.setWidgetResizable(True)
         self.toolScroll.setObjectName(_fromUtf8("toolScroll"))
         self.scrollAreaWidgetContents_2 = QtGui.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 521, 86))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 821, 86))
         self.scrollAreaWidgetContents_2.setObjectName(_fromUtf8("scrollAreaWidgetContents_2"))
         self.toolScroll.setWidget(self.scrollAreaWidgetContents_2)
         self.controlLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.toolScroll)
@@ -114,7 +114,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.tabletScroll.sizePolicy().hasHeightForWidth())
         self.tabletScroll.setSizePolicy(sizePolicy)
         self.tabletScroll.setMinimumSize(QtCore.QSize(0, 100))
-        self.tabletScroll.setMaximumSize(QtCore.QSize(480, 16777215))
+        self.tabletScroll.setMaximumSize(QtCore.QSize(780, 16777215))
         self.tabletScroll.setAutoFillBackground(False)
         self.tabletScroll.setStyleSheet(_fromUtf8("QScrollBar:horizontal {\n"
 "            border: none;\n"
@@ -152,7 +152,7 @@ class Ui_MainWindow(object):
         self.tabletScroll.setWidgetResizable(True)
         self.tabletScroll.setObjectName(_fromUtf8("tabletScroll"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 476, 96))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 776, 96))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.tabletScroll.setWidget(self.scrollAreaWidgetContents)
         self.horizontalLayout.addWidget(self.tabletScroll)
@@ -172,7 +172,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.configScroll.sizePolicy().hasHeightForWidth())
         self.configScroll.setSizePolicy(sizePolicy)
         self.configScroll.setMinimumSize(QtCore.QSize(0, 90))
-        self.configScroll.setMaximumSize(QtCore.QSize(500, 80))
+        self.configScroll.setMaximumSize(QtCore.QSize(740, 80))
         self.configScroll.setStyleSheet(_fromUtf8("QScrollBar:horizontal {\n"
 "            border: none;\n"
 "            background: none;\n"
@@ -209,7 +209,7 @@ class Ui_MainWindow(object):
         self.configScroll.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.configScroll.setObjectName(_fromUtf8("configScroll"))
         self.scrollAreaWidgetContents_3 = QtGui.QWidget()
-        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 425, 86))
+        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 725, 86))
         self.scrollAreaWidgetContents_3.setObjectName(_fromUtf8("scrollAreaWidgetContents_3"))
         self.configScroll.setWidget(self.scrollAreaWidgetContents_3)
         self.horizontalLayout_2.addWidget(self.configScroll)
@@ -232,23 +232,43 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.configControls)
         self.controlLayout.setLayout(2, QtGui.QFormLayout.FieldRole, self.horizontalLayout_2)
         self.controlBox = QtGui.QGroupBox(self.centralwidget)
-        self.controlBox.setGeometry(QtCore.QRect(10, 310, 581, 551))
+        self.controlBox.setGeometry(QtCore.QRect(10, 310, 880, 540))
+        self.controlBox.setMinimumSize(QtCore.QSize(880, 540))
+        self.controlBox.setMaximumSize(QtCore.QSize(880, 540))
+        self.controlBox.setStyleSheet(_fromUtf8(""))
+        self.controlBox.setTitle(_fromUtf8(""))
+        self.controlBox.setObjectName(_fromUtf8("controlBox"))
+        self.aboutButton = QtGui.QPushButton(self.centralwidget)
+        self.aboutButton.setGeometry(QtCore.QRect(770, 860, 90, 20))
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.controlBox.sizePolicy().hasHeightForWidth())
-        self.controlBox.setSizePolicy(sizePolicy)
-        self.controlBox.setStyleSheet(_fromUtf8("background-color: rgb(222, 222, 222);"))
-        self.controlBox.setTitle(_fromUtf8(""))
-        self.controlBox.setFlat(False)
-        self.controlBox.setObjectName(_fromUtf8("controlBox"))
+        sizePolicy.setHeightForWidth(self.aboutButton.sizePolicy().hasHeightForWidth())
+        self.aboutButton.setSizePolicy(sizePolicy)
+        self.aboutButton.setObjectName(_fromUtf8("aboutButton"))
+        self.helpButton = QtGui.QPushButton(self.centralwidget)
+        self.helpButton.setGeometry(QtCore.QRect(870, 860, 20, 20))
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.helpButton.sizePolicy().hasHeightForWidth())
+        self.helpButton.setSizePolicy(sizePolicy)
+        self.helpButton.setStyleSheet(_fromUtf8("border-radius: 10px;\n"
+"border-style: inset;\n"
+"border-width: 1px;\n"
+""))
+        self.helpButton.setObjectName(_fromUtf8("helpButton"))
+        self.deviceDefaults = QtGui.QPushButton(self.centralwidget)
+        self.deviceDefaults.setGeometry(QtCore.QRect(650, 860, 111, 20))
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.deviceDefaults.sizePolicy().hasHeightForWidth())
+        self.deviceDefaults.setSizePolicy(sizePolicy)
+        self.deviceDefaults.setObjectName(_fromUtf8("deviceDefaults"))
         MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtGui.QStatusBar(MainWindow)
-        self.statusbar.setEnabled(True)
-        self.statusbar.setObjectName(_fromUtf8("statusbar"))
-        MainWindow.setStatusBar(self.statusbar)
         self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 600, 20))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 900, 20))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         MainWindow.setMenuBar(self.menuBar)
 
@@ -263,4 +283,7 @@ class Ui_MainWindow(object):
         self.addConfig.setText(_translate("MainWindow", "+", None))
         self.removeConfig.setText(_translate("MainWindow", "-", None))
         self.saveConfig.setText(_translate("MainWindow", "Save Config", None))
+        self.aboutButton.setText(_translate("MainWindow", "About", None))
+        self.helpButton.setText(_translate("MainWindow", "?", None))
+        self.deviceDefaults.setText(_translate("MainWindow", "Restore Defaults", None))
 
