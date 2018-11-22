@@ -1,0 +1,36 @@
+{
+    "Single Finger": {
+        "Left Click": {
+            "icon": "touch.png",
+            "text": "Tap, actual click happens after TapTime period elapses."
+        },
+        "Left Click Drag": {
+            "icon": "touch-drag.png",
+            "text": "Tap to select, quickly (within TapTime period) touch selection again. Then drag."
+        }
+    },
+    "Two Finger": {
+        "Right Click": {
+            "icon": "2-touch.png",
+            "text": "One finger down + tap second finger."
+        },
+        "Vertical Scroll": {
+            "icon": "2-touch-vscroll.png",
+            "text": "Ttwo fingers side by side (e.g. index + second), move up or down holding constant distance between fingers."
+        },
+        "Horizontal Scroll": {
+            "icon": "2-touch-hscroll.png",
+            "text": "Two fingers side by side (e.g. index + second), move left or right holding constant distance between fingers."
+        },
+        "Zoom In": {
+            "icon": "2-touch-zoomin.png",
+            "text": "Two separated fingers side by side (e.g. thumb + index), bring together i.e. pinch."
+        },
+        "Zoom Out": {
+            "icon": "2-touch-zoomout.png",
+            "text": "Two fingers side by side (e.g. thumb + index), spread."
+        }
+            
+    }
+}
+
