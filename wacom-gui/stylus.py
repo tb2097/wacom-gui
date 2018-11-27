@@ -268,9 +268,9 @@ class WacomAttribSlider(QWidget):
         self.dev_id = dev_id
         self.attr = attr
         self.default = default
-        group = QGroupBox(label)
-        group.setFixedSize(290, 80)
-        group.setAlignment(Qt.AlignTop)
+        self.group = QGroupBox(label)
+        self.group.setFixedSize(290, 80)
+        self.group.setAlignment(Qt.AlignTop)
         self.min = None
         self.max = None
         self.slider = QSlider(Qt.Horizontal)
@@ -311,9 +311,9 @@ class WacomAttribSlider(QWidget):
         grid.addWidget(self.min, 2, 0, 1, 1, Qt.AlignRight)
         grid.addItem(self.spread, 2, 1, 1, 1)
         grid.addWidget(self.max, 2, 2, 1, 1, Qt.AlignLeft)
-        group.setLayout(grid)
+        self.group.setLayout(grid)
         layout = QHBoxLayout()
-        layout.addWidget(group)
+        layout.addWidget(self.group)
         self.setLayout(layout)
 
         self.slider.valueChanged.connect(self.update_label)
@@ -469,6 +469,8 @@ class Mapping(QWidget):
         self.main.addWidget(self.mode_box)
         self.lscreen = QGridLayout()
         self.screen = QComboBox()
+        # get display info
+        self.screen.addItems(sorted(self.displays.keys()))
         self.screen.currentIndexChanged.connect(self.update_screen)
         self.screen_lbl = QLabel("Screen: ")
         self.forced = QCheckBox("Force Proportions")
@@ -507,14 +509,14 @@ class Mapping(QWidget):
             self.mode_pen.setChecked(True)
             self.screen.setDisabled(False)
             self.update_mode(self.mode_pen)
-        # get display info
-        self.screen.addItems(sorted(self.displays.keys()))
         # set forced
         if 'forcedproportion' in self.settings.keys():
             if self.settings['forcedproportion'] == 'True':
                 self.forced.setChecked(True)
             else:
                 self.forced.setChecked(False)
+        else:
+            self.settings['forcedproportion'] = 'False'
         # TODO: figure out partial...
         if 'maptooutput' in self.settings.keys():
             if self.settings['maptooutput'] in self.displays.keys():
@@ -528,6 +530,8 @@ class Mapping(QWidget):
                 self.screen.setToolTip('[%s]' % self.settings['maptooutput'])
                 self.screen.setCurrentIndex(self.screen.findText('Partial...'))
                 self.update_screen()
+        else:
+            self.settings['maptooutput'] = 'Full'
         # hack note
         idx = self.screen.findText('Partial...')
         self.screen.setItemData(idx, "Just sets display to Full Screen (for now)", Qt.ToolTipRole)
@@ -562,6 +566,7 @@ class Mapping(QWidget):
         os.popen(cmd)
 
     def update_screen(self):
+        self.settings['maptooutput'] = str(self.screen.currentText())
         coords = self.displays[str(self.screen.currentText())]['cmd']
         cmd = "xsetwacom --set %s maptooutput %s" % (self.sid, coords)
         os.popen(cmd)
@@ -580,6 +585,7 @@ class Mapping(QWidget):
         output = p.communicate()[0].rstrip()
         self.settings['area'] = output
         if self.forced.isChecked():
+            self.settings['forcedproportion'] = 'True'
             display = self.displays[str(self.screen.currentText())]['cmd']
             display = re.split('\D+', display)
             output = output.split(' ')
@@ -594,7 +600,18 @@ class Mapping(QWidget):
             os.popen(cmd)
             cmd = "xsetwacom --set %s area %s" % (self.eid, self.settings['area'])
             os.popen(cmd)
+        else:
+            self.settings['forcedproportion'] = 'False'
 
+    def toggle_next(self):
+        idx = self.screen.currentIndex()
+        if idx == 3:
+            idx = 0
+        else:
+            idx = idx + 1
+        self.screen.setCurrentIndex(idx)
+        self.settings['maptooutput'] = str(self.screen.currentText())
+        self.update_screen()
 
     def get_displays(self):
         displays = {}

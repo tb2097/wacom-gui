@@ -7,7 +7,7 @@ import sys
 import os
 from os.path import expanduser
 import json
-import copy
+import argparse
 from wacom_data import Tablets
 import wacom_menu
 from pad import Pad, Touch
@@ -18,16 +18,13 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def __init__(self, parent=None):
         super(WacomGui, self).__init__(parent)
         self.setupUi(self)
+        self.toggle = False
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         self.setFocusPolicy(Qt.NoFocus)
         # button instances
         self.tabletButtons = ButtonGroup()
         self.toolButtons = ButtonGroup()
         self.configButtons = ButtonGroup()
-        # init button functions
-        self.tabletButtons.btn_grp.buttonClicked['int'].connect(self.tabletSelect)
-        self.toolButtons.btn_grp.buttonClicked['int'].connect(self.toolSelect)
-        self.configButtons.btn_grp.buttonClicked['int'].connect(self.configSelect)
         # button layouts
         self.tabletLayout = ButtonLayout()
         self.toolLayout = ButtonLayout()
@@ -74,6 +71,10 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.deviceDefaults.clicked.connect(self.deviceReset)
         # load first tool found
         self.toolSelect(self.toolButtons.btn_grp.checkedId())
+        # init button functions
+        self.tabletButtons.btn_grp.buttonClicked['int'].connect(self.tabletSelect)
+        self.toolButtons.btn_grp.buttonClicked['int'].connect(self.toolSelect)
+        self.configButtons.btn_grp.buttonClicked['int'].connect(self.configSelect)
 
     def initTabletButtons(self):
         for dev, data in self.tablet_data.tablets.items():
@@ -188,24 +189,43 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             # load default config, if it exists
             if 'default' not in self.configs[dev].keys():
                 self.configs[dev]['default'] = self.emptyConfig(dev, dev_id)
-
-            # we are loading default config for now...
-            self.loadConfig(dev, dev_id, 'default')
+            # get default config to load for given device, ie last selected config
+            self.config = 'default'
+            if os.path.exists("%s/device_default" % conf_path):
+                with open("%s/device_default" % conf_path, 'r') as f:
+                    device = json.load(f)
+                # config file exists, use it
+                if str(dev_id) in device.keys() and device[str(dev_id)] in self.configs[dev].keys():
+                    self.config = device[str(dev_id)]
+                # set defaults in tablet_data, if it's detected
+                for idx in device.keys():
+                    try:
+                        self.tablet_data.tablets[self.dev][int(idx)]['config'] = device[idx]
+                    except Exception as e:
+                        pass
             self.configLayout.addButton(
                 self.configButtons.addButton("default", 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
             for config in sorted(self.configs[dev].keys()):
                 if config != 'default':
                     self.configLayout.addButton(
                         self.configButtons.addButton(config, 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
+            # we are loading default config for now...
+            self.loadConfig(dev, dev_id, self.config)
+            for idx, button in enumerate(self.configButtons.btn_grp.buttons()):
+                if button.text() == self.config:
+                    self.configButtons.btn_grp.buttons()[idx].setChecked(True)
+            # TODO: save the selected config somewhere...
+            self.tablet_data.tablets[dev][dev_id]['config'] = self.config
         else:
             os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
             self.configLayout.addButton(
                 self.configButtons.addButton("default", 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
 
     def loadConfig(self, dev, dev_id, config):
-        # TODO: load all stylus, cursor, touch configs
+        # TODO: load cursor configs
         # load pad buttons
         self.config = config
+        self.tablet_data.tablets[dev][dev_id]['config'] = self.config
         if not self.toolButtons.buttons[(0, 0)].isHidden():
             self.pad.init_keys(self.tablet_data.tablets[dev][dev_id]['pad']['id'],
                                self.tablet_data.tablets[dev][dev_id]['svg'],
@@ -224,6 +244,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                             self.configs[dev][config]['touch'])
 
     def tabletSelect(self, idx):
+        self.updateConfigs()
         self.setToolsAvail(idx)
         self.getConfigs(idx)
         # set first available tool as selected
@@ -292,12 +313,12 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 self.configs[self.dev][self.config]['pad']['buttons'] = pad
         if not self.toolButtons.buttons[(1, 0)].isHidden():
             stylus = self.stylus.get_config()
-            if stylus['stylus'] != self.configs[self.dev][self.config]['stylus']:
-                write = True
-                self.configs[self.dev][self.config]['stylus'] = stylus['stylus']
-            if stylus['eraser'] != self.configs[self.dev][self.config]['eraser']:
-                write = True
-                self.configs[self.dev][self.config]['eraser'] = stylus['eraser']
+            # if stylus['stylus'] != self.configs[self.dev][self.config]['stylus']:
+            write = True
+            self.configs[self.dev][self.config]['stylus'] = stylus['stylus']
+            # if stylus['eraser'] != self.configs[self.dev][self.config]['eraser']:
+            write = True
+            self.configs[self.dev][self.config]['eraser'] = stylus['eraser']
         if not self.toolButtons.buttons[(2, 0)].isHidden():
             touch = self.touch.get_config()
             if touch != self.configs[self.dev][self.config]['touch']:
@@ -307,10 +328,13 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         if not self.toolButtons.buttons[(3, 0)].isHidden():
             tmp = 1
         if write:
-            reply = QMessageBox.question(self, 'Save Config',
-                                               "Write \"%s\" config file?" % self.config,
-                                         QMessageBox.Yes, QMessageBox.No)
-            if reply == QMessageBox.Yes:
+            reply = None
+            if self.toggle is False:
+                reply = QMessageBox.question(self, 'Save Config',
+                                                   "Write \"%s\" config file?" % self.config,
+                                             QMessageBox.Yes, QMessageBox.No)
+            # update config if toggle is set or save is called
+            if self.toggle or reply == QMessageBox.Yes:
                 home = "%s/.wacom-gui" % expanduser("~")
                 conf_path = os.path.join(home, self.dev)
                 conf_file = os.path.join(conf_path, "%s.json" % self.config)
@@ -322,7 +346,35 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                     json.dump(self.configs[self.dev][self.config], outfile, sort_keys=True,
                               indent=4, separators=(',', ': '))
                 if os.path.exists(conf_file):
-                    os.remove("%s.bak" % conf_file)
+                    if os.path.exists("%s.bak" % conf_file):
+                        os.remove("%s.bak" % conf_file)
+        # check if we need to update what config is loaded
+        default = {}
+        if self.dev is not None:
+            for idx, tablet in enumerate(self.tablet_data.tablets[self.dev]):
+                if 'config' in tablet.keys():
+                    default[idx] = tablet['config']
+                else:
+                    default[idx] = 'default'
+            conf_path = os.path.join("%s/.wacom-gui" % expanduser("~"), self.dev)
+            conf_file = os.path.join(conf_path, 'device_default')
+            with open(conf_file, 'w') as outfile:
+                json.dump(default, outfile, sort_keys=True,
+                          indent=4, separators=(',', ': '))
+
+    def quickLoad(self):
+        for idx, button in enumerate(self.tabletButtons.btn_grp.buttons()):
+            self.tabletSelect(idx)
+        sys.exit()
+
+    def toggleDisplay(self):
+        self.toggle = True
+        for idx, button in enumerate(self.tabletButtons.btn_grp.buttons()):
+            self.tabletSelect(idx)
+            if self.pad.is_toggle():
+                self.stylus.mapping.toggle_next()
+                self.updateConfigs()
+        sys.exit()
 
     def closeEvent(self, event):
         self.updateConfigs()
@@ -419,11 +471,25 @@ class ButtonGroup(QObject):
             if idx[1] == 0:
                 self.buttons[idx].setVisible(False)
 
+
+def parseArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--load", help="load configuration for device", action="store_true")
+    parser.add_argument("--toggle", help="toggle display if hotkey is defined for device", action="store_true")
+    return parser.parse_args()
+
+
 def main():
     app = QApplication(sys.argv)
     form = WacomGui()
+    opts = parseArgs()
+    if opts.load:
+        form.quickLoad()
+    if opts.toggle:
+        form.toggleDisplay()
     form.show()
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     main()

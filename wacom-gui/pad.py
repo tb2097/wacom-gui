@@ -141,7 +141,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             if svgWidget is None:
                 self.keysLayout.addLayout(right, row, 2, 1, 1)
             else:
-                self.keysLayout.addLayout(right, row -1, 3, 2, 1)
+                self.keysLayout.addLayout(right, row - 1, 3, 2, 1)
         if self.buttons['left'].__len__() != 0 or self.buttons['right'].__len__() != 0:
             row = row + 1
         if self.buttons['bottom'].__len__() != 0:
@@ -158,6 +158,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         for loc in self.buttons.keys():
             for btn in self.buttons[loc]:
                 btn.reset()
+
+    def is_toggle(self):
+        for loc in self.buttons:
+            for button in self.buttons[loc]:
+                if button.is_toggle():
+                    return True
+        return False
 
     def get_config(self):
         buttons = {}
@@ -182,20 +189,23 @@ class Touch(QWidget):
     def __init__(self):
         QWidget.__init__(self, None)
         self.dev_id = None
-        self.touch = QCheckBox("Enable Touch")
-        self.touch.stateChanged.connect(self.updateTouch)
-        self.gesture = QCheckBox("Enable Gestures")
-        self.gesture.stateChanged.connect(self.updateGesture)
+        self.touch = None
+        self.gesture = None
+        self.layout = QGridLayout()
         self.taptime = None
         self.rawsample = None
         self.zoomdistance = None
         self.scrolldistance = None
-        self.guide = QVBoxLayout()
-        self.guide.setAlignment(Qt.AlignLeft)
+        self.guide = None
 
     def init(self, dev_id, settings):
+        self.deleteItemsOfLayout(self.layout.layout())
         self.dev_id = dev_id
         self.cwd = os.path.dirname(os.path.abspath(__file__))
+        self.touch = QCheckBox("Enable Touch")
+        self.gesture = QCheckBox("Enable Gestures")
+        self.guide = QVBoxLayout()
+        self.guide.setAlignment(Qt.AlignLeft)
         touch = QVBoxLayout()
         touch.addWidget(self.touch)
         touch.addWidget(self.gesture)
@@ -234,6 +244,8 @@ class Touch(QWidget):
         self.scrolldistance.setToolTip("A lower value increases the sensitivity when scrolling")
         self.updateTouch()
         self.updateGesture()
+        self.touch.stateChanged.connect(self.updateTouch)
+        self.gesture.stateChanged.connect(self.updateGesture)
         try:
             if os.path.isfile(os.path.join(self.cwd, "icons/ui/touch.json")):
                 data = None
@@ -252,21 +264,40 @@ class Touch(QWidget):
         gesture = QGroupBox("Gesture Controls List")
         gesture.setLayout(self.guide)
         gesture.setContentsMargins(6, 6, 6, 6)
-        layout = QGridLayout()
-        layout.setMargin(0)
-        layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
-        layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
-        layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)
-        layout.addWidget(self.rawsample, 2, 0, 1, 1, Qt.AlignTop)
-        layout.addWidget(self.zoomdistance, 3, 0, 1, 1, Qt.AlignTop)
-        layout.addWidget(self.scrolldistance, 4, 0, 1, 1, Qt.AlignTop)
-        self.setLayout(layout)
+        self.layout.setMargin(0)
+        self.layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
+        self.layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.rawsample, 2, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.zoomdistance, 3, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.scrolldistance, 4, 0, 1, 1, Qt.AlignTop)
+        self.setLayout(self.layout)
+
+    def deleteItemsOfLayout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
+                else:
+                    self.deleteItemsOfLayout(item.layout())
+
+    def boxdelete(self, box):
+        for i in range(self.keys.count()):
+            layout_item = self.keys.itemAt(i)
+            if layout_item.layout() == box:
+                self.deleteItemsOfLayout(layout_item.layout())
+                self.vlayout.removeItem(layout_item)
+                break
 
     def updateTouch(self):
         if self.touch.isChecked():
             cmd = "xsetwacom --set %s touch on" % self.dev_id
             os.popen(cmd)
             self.gesture.setEnabled(True)
+            self.taptime.group.setEnabled(True)
+            self.rawsample.group.setEnabled(True)
             return ('touch', 'on')
         else:
             cmd = "xsetwacom --set %s touch off" % self.dev_id
@@ -275,14 +306,22 @@ class Touch(QWidget):
             os.popen(cmd)
             self.gesture.setChecked(False)
             self.gesture.setEnabled(False)
+            self.taptime.group.setEnabled(False)
+            self.rawsample.group.setEnabled(False)
+            self.zoomdistance.group.setEnabled(False)
+            self.scrolldistance.group.setEnabled(False)
             return ('touch', 'off')
 
     def updateGesture(self):
         if self.gesture.isChecked():
+            self.zoomdistance.group.setEnabled(True)
+            self.scrolldistance.group.setEnabled(True)
             cmd = "xsetwacom --set %s gesture on" % self.dev_id
             os.popen(cmd)
             return ('gesture', 'on')
         else:
+            self.zoomdistance.group.setEnabled(False)
+            self.scrolldistance.group.setEnabled(False)
             cmd = "xsetwacom --set %s gesture off" % self.dev_id
             os.popen(cmd)
             return ('gesture', 'off')

@@ -220,6 +220,12 @@ class Hotkey(QObject):
         # return wacom id, xsetwacom id, cmd
         return (str(self.btn.text()), self.id, self.cmd)
 
+    def is_toggle(self):
+        if self.cmd == 'lhyper z':
+            return True
+        else:
+            return False
+
 class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
     def __init__(self, cmd, parent=None):
         super(KeystrokeGui, self).__init__(parent)
@@ -483,7 +489,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
             return False
         # setup hotkeys
         custom = self.load_keyboard_shortcuts()
-        # check if we're changing an existing hotkey
+        # TODO: check if we're changing an existing hotkey
         idx = -1
         found = False
         cfg = '/tmp/wc_%s.cfg' % ''.join(random.SystemRandom().choice(string.ascii_uppercase) for _ in range(6))
@@ -553,7 +559,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
                                         "This command can not be changed.")
             warning.exec_()
         # no shortcut name entered
-        elif self.keystrokeinput.text().__len__() == 0:
+        elif self.shortcutinput.text().__len__() <= 1:
             warning = QMessageBox(QMessageBox.Warning, "Shortcut Name Undefined",
                                         "Please provide a shortcut name before saving.")
             warning.exec_()
@@ -646,6 +652,9 @@ class HotkeyWidget(QWidget):
 
     def reset(self):
         self.button.set_value(self.button.id, "Default")
+
+    def is_toggle(self):
+        return self.button.is_toggle()
 
 
 if __name__ == '__main__':
