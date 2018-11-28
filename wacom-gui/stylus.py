@@ -489,7 +489,11 @@ class Mapping(QWidget):
             self.settings = settings['mapping']
         # set rotation value
         if 'rotate' in self.settings.keys():
-            if self.settings['rotate'] == 'none':
+            if self.settings['rotate'] == 'False':
+                self.orient.hide()
+                self.orient_lbl.hide()
+                del self.settings['rotate']
+            elif self.settings['rotate'] == 'none':
                 self.orient.setCurrentIndex(0)
             elif self.settings['rotate'] == 'half':
                 self.orient.setCurrentIndex(1)
@@ -648,8 +652,9 @@ class Mapping(QWidget):
 
     def resetMapping(self):
         # set default orientation
-        self.orient.setCurrentIndex(0)
-        self.update_orient()
+        if not self.orient.isHidden():
+            self.orient.setCurrentIndex(0)
+            self.update_orient()
         # set to full screen
         self.screen.setCurrentIndex(self.screen.findText('Full'))
         self.forced.setChecked(False)

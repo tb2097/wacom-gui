@@ -116,15 +116,20 @@ class Tablets:
                 if not buttons:
                     # get usb id; will use for BT as well to simplify mapping
                     if "DeviceMatch=" in line:
-                        self.device_data[cur_device]['devID'] = line.split('=')[1].split(';')[0][-4:]
+                        # don't include serial devices
+                        if 'serial' in line:
+                            del self.device_data[cur_device]
+                            cur_device = None
+                        else:
+                            self.device_data[cur_device]['devID'] = line.split('=')[1].split(';')[0][-4:]
                     elif "Layout=" in line:
                         self.device_data[cur_device]['svg'] = line.split('=')[1]
                     # Reversible means it can be flipped
                     elif "Reversible=" in line:
                         if "true" in line:
-                            self.device_data[cur_device]['pad']['attr']['rotate'] = True
+                            self.device_data[cur_device]['stylus']['rotate'] = True
                         else:
-                            self.device_data[cur_device]['pad']['attr']['rotate'] = False
+                            self.device_data[cur_device]['stylus']['rotate'] = False
                     elif "Ring=true" in line:
                         self.device_data[cur_device]['pad']['buttons']['RingUp'] = \
                             {'bid': 'AbsWheelUp', 'orient': 'Left'}
@@ -135,12 +140,6 @@ class Tablets:
                             {'bid': 'AbsWheel2Up', 'orient': 'Right'}
                         self.device_data[cur_device]['pad']['buttons']['Ring2Down'] = \
                             {'bid': 'AbsWheel2Down', 'orient': 'Right'}
-                    elif "Touch=" in line:
-                        if "true" in line:
-                            self.device_data[cur_device]['pad']['attr']['touch'] = True
-                        else:
-                            self.device_data[cur_device]['pad']['attr']['touch'] = False
-                            del self.device_data[cur_device]['touch']
                     # get button info now...
                     elif '[Buttons]' == line:
                         buttons = True
@@ -163,7 +162,6 @@ class Tablets:
                         try:
                             for but in touch_but:
                                 side = self.device_data[cur_device]['pad']['buttons']['Button%s' % but]['orient']
-                                # del self.device_data[cur_device]['pad']['buttons']['Button%s' % but]
                                 if line.split('=')[0][-1:] == '2':
                                     self.device_data[cur_device]['pad']['buttons']['Strip2Up'] = {
                                         'bid': "Strip%sUp" % side,
@@ -178,15 +176,16 @@ class Tablets:
                                     self.device_data[cur_device]['pad']['buttons']['StripDown'] = {
                                         'bid': "Strip%sUp" % side,
                                         'orient': side}
-                        except Exception:
+                        except Exception as e:
                             pass
 
         for device, data in self.device_data.items():
             # get button svg info
-            if data['pad']['buttons'].__len__() == 0:
-                del data['pad']['buttons']
-            else:
-                self.pretty_svg(device)
+            if 'pad' in data.keys():
+                if data['pad']['buttons'].__len__() == 0:
+                    del data['pad']['buttons']
+                else:
+                    self.pretty_svg(device)
 
 
     def pretty_svg(self, device):
@@ -386,5 +385,3 @@ class Tablets:
 
         except Exception as e:
             print (e)
-
-tablet_test = Tablets()

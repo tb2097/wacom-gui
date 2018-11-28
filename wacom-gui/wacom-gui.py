@@ -236,6 +236,12 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                                  self.configs[dev][config]['stylus'])
             self.stylus.init_eraser(self.tablet_data.tablets[dev][dev_id]['eraser']['id'],
                                  self.configs[dev][config]['eraser'])
+            if self.tablet_data.tablets[dev][dev_id]['stylus']['rotate'] == False:
+                # turn off rotate, if device doesn't support it
+                if 'mapping' in self.configs[dev][config]['stylus']:
+                    self.configs[dev][config]['stylus']['mapping']['rotate'] = 'False'
+                else:
+                    self.configs[dev][config]['stylus']['mapping'] = {'rotate': 'False'}
             self.stylus.mapping.initUI(self.tablet_data.tablets[dev][dev_id]['stylus']['id'],
                                        self.tablet_data.tablets[dev][dev_id]['eraser']['id'],
                                        self.configs[dev][config]['stylus'])
