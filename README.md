@@ -8,11 +8,8 @@ Python/PyQt Wacom GUI for MATE/KDE
 These instructions will help you get a copy of the project up and running on yoru local machine for development/testing purposes.
 
 ### Prerequisites
-
 You will require a few packages to get this working on your system:
 - PyQt4
-- qtwebkit (available from epel repo)
-- PyQt4-webkit (available from epel repo)
 
 ### Installing
 - Running from source
@@ -24,27 +21,35 @@ You will require a few packages to get this working on your system:
   - menu option will appear under System > Preferences > Hardware > Wacom Tablet
 
 ## Features
-- works with most Intuos tablets
+- should work with any tablet detected by libwacom
 - per tablet model configuration files
-  - buttons can be disabled if desired
-- multi-monitor configuration
-  - can support >2 monitors
-  - toggle hotkey (Win+Z) to swap display
+- supports multiple tablets at once, can be of the same model
+- refresh connected devices without restarting the interface
 - auto-load config on login
-- pressure curve testing area for stylus/eraser
-- pad touch enable/disable (if available)
-- Shift/Alt/Ctrl can be set to a pad button for press-and-hold function, as you would for using a keyboard
-  - ie. holding Alt to zoom/pan/rotate in Maya with the mouse/pen
+- Configuration Features
+  - Express Keys
+    - Enable/Disable/Default options
+    - supports modifier keys (Alt/Ctrl/Shift)
+    - can create custom, global keystrokes
+    - can create system hotkeys to run scripts/commands
+  - Stylus/Eraser
+    - pressure curve, sensitivity, various other options available
+    - mapping input to specific display as well as enabling "force perspective" for drawing area
+    - rotate tablet at 90° increments, as needed
+    - multi-monitor support with toggle to easily swap displays
+  - Touch
+    - enable/disable, if available for device
+    - enable/disable gestures, if desired as well as setting scroll/zoom sensitivity
 
 ## Contributing
 
-If you would have bugs you have found, feature requests, or would like to contribute in some way please feel free to contact me.
+If you have found any bugs, have feature requests, or would like to contribute in some way please feel free to contact me.
 
 ## License
 
 This project is licensed under the GPL 3.0 License - See the [LICENSE.nd](LICENSE.md) file for details
 
 ## Acknowledgements
-This utility is based upon the GTK control panel created by qb89dragon, located here: http://gtk-apps.org/content/show.php/Wacom+Control+Panel?content=104309
+touch icons: <div>Icons made by <a href="https://www.flaticon.com/authors/mobiletuxedo" title="Mobiletuxedo">Mobiletuxedo</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 
-I was unable to get it running on CentOS 6.4, my platform at the time, under KDE so I used the base tablet information class he had defined and rebuilt the GUI. It has since been updated to run on CentOS 7 (7.3 latest tested).  *should* run on CentOS 6 still but has not been tested.
+All testing has been done on CentOS => 7.3.  Due to major reworks from v0.2.x, it may not work on CentOS 6.x but it should, in theory, work.
