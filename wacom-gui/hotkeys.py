@@ -20,6 +20,9 @@ class Hotkey(QObject):
         self.devid = devid
         self.id = bid
         self.cmd = cmd
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+        if self.cwd == '/usr/local/bin':
+            self.cwd = '/usr/local/wacom-gui'
         self.btn = QPushButton()
         self.btn.setFocusPolicy(Qt.NoFocus)
         self.btn.setMaximumSize(90, 16)
@@ -66,7 +69,7 @@ class Hotkey(QObject):
         self.menu.addAction("Keystroke...", lambda: self.get_keystroke(False))
         self.menu.addAction("Keystroke/Run...", lambda: self.get_keystroke(True))
         try:
-            config = os.path.join(os.getcwd(), "keymap.json")
+            config = os.path.join(self.cwd, "keymap.json")
             if os.path.exists(config):
                 with open(config, 'r') as f:
                     self.keymap = json.load(f)
@@ -131,7 +134,7 @@ class Hotkey(QObject):
     def get_custom(self):
         # get gui-specific keystrokes from file
         try:
-            config = os.path.join(os.getcwd(), "custom.json")
+            config = os.path.join(self.cwd, "custom.json")
             if os.path.exists(config):
                 with open(config, 'r') as f:
                     self.keymap_custom = json.load(f)
@@ -230,6 +233,9 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
     def __init__(self, cmd, parent=None):
         super(KeystrokeGui, self).__init__(parent)
         self.setupUi(self)
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+        if self.cwd == '/usr/local/bin':
+            self.cwd = '/usr/local/wacom-gui'
         self.setWindowTitle("Define Keystroke")
         self.keymap = None
         self.keymap_custom = None
@@ -301,7 +307,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
                        }
         # key keystrokes from file
         try:
-            config = os.path.join(os.getcwd(), "keymap.json")
+            config = os.path.join(self.cwd, "keymap.json")
             if os.path.exists(config):
                 with open(config, 'r') as f:
                     self.keymap = json.load(f)
@@ -334,7 +340,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
     def get_custom(self):
         # get gui-specific keystrokes from file
         try:
-            config = os.path.join(os.getcwd(), "custom.json")
+            config = os.path.join(self.cwd, "custom.json")
             if os.path.exists(config):
                 with open(config, 'r') as f:
                     self.keymap_custom = json.load(f)

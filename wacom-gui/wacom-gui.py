@@ -19,7 +19,10 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         super(WacomGui, self).__init__(parent)
         self.setupUi(self)
         self.toggle = False
+        self.load = False
         self.cwd = os.path.dirname(os.path.abspath(__file__))
+        if self.cwd == '/usr/local/bin':
+            self.cwd = '/usr/local/wacom-gui'
         self.setFocusPolicy(Qt.NoFocus)
         # button instances
         self.tabletButtons = ButtonGroup()
@@ -59,6 +62,8 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.addConfig.setEnabled(True)
         self.addConfig.clicked.connect(self.newConfig)
         self.removeConfig.clicked.connect(self.verifyConfigRemove)
+        # about/help menu
+        self.aboutButton.clicked.connect(About.display)
         # refresh tablet list, set tools, configs
         self.refreshTablets()
         self.controlBox.setContentsMargins(0, 0, 0, 0)
@@ -202,6 +207,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 if button.text() == self.config:
                     self.configButtons.btn_grp.buttons()[idx].setChecked(True)
             self.tablet_data.tablets[self.dev][self.dev_id]['config'] = self.config
+            self.removeConfig.setEnabled(True)
 
     def getConfigs(self, idx):
         self.configLayout.removeButtons()
@@ -377,7 +383,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             tmp = 1
         if write:
             reply = None
-            if self.toggle is False:
+            if self.toggle is False and self.load is False:
                 reply = QMessageBox.question(self, 'Save Config',
                                                    "Write \"%s\" config file?" % self.config,
                                              QMessageBox.Yes, QMessageBox.No)
@@ -411,6 +417,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                           indent=4, separators=(',', ': '))
 
     def quickLoad(self):
+        self.load = True
         for idx, button in enumerate(self.tabletButtons.btn_grp.buttons()):
             self.tabletSelect(idx)
         sys.exit()
@@ -586,6 +593,39 @@ class AddConfig(QDialog):
             else:
                 return None
 
+class About(QDialog):
+    def __init__(self, parent=None):
+        super(About, self).__init__(parent)
+        self.setFixedSize(360, 240)
+        self.setWindowTitle("About")
+        self.text = QTextEdit()
+        self.text.setAlignment(Qt.AlignHCenter)
+        self.text.setReadOnly(True)
+        self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.  
+        
+For support, please open a support ticket:
+https://github.com/tb2097/wacom-gui/issues
+
+GUI written by:    
+Travis Best (tb2097); Nov. 2018
+[GPL 3.0]
+    
+Hand Icons by: 
+https://www.flaticon.com/authors/mobiletuxedo 
+[CC 3.0]""")
+        self.text.setFrameShape(QFrame.WinPanel)
+        self.text.setFrameShadow(QFrame.Plain)
+        self.text.setStyleSheet("background-color:#23464c; color:#dddddd")
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignVCenter)
+        layout.addWidget(self.text)
+        self.setLayout(layout)
+
+    @staticmethod
+    def display(parent=None):
+        dialog = About()
+        result = dialog.exec_()
+
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--load", help="load configuration for device", action="store_true")
@@ -610,4 +650,3 @@ if __name__ == '__main__':
 
 
 # pyuic4 wacom_menu.ui -o wacom_menu.py
-#touch icons: <div>Icons made by <a href="https://www.flaticon.com/authors/mobiletuxedo" title="Mobiletuxedo">Mobiletuxedo</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
