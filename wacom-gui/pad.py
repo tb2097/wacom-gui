@@ -1,591 +1,405 @@
+# TODO: mapping to specific
+
+
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import sys
-import errno
-import distutils.dir_util
-import shutil
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtSvg import *
+from hotkeys import HotkeyWidget
+from stylus import WacomAttribSlider
+import pad_ui
 import os
-import re
-from os.path import expanduser
-from PyQt4 import QtCore, QtGui
-from wacom_data import tabletidentities
+import json
 
+# 880, 560
 
-class Pad(QtGui.QWidget):
-    buttonClicked = QtCore.pyqtSignal(int)
+class Pad(QTabWidget, pad_ui.Ui_PadWidget):
+    def __init__(self, parent = None):
+        super(Pad, self).__init__(parent)
+        self.setupUi(self)
+        self.keysLayout.setAlignment(Qt.AlignCenter)
+        self.reset = QPushButton("Set Defaults")
+        self.reset.setMinimumSize(90, 20)
+        self.reset.setMaximumSize(90, 20)
+        self.reset.clicked.connect(self.set_default)
+        self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
+        self.setFocusPolicy(Qt.NoFocus)
 
-    def __init__(self):
-        super(Pad, self).__init__()
-       
-        # signalMapper = QtCore.QSignalMapper(self)
-        self.initUI()
-        
-    def initUI(self):
-        #get tablet name/type
-        tablets = os.popen("lsusb | grep -i wacom").readlines()
-        self.TabletIds = tabletidentities()
-        # reset button configs button
-        self.buttonReset = QtGui.QPushButton("Reset Buttons")
-        self.buttonToggle = QtGui.QPushButton("Disable Buttons")
-        self.buttonReset.clicked.connect(self.resetButtons)
-        self.buttonToggle.clicked.connect(self.toggleButtons)
-        if len(tablets) == 0:
-            label = "No tablet detected"
-            print label
-            w = QtGui.QMessageBox()
-            QtGui.QMessageBox.warning(w, "Error", label)
-            w.show()
-            sys.exit(-1)
-        else:
-            self.Tablet = []
-            for idx, tablet in enumerate(tablets):
-                (VendId, DevId) = tablet.split(" ")[5].split(":")
-                self.Tablet.append(self.IdentifyByUSBId(VendId, DevId))
-                if self.Tablet[idx].Model != "generic":
-                    self.Tablet[idx].devID = DevId
+    def deleteItemsOfLayout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
                 else:
-                    self.Tablet[idx].devID = "generic"
-                    # break
-            # if we have multiple tablets, need to figure out which one we use...
-            if self.Tablet.__len__() != 1:
-                # check of "generic" tablet exists, if it does we ignore it
-                gen_idx = []
-                for idx, dev in enumerate(self.Tablet):
-                    if dev.Model == 'generic':
-                        gen_idx.append(idx)
-                # make sure we have at least 1 tablet detected...
-                if gen_idx.__len__() < self.Tablet.__len__():
-                    gen_idx = sorted(gen_idx)
-                    count = 0
-                    for idx in gen_idx:
-                        self.Tablet.pop(idx - count)
-                if self.Tablet.__len__() > 1:
-                    label = "Multiple Tablets detected; using the first one detected: %s (%s)" % \
-                        (self.Tablet[0].Name, self.Tablet[0].Model)
-                    w = QtGui.QMessageBox()
-                    QtGui.QMessageBox.warning(w, "Information", label)
-                    w.show()
-            self.Tablet = self.Tablet[0]
-            # on some tablets each 'device' has a different name ...
-            # read in wacom devices into an dict
-            deviceNames = {'eraser': None, 'stylus': None, 'cursor': None, 'pad': None, 'touch': None}
-            foundDevs = False
-            with os.popen("xsetwacom --list devices") as f:
-                for line in f:
-                    deviceNames[line.strip().rsplit(" ", 1)[1].lower()] = line.split("\t")[0].strip().rsplit(" ", 1)[0].rstrip()
-                    foundDevs = True
+                    self.deleteItemsOfLayout(item.layout())
 
-            if not foundDevs:
-                label = "Tablet not supported"
-                w = QtGui.QMessageBox()
-                QtGui.QMessageBox.warning(w, "Error", label)
-                w.show()
-                # print label
-                sys.exit(-1)
-
-            self.Tablet.deviceNames = deviceNames
-            self.Tablet.padName = deviceNames['pad']
-        # read in previous config file, if exists
-        # old config file move/update code
-        home = "%s/.wacom-gui.sh" % expanduser("~")
-        path = "%s/.wacom-gui/%s" % (expanduser("~"), self.Tablet.devID)
-        if os.path.exists(home) and os.access(home, os.X_OK):
-            # check if for existing tablet, if it is move to its new home & rename
-            if self.Tablet.Name in open(home).read():
-
-                try:
-                    shutil.copy(home, "%s/default.sh" % path)
-                except IOError as e:
-                    if e.errno != errno.ENOENT:
-                        raise
-                    distutils.dir_util.mkpath(path)
-                    shutil.copy(home, "%s/default.sh" % path)
-                    shutil.move(home, "%s.bak" % home)
-        # check for updated config
-        self.Tablet.config = "%s/.wacom-gui/%s/default.sh" % (expanduser("~"), self.Tablet.devID)
-        if os.path.exists(self.Tablet.config) and os.access(self.Tablet.config, os.X_OK):
-            os.system(self.Tablet.config)
-        else:
-            # create directory for config
-            if not os.path.exists(path):
-                distutils.dir_util.mkpath(path)
-            label = "No previous config"
-            w = QtGui.QMessageBox()
-            QtGui.QMessageBox.warning(w, "Information", label)
-            w.show()
-
-        opPath = os.path.dirname(os.path.realpath(__file__)) 
-
-        self.setWindowIcon(QtGui.QIcon(opPath + '/images/wacom-gui.svg'))
-        self.TabletImg = opPath + "/images/" + self.Tablet.Model + ".png"
-        self.TabletLayout = opPath + "/images/pad/" + self.Tablet.Model + ".png"
-
-        self.pixmap = QtGui.QPixmap(self.TabletImg)
-        pixmap2= QtGui.QPixmap(self.TabletLayout)
-
-        self.tabletName = QtGui.QLabel(self.Tablet.Name)
-        # if no 'pad' found, return None
-        if self.Tablet.padName == '':
-            return
-
-        #trying to draw on pixmap...
-        painter = QtGui.QPainter (pixmap2)
-        pen = QtGui.QPen(QtGui.QColor(160, 160, 180, 255))
-        font = QtGui.QFont(painter.font())
-        font.setPointSize(16)
-        #font.setWeight(QtGui.QFont.DemiBold)
-        painter.setFont(font)
-        pen.setWidth(3)
-        painter.setPen(pen)
-        for i in range(len(self.Tablet.Buttons)):
-            if (self.Tablet.Buttons[i].Callsign != 'AbsWheelUp' and self.Tablet.Buttons[i].Callsign != 'AbsWheelDown'):
-                box = QtCore.QRectF(self.Tablet.Buttons[i].X1, self.Tablet.Buttons[i].Y1,
-                                    self.Tablet.Buttons[i].X2, self.Tablet.Buttons[i].Y2)
-                painter.drawRect(box)
-                painter.drawText(box, QtCore.Qt.AlignCenter, self.Tablet.Buttons[i].Number)
-        painter.end()
-        self.tabletPad = QtGui.QLabel(self)
-        self.tabletPad.setPixmap(pixmap2)
-        self.icons = [QtGui.QPixmap("%s/images/enabled.png" % opPath),
-                      QtGui.QPixmap("%s/images/disabled.png" % opPath)]
-        self.padButtons = {}
-        self.padButtonsLayout = QtGui.QGridLayout()
-        self.buttonMapper = QtCore.QSignalMapper(self)
-        for i in range(len(self.Tablet.Buttons)):
-            buttonType = "Button "+self.Tablet.Buttons[i].Number
-            if self.Tablet.Buttons[i].Callsign == 'AbsWheelUp' or self.Tablet.Buttons[i].Callsign == 'AbsWheelDown':
-                buttonType = self.Tablet.Buttons[i].Callsign
-            getCommand = os.popen("xsetwacom --get \"" + self.Tablet.padName + " pad\" " + buttonType).readlines()
-            if str(getCommand).find("key") == -1 and str(getCommand).find("button") == -1:
-                self.padButtons[(i, 0)] = QtGui.QLabel("UNDEFINED")
-            elif getCommand[0] == "button +0 \n":
-                self.padButtons[(i, 0)] = QtGui.QLabel("")
-            else:    
-                self.padButtons[(i, 0)] = QtGui.QLabel(self.wacomToHuman(getCommand[0]))
-            self.padButtons[(i, 1)] = QtGui.QPushButton(self.Tablet.Buttons[i].Name)
-            self.padButtons[(i, 1)].clicked[()].connect(self.buttonMapper.map)
-            self.padButtons[(i, 2)] = self.Tablet.Buttons[i].Number
-            # disable button
-            if getCommand[0] == "button +0 \n":
-                self.padButtons[(i, 3)] = ''
-            else:
-                self.padButtons[(i, 3)] = getCommand[0].rstrip('\n')
-            self.padButtons[(i, 4)] = self.Tablet.Buttons[i].Callsign
-            # align text
-            self.padButtons[(i, 0)].setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignCenter)
-            # disabled button
-            self.padButtons[(i, 5)] = QtGui.QPushButton('')
-            self.padButtons[(i, 5)].clicked[()].connect(self.buttonMapper.map)
-            if self.padButtons[(i, 3)] == '':
-                self.padButtons[(i, 1)].setEnabled(False)
-                self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[1]))
-            else:
-                self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
-            self.buttonMapper.setMapping(self.padButtons[(i, 1)], i)
-            self.buttonMapper.setMapping(self.padButtons[(i, 5)], i + 50)
-            self.padButtonsLayout.addWidget(self.padButtons[i, 0], i, 0)
-            self.padButtonsLayout.setColumnMinimumWidth(0, 400)
-            self.padButtonsLayout.addWidget(self.padButtons[i, 1], i, 1)
-            self.padButtonsLayout.addWidget(self.padButtons[i, 5], i, 2)
-
-        self.buttonMapper.mapped.connect(self.updatePadButton)
-        # toggle sanity check
-        swap = True
-        for i in range(len(self.Tablet.Buttons)):
-            if self.padButtons[(i, 1)].isEnabled():
-                swap = False
+    def boxdelete(self, box):
+        for i in range(self.keys.count()):
+            layout_item = self.keys.itemAt(i)
+            if layout_item.layout() == box:
+                self.deleteItemsOfLayout(layout_item.layout())
+                self.vlayout.removeItem(layout_item)
                 break
-        if swap:
-            self.buttonToggle.setText("Enable Buttons")
-            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[0]))
+
+    def init_keys(self, dev_id, image, buttons, cmds):
+        # remove previous stuff
+        self.deleteItemsOfLayout(self.keysLayout.layout())
+        self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
+        # TODO: Bottom, Right
+        top = QHBoxLayout()
+        top.setAlignment(Qt.AlignHCenter)
+        left = QVBoxLayout()
+        left.setAlignment(Qt.AlignVCenter)
+        right = QVBoxLayout()
+        right.setAlignment(Qt.AlignVCenter)
+        bottom = QVBoxLayout()
+        bottom.setAlignment(Qt.AlignVCenter)
+        # add buttons
+        but_loc = {}
+        for bid in sorted(buttons.keys()):
+            but_loc[bid] = buttons[bid]['pos']
+        for bid, value in sorted(but_loc.iteritems(), key=lambda (k, v): (v, k)):
+            if cmds.__len__() == 0:
+                keystroke = "Default"
+            else:
+                keystroke = cmds[bid]
+            if buttons[bid]['orient'] == 'Top':
+                self.buttons['top'].append(HotkeyWidget(dev_id, bid, buttons[bid]['bid'], keystroke))
+            elif buttons[bid]['orient'] == 'Left':
+                self.buttons['left'].append(HotkeyWidget(dev_id, bid, buttons[bid]['bid'], keystroke))
+            elif buttons[bid]['orient'] == 'Right':
+                self.buttons['right'].append(HotkeyWidget(dev_id, bid, buttons[bid]['bid'], keystroke))
+            elif buttons[bid]['orient'] == 'Bottom':
+                self.buttons['bottom'].append(HotkeyWidget(dev_id, bid, buttons[bid]['bid'], keystroke))
+        svgWidget = None
+        svg_hspace = QSpacerItem(800, 80, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        svg_vspace = QSpacerItem(80, 300, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        hspace = 0
+        vspace = 20  # reset button
+        row = 0
+        col = 0  # need at least 1 column
+        if self.buttons['top'].__len__() != 0:
+            vspace = vspace + 40
+        if self.buttons['bottom'].__len__() != 0:
+            vspace = vspace + 40
+        if self.buttons['left'].__len__() != 0:
+            col = col + 1
+            hspace = hspace + 120
+        if self.buttons['right'].__len__() != 0:
+            col = col + 1
+        try:
+            bkground = os.path.join("/tmp", image)
+            if os.path.exists(bkground):
+                svgWidget = QSvgWidget(bkground)
+                col = col + 1
+        except Exception as e:
+            print (e)
+        # get spacing for final image
+        svg_size = svgWidget.sizeHint()
+        img_h = float(540 - vspace)
+        img_w = float(860 - hspace)
+        scale_w = float(img_w / svg_size.width())
+        scale_h = float(img_h / svg_size.height())
+        if scale_h < scale_w:
+            vspace = round(img_w - (scale_h * svg_size.width()))
+            svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
         else:
-            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[1]))
-        loc = len(self.Tablet.Buttons) + 1
-        self.padButtonsLayout.addWidget(self.buttonReset, loc, 1, 1, 2)
-        self.padButtonsLayout.addWidget(self.buttonToggle, loc + 1, 1, 1, 2)
-        self.vMaster = QtGui.QHBoxLayout()
-        self.vMaster.addLayout(self.padButtonsLayout)
-        self.vMaster.addWidget(self.tabletPad)
-
-
-        self.setLayout(self.vMaster)
-
-        # function to check what button has been pressed
-        self.activeButton = None
-        self.editButton = lambda: self.activeButton
-        self.buttonCommandList = []
-
-
-    def IdentifyByUSBId(self,VendId,DevId):
-        for item in self.TabletIds.Tablets:
-            if item.ProductId == int(DevId, 16) and int(VendId, 16) == int("056a", 16):
-                return item
-        return self.TabletIds.Tablets[len(self.TabletIds.Tablets)-1]
-
-
-    def getTabletName(self):
-        return self.Tablet.Name
-
-
-    def getIcon(self):
-        return self.pixmap
-
-
-    def getCommands(self):
-        buttons = []
-        for i in range(len(self.Tablet.Buttons)):
-            cmd = "xsetwacom --set \"%s pad\" " % self.Tablet.padName
-            if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
-                cmd += "%s " % self.padButtons[(i, 4)]
+            hspace = round(img_h - (scale_w * svg_size.height()))
+            svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # start to build...
+        # add top row
+        if self.buttons['top'].__len__() != 0:
+            for button in self.buttons['top']:
+                top.addWidget(button)
+            self.keysLayout.addLayout(top, row, 0, 1, col)
+            row = row + 1
+        # add left row
+        if self.buttons['left'].__len__() != 0:
+            for button in self.buttons['left']:
+                left.addWidget(button)
+            if svgWidget is None:
+                self.keysLayout.addLayout(left, row, 0, 1, 1)
             else:
-                cmd += "Button %s " % self.padButtons[(i, 2)]
-            # check if enabled
-            if self.padButtons[(i, 1)].isEnabled() == False:
-                cmd += "button +0"
+                self.keysLayout.addLayout(left, row, 0, 2, 1)
+        if svgWidget is not None:
+            if self.buttons['left'].__len__() == 0:
+                self.keysLayout.addWidget(svgWidget, row, 0, 1, 1)
             else:
-                if len(str(self.padButtons[(i, 3)])) == 0:
-                    if 'Abs' in self.padButtons[(i, 4)]:
-                        if 'Up' in self.padButtons[(i, 4)]:
-                            cmd += "button +4"
-                        elif 'Down' in self.padButtons[(i, 4)]:
-                            cmd += "button +5"
-                    else:
-                        cmd += "button +%s" % self.padButtons[(i, 2)]
+                self.keysLayout.addWidget(svgWidget, row, 1, 1, 1)
+                self.keysLayout.addItem(svg_vspace, row, 2, 1, 1)
+                self.keysLayout.addItem(svg_hspace, row + 1, 1, 1, 2)
+                row = row + 1
+        if self.buttons['right'].__len__() != 0:
+            for button in self.buttons['right']:
+                right.addWidget(button)
+            if svgWidget is None:
+                self.keysLayout.addLayout(right, row, 2, 1, 1)
+            else:
+                self.keysLayout.addLayout(right, row - 1, 3, 2, 1)
+        if self.buttons['left'].__len__() != 0 or self.buttons['right'].__len__() != 0:
+            row = row + 1
+        if self.buttons['bottom'].__len__() != 0:
+            for button in self.buttons['bottom']:
+                top.addWidget(button)
+            self.keysLayout.addLayout(top, row, 0, 1, col)
+            row = row + 1
+        resetLayout = QHBoxLayout()
+        resetLayout.setAlignment(Qt.AlignRight)
+        resetLayout.addWidget(self.reset)
+        self.keysLayout.addLayout(resetLayout, row, col, 1, col)
+
+    def set_default(self):
+        for loc in self.buttons.keys():
+            for btn in self.buttons[loc]:
+                btn.reset()
+
+    def is_toggle(self):
+        for loc in self.buttons:
+            for button in self.buttons[loc]:
+                if button.is_toggle():
+                    return True
+        return False
+
+    def get_config(self):
+        buttons = {}
+        for loc in self.buttons.keys():
+            for btn in self.buttons[loc]:
+                info = list(btn.button.get_button_cmd())
+                id = None
+                if 'Button' in info[1]:
+                    id = info[1].split(' ')[1]
+                elif info[1] in ['AbsWheelUp', 'StripLeftUp', 'StripRightUp']:
+                    id = 4
+                elif info[1] in ['AbsWheelDown', 'StripLeftDown', 'StripRightDown']:
+                    id = 5
+                if id == info[2]:
+                    buttons[info[0]] = 'Default'
                 else:
-                    cmd += " \"%s\"" % str(self.padButtons[(i, 3)])
-            buttons.append(cmd)
-            # check if command is legit
-            #if (i < 9 and len(str(self.padButtons[(i, 3)])) > 1) or \
-            #        (i >= 9 and len(str(self.padButtons[(i, 3)])) > 2) or self.padButtons[(i, 3)] == 0:
-            #    cmd = "xsetwacom --set \"" + self.Tablet.padName + " pad\" "
-            #    if self.padButtons[(i, 4)] == 'AbsWheelUp' or self.padButtons[(i, 4)] == 'AbsWheelDown':
-            #        cmd += self.padButtons[(i, 4)] + " "
-            #    else:
-            #        cmd += "Button " + self.padButtons[(i, 2)]
-            #    if self.padButtons[(i, 3)] == 0:
-            #        cmd += ' 0'
-            #    else:
-            #        cmd += " \"" + str(self.padButtons[(i, 3)]) + "\""
-            #    buttons.append(cmd)
+                    buttons[info[0]] = str(info[2])
         return buttons
 
 
-    #for pad buttons
-    def updatePadButton(self, button):
-        # enable/disable
-        # herp!
-        if button >= 50:
-            if self.padButtons[(button - 50, 4)] == 'AbsWheelUp' or \
-                    self.padButtons[(button - 50, 4)] == 'AbsWheelDown':
-                buttonType = self.padButtons[(button - 50, 4)]
-            else:
-                buttonType = "Button " + self.padButtons[(button - 50, 2)]
-            if self.padButtons[(button - 50, 1)].isEnabled():
-                cmd = "xsetwacom --set \"%s pad\" %s 0" % (self.Tablet.padName, buttonType)
-                setCommand = os.popen(cmd)
-                self.padButtons[(button - 50, 5)].setIcon(QtGui.QIcon(self.icons[1]))
-                self.padButtons[(button - 50, 1)].setEnabled(False)
-                self.padButtons[(button - 50, 3)] = ''
-                self.padButtons[(button - 50, 0)].setText('')
-            else:
-                cmd = "xsetwacom --set \"%s pad\" %s " % (self.Tablet.padName, buttonType)
-                if 'Abs' in self.padButtons[(button - 50, 4)]:
-                    if 'Up' in self.padButtons[(button - 50, 4)]:
-                        cmd += "button +4"
-                    elif 'Down' in self.padButtons[(button - 50, 4)]:
-                        cmd += "button +5"
-                else:
-                    cmd += "button +%s" % self.padButtons[(button - 50, 2)]
-                setCommand = os.popen(cmd)
-                self.padButtons[(button - 50, 5)].setIcon(QtGui.QIcon(self.icons[0]))
-                self.padButtons[(button - 50, 1)].setEnabled(True)
-                self.padButtons[(button - 50, 3)] = 'button +%s' % self.padButtons[(button - 50, 2)]
-                self.padButtons[(button - 50, 0)].setText('<DEFAULT>')
-            return
-        if self.activeButton is None:
-            self.activeButton = self.padButtons[(button, 2)]
-            self.padButtons[(button, 0)].setText("Recording keypresses... Click button to stop")
-            self.buttonCommandList[:] = []
-        elif self.activeButton == self.padButtons[(button, 2)]:
-            tmp = 1
-            self.activeButton = None
-            userInput = self.userToWacomKeystrokeTranslate()
-            if userInput is None:
-                print self.wacomToHuman(self.padButtons[(button, 3)])
-                # self.padButtons[(button,0)].setText(self.padButtons[(button,3)])
-                self.padButtons[(button, 0)].setText(self.wacomToHuman(self.padButtons[(button, 3)]))
-            else:
+class Touch(QWidget):
+    def __init__(self):
+        QWidget.__init__(self, None)
+        self.dev_id = None
+        self.touch = None
+        self.gesture = None
+        self.layout = QGridLayout()
+        self.taptime = None
+        self.rawsample = None
+        self.zoomdistance = None
+        self.scrolldistance = None
+        self.guide = None
 
-                setCommand = self.wacomToHuman(userInput)
-                self.padButtons[(button, 0)].setText(setCommand)
-                # this is hack-y but should be simplified; need to remove the number as I don't think it's necessary...
-                buttonType = "Button " + self.padButtons[(button, 2)]
-                if self.padButtons[(button, 4)] == 'AbsWheelUp' or self.padButtons[(button, 4)] == 'AbsWheelDown':
-                    buttonType = self.padButtons[(button, 4)]
-                # end of hackey shit.  Why did they do this originally??!???
-                if userInput == 0:
-                    cmd = "xsetwacom --set \"%s pad\" %s %s" % (self.Tablet.padName, buttonType, str(userInput))
-                else:
-                    cmd = "xsetwacom --set \"%s pad\" %s \"%s\"" %(self.Tablet.padName, buttonType, str(userInput))
-                setCommand = os.popen(cmd)
-                self.padButtons[(button, 3)] = userInput
-
-    def event(self, event):
-        if (event.type() == QtCore.QEvent.ShortcutOverride and
-                (event.key() == (QtCore.Qt.Key_Tab or QtCore.Qt.Key_Up or QtCore.Qt.Key_Down
-                                 or QtCore.Qt.Key_Left or QtCore.Qt.Key_Right))) or \
-                        event.type() == (QtCore.QEvent.KeyPress or QtCore.QEvent.MouseButtonPress or
-                                             QtCore.QEvent.MouseButtonDblClick):
-                tmp = 1
-                if self.editButton() is not None:
-                    print self.keyTranslate(event.key(), event.text(), '+')
-                    if event.type() == QtCore.QEvent.MouseButtonPress or \
-                                    event.type() == QtCore.QEvent.MouseButtonDblClick:
-                        self.buttonCommandList.append("button")
-                        self.buttonCommandList.append("+" + str(event.button()))
-                        self.buttonCommandList.append("-" + str(event.button()))
-                    else:
-                        self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '+'))
-                return False
-        elif event.type() == QtCore.QEvent.KeyRelease:
-            if event.key() == (QtCore.Qt.Key_Shift or QtCore.Qt.Key_Alt or QtCore.Qt.Key_Control):
-                self.buttonCommandList.append(self.keyTranslate(event.key(), event.text(), '-'))
-            return False
-        if event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key_Space:
-            tmp = 1
-        return QtGui.QWidget.event(self, event)
-
-    def keyTranslate(self, keyvalue, keytext, keystate):
-        #print "Key value: " + str(keyvalue)
-        if (33 <= keyvalue <= 96) or (123 <= keyvalue <= 126):
-            if keytext != chr(keyvalue):
-                keytext = chr(keyvalue)
-            return keytext
+    def init(self, dev_id, settings):
+        self.deleteItemsOfLayout(self.layout.layout())
+        self.dev_id = dev_id
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+        self.touch = QCheckBox("Enable Touch")
+        self.gesture = QCheckBox("Enable Gestures")
+        self.guide = QVBoxLayout()
+        self.guide.setAlignment(Qt.AlignLeft)
+        touch = QVBoxLayout()
+        touch.addWidget(self.touch)
+        touch.addWidget(self.gesture)
+        self.touch.setChecked(False)
+        self.gesture.setEnabled(False)
+        if 'touch' in settings.keys() and settings['touch'] == 'on':
+            self.touch.setChecked(True)
+            self.gesture.setEnabled(True)
+        self.gesture.setChecked(False)
+        if 'gesture' in settings.keys() and settings['gesture'] == 'on' and self.gesture.isEnabled():
+            self.touch.setChecked(True)
+        if 'taptime' in settings.keys():
+            self.taptime = WacomAttribSlider(self.dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
+                                                int(settings['taptime']))
         else:
-            # this is a hack; Mate interprets Win key as Meta instead of Hyper by default
-            if keyvalue == 16777250:
-                keyvalue = 16777302
-            return {
-                QtCore.Qt.Key_Space: keystate + 'Space',
-                QtCore.Qt.Key_Shift: keystate + 'Shift_L',
-                QtCore.Qt.Key_Alt: keystate + 'Alt_L',
-                QtCore.Qt.Key_Control: keystate + 'Control_L',
-                QtCore.Qt.Key_Super_L: '+Super_L',
-                QtCore.Qt.Key_Super_R: '+Super_R',
-                QtCore.Qt.Key_Hyper_L: '+Hyper_L',
-                QtCore.Qt.Key_Hyper_R: '+Hyper_R',
-                QtCore.Qt.Key_Escape: '+Escape',
-                QtCore.Qt.Key_Backspace: '+Backspace',
-                QtCore.Qt.Key_PageUp: '+Prior',
-                QtCore.Qt.Key_PageDown: '+Next',
-                QtCore.Qt.Key_Up: '+Up',
-                QtCore.Qt.Key_Down: '+Down',
-                QtCore.Qt.Key_Left: '+Left',
-                QtCore.Qt.Key_Right: '+Right',
-                QtCore.Qt.Key_Tab: '+Tab',
-                QtCore.Qt.Key_F1: '+F1',
-                QtCore.Qt.Key_F2: '+F2',
-                QtCore.Qt.Key_F3: '+F3',
-                QtCore.Qt.Key_F4: '+F4',
-                QtCore.Qt.Key_F5: '+F5',
-                QtCore.Qt.Key_F6: '+F6',
-                QtCore.Qt.Key_F7: '+F7',
-                QtCore.Qt.Key_F8: '+F8',
-                QtCore.Qt.Key_F9: '+F9',
-                QtCore.Qt.Key_F10: '+F10',
-                QtCore.Qt.Key_F11: '+F11',
-                QtCore.Qt.Key_F12: '+F12',
-                QtCore.Qt.Key_Meta: keystate + 'Hyper_L',
-            }.get(keyvalue, '')
-
-    def userToWacomKeystrokeTranslate(self):
-        if len(self.buttonCommandList) != 0:
-            inputString = ""
-            button = False
-            shift = False
-            for item in self.buttonCommandList:
-                #first check for mouse button crap
-                if item == "button":
-                    button = True
-                    inputString += " " + str(item)
-                elif len(inputString) == 0:
-                    inputString = "key"
-                if button and (item == "+1" or item == "-1" or item == "+2" or item == "-2" or
-                                       item == "+4" or item == "-4" or item == "button"):
-                    if item != "button":
-                        #print "currently in a button " + str(item)
-                        inputString += " " + str(item)
-                elif button != False:
-                    button = False
-                    #print "finished with button; move onto other stuff " + str(item)
-                    #inputString += " key " + str(item)
-                #now check for special characters
-                if item == "shift":
-                    shift = True
-                    inputString += " " + str(item)
-                if shift == True and button == False:
-                    # shift active, check if it is being applied to this character or not
-                    if len(item) == 1 and str(item).isalpha():
-                        #print "This is a letter, shift is active " + str(item)
-                        if str(item).isupper():
-                            inputString += " " + str(item)
-                        else:
-                            shift = False
-                            inputString += " -shift " + str(item)
-                elif button == False:
-                    inputString += " " + str(item)
-            # special cases
-            if inputString == 'key +Shift_L -Shift_L':
-                return 'key +Shift_L'
-            else:
-                return inputString
+            self.taptime = WacomAttribSlider(self.dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
+        self.taptime.setToolTip("Time between taps in ms that will register as a double time")
+        if 'rawsample' in settings.keys():
+            self.rawsample = WacomAttribSlider(self.dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
+                                                  int(settings['rawsample']))
         else:
-            return None
+            self.rawsample = WacomAttribSlider(self.dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4)
+        self.rawsample.setToolTip("Set the sample window size (a sliding average sampling window) for\n"
+                                     "incoming input tool raw data points.")
+        if 'zoomdistance' in settings.keys():
+            self.zoomdistance = WacomAttribSlider(self.dev_id, 'zoomdistance', 180, "Zoom Distance", 50, 500, 25,
+                                                int(settings['zoomdistance']))
+        else:
+            self.zoomdistance = WacomAttribSlider(self.dev_id, 'zoomdistance', 180, "Zoom Distance", 50, 500, 25)
+        self.zoomdistance.setToolTip("A lower value increases the sensitivity when zooming")
+        if 'scrolldistance' in settings.keys():
+            self.scrolldistance = WacomAttribSlider(self.dev_id, 'scrolldistance', 80, "Scroll Distance", 10, 200, 20,
+                                                int(settings['scrolldistance']))
+        else:
+            self.scrolldistance = WacomAttribSlider(self.dev_id, 'scrolldistance', 80, "Scroll Distance", 10, 200, 20)
+        self.scrolldistance.setToolTip("A lower value increases the sensitivity when scrolling")
+        self.updateTouch()
+        self.updateGesture()
+        self.touch.stateChanged.connect(self.updateTouch)
+        self.gesture.stateChanged.connect(self.updateGesture)
+        try:
+            if os.path.isfile(os.path.join(self.cwd, "icons/ui/touch.json")):
+                data = None
+                with open(os.path.join(self.cwd, "icons/ui/touch.json"), 'r') as f:
+                    data = json.load(f)
+                for fingers in data.keys():
+                    self.guide.addWidget(QLabel(fingers))
+                    for control in data[fingers].keys():
+                        text = "%s - %s" % (control, data[fingers][control]['text'])
+                        self.guide.addWidget(GuideWidget(data[fingers][control]['icon'], text))
+        except Exception as e:
+            print e
+        group = QGroupBox("Touch Controls")
+        group.setFixedSize(290, 80)
+        group.setLayout(touch)
+        gesture = QGroupBox("Gesture Controls List")
+        gesture.setLayout(self.guide)
+        gesture.setContentsMargins(6, 6, 6, 6)
+        self.layout.setMargin(0)
+        self.layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
+        self.layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.rawsample, 2, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.zoomdistance, 3, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(self.scrolldistance, 4, 0, 1, 1, Qt.AlignTop)
+        self.setLayout(self.layout)
 
-    def wacomToHuman(self, command):
-        if command == 0:
-            return "None"
-        if re.match(r'^button \+\d+ \n', command):
-            return "<DEFAULT>"
-        values = command.split()
-        humanReadable = ""
-        shift = False
-        mouseButton = False
-        mouseButtonHold = False
-        for item in values:
-            #print "Values = " + str(item)
-            if item == 'key' and mouseButtonHold != False:
-                item = mouseButtonHold
-                mouseButtonHold = False
-            elif item == "+Space":
-                item = "SPACE"
-            elif item == "+Shift_L" or item == "+Shift_R":
-                shift = True
-                item = "SHIFT"
-            elif item == "-Shift_L" or item == "-Shift_R":
-                shift = False
-                item = "-SHIFT"
-            elif item == "+Alt_L" or item == "+Alt_R":
-                item = "ALT"
-            elif item == "+Control_L" or item == "+Control_R":
-                item = "CTRL"
-            elif item == "+Tab":
-                item = "TAB"
-            elif item == "+equal":
-                item = "+"
-            elif item == "+minus":
-                item = "-"
-            elif item == "+90":
-                item = "Ctrl +"
-            elif item == "+91":
-                item = "Ctrl -"
-            elif item == "-Alt_L" or item == "-Alt_R" or item == "-Control_L" or item == "-Control_R" \
-                or item == "-Tab" or item == "-equal" or item == "-minus":
-                item = ""
-            elif item.find("button") != -1:
-                mouseButton = True
-            elif mouseButton == True:
-                if item == "+1":
-                    if mouseButtonHold == False:
-                        mouseButtonHold = "Left-Click"
-                        item = ""
-                    elif mouseButtonHold == "Left-Click":
-                        item = "Dbl Left-Click"
-                        mouseButtonHold = False
-                    else:
-                        item = mouseButtonHold
-                        mouseButtonHold = "Left-Click"
-                if item == "+2":
-                    if mouseButtonHold == False:
-                        mouseButtonHold = "Right-Click"
-                        item = ""
-                    elif mouseButtonHold == "Right-Click":
-                        item = "Dbl Right-Click"
-                        mouseButtonHold = False
-                    else:
-                        item = mouseButtonHold
-                        mouseButtonHold = "Right-Click"
-                if item == "+4":
-                    if mouseButtonHold == False:
-                        mouseButtonHold = "Middle-Click"
-                        item = ""
-                    elif mouseButtonHold == "Middle-Click":
-                        item = "Dbl Middle-Click"
-                        mouseButtonHold = False
-                    else: 
-                        item = mouseButtonHold
-                        mouseButtonHold = "Middle-Click"
-                if item == "-1" or item == "-2" or item == "-4":
-                    item = ""
-                   
-            if (item != 'key' and item !='button'):
-                if str(item)[:-1] == '+' or str(item)[:-1] == '-' and len(str(item)[1:]) == 1:
-                    if str(item)[:-1] == '+':
-                        item = str(item)[1:]
-                    elif str(item)[:-1] == '-':
-                        item = ""
-                if len(humanReadable) > 0 and len(item) > 0:
-                    humanReadable += " " + str(item)
-                elif len(item) > 0:
-                    humanReadable = str(item)
-        return humanReadable
-
-    def resetButtons(self):
-        for i in range(self.Tablet.Buttons.__len__()):
-            # only reset enabled buttons
-            self.padButtons[(i, 1)].setEnabled(True)
-            self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
-            if 'Abs' in self.padButtons[(i, 4)]:
-                #touch wheel, do other stuff
-                if 'Up' in self.padButtons[(i, 4)]:
-                    bid = 4
-                    self.padButtons[(i, 3)] = 'button +4'
+    def deleteItemsOfLayout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
                 else:
-                    bid = 5
-                    self.padButtons[(i, 3)] = 'button +5'
-                cmd = "xsetwacom --set \"%s pad\" %s %i" % (self.Tablet.padName, self.padButtons[(i, 4)], bid)
-            else:
-                bid = int(self.padButtons[(i, 2)])
-                self.padButtons[(i, 3)] = 'button +%i' % bid
-                cmd = "xsetwacom --set \"%s pad\" Button %i %i" % (self.Tablet.padName, bid, bid)
-            setCommand = os.popen(cmd)
-            self.padButtons[(i, 0)].setText("<DEFAULT>")
+                    self.deleteItemsOfLayout(item.layout())
 
+    def boxdelete(self, box):
+        for i in range(self.keys.count()):
+            layout_item = self.keys.itemAt(i)
+            if layout_item.layout() == box:
+                self.deleteItemsOfLayout(layout_item.layout())
+                self.vlayout.removeItem(layout_item)
+                break
 
-    def toggleButtons(self):
-        for i in range(len(self.Tablet.Buttons)):
-            if self.padButtons[(i, 4)] == 'AbsWheelUp' or \
-                    self.padButtons[(i, 4)] == 'AbsWheelDown':
-                buttonType = self.padButtons[(i, 4)]
-            else:
-                buttonType = "Button %s" % self.padButtons[(i, 2)]
-            if 'Disable' in self.buttonToggle.text():
-                if self.padButtons[(i, 1)].isEnabled():
-                    cmd = "xsetwacom --set \"%s pad\" %s 0" % (self.Tablet.padName, buttonType)
-                    setCommand = os.popen(cmd)
-                    self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[1]))
-                    self.padButtons[(i, 1)].setEnabled(False)
-                    self.padButtons[(i, 3)] = ''
-                    self.padButtons[(i, 0)].setText('')
-            if 'Enable' in self.buttonToggle.text():
-                if self.padButtons[(i, 1)].isEnabled() is False:
-                    cmd = "xsetwacom --set \"%s pad\" %s " % (self.Tablet.padName, buttonType)
-                    if 'Abs' in self.padButtons[(i, 4)]:
-                        if 'Up' in self.padButtons[(i, 4)]:
-                            cmd += "button +4"
-                        elif 'Down' in self.padButtons[(i, 4)]:
-                            cmd += "button +5"
-                    else:
-                        cmd += "button +%s" % self.padButtons[(i, 2)]
-                    setCommand = os.popen(cmd)
-                    self.padButtons[(i, 5)].setIcon(QtGui.QIcon(self.icons[0]))
-                    self.padButtons[(i, 1)].setEnabled(True)
-                    self.padButtons[(i, 3)] = 'button +%s' % self.padButtons[(i, 2)]
-                    self.padButtons[(i, 0)].setText('<DEFAULT>')
-        if 'Disable' in self.buttonToggle.text():
-            self.buttonToggle.setText("Enable Buttons")
-            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[0]))
+    def updateTouch(self):
+        if self.touch.isChecked():
+            cmd = "xsetwacom --set %s touch on" % self.dev_id
+            os.popen(cmd)
+            self.gesture.setEnabled(True)
+            self.taptime.group.setEnabled(True)
+            self.rawsample.group.setEnabled(True)
+            return ('touch', 'on')
         else:
-            self.buttonToggle.setText("Disable Buttons")
-            self.buttonToggle.setIcon(QtGui.QIcon(self.icons[1]))
+            cmd = "xsetwacom --set %s touch off" % self.dev_id
+            os.popen(cmd)
+            cmd = "xsetwacom --set %s gesture off" % self.dev_id
+            os.popen(cmd)
+            self.gesture.setChecked(False)
+            self.gesture.setEnabled(False)
+            self.taptime.group.setEnabled(False)
+            self.rawsample.group.setEnabled(False)
+            self.zoomdistance.group.setEnabled(False)
+            self.scrolldistance.group.setEnabled(False)
+            return ('touch', 'off')
+
+    def updateGesture(self):
+        if self.gesture.isChecked():
+            self.zoomdistance.group.setEnabled(True)
+            self.scrolldistance.group.setEnabled(True)
+            cmd = "xsetwacom --set %s gesture on" % self.dev_id
+            os.popen(cmd)
+            return ('gesture', 'on')
+        else:
+            self.zoomdistance.group.setEnabled(False)
+            self.scrolldistance.group.setEnabled(False)
+            cmd = "xsetwacom --set %s gesture off" % self.dev_id
+            os.popen(cmd)
+            return ('gesture', 'off')
+
+    def reset(self):
+        self.touch.setChecked(False)
+        self.updateTouch()
+        self.taptime.set_defaults()
+        self.rawsample.set_defaults()
+        self.zoomdistance.set_defaults()
+        self.scrolldistance.set_defaults()
+
+    def get_config(self):
+        settings = {}
+        (attr, data) = self.updateTouch()
+        settings[attr] = str(data)
+        (attr, data) = self.updateGesture()
+        settings[attr] = str(data)
+        (attr, value) = self.rawsample.get_setting()
+        settings[attr] = str(value)
+        (attr, value) = self.taptime.get_setting()
+        settings[attr] = str(value)
+        (attr, value) = self.zoomdistance.get_setting()
+        settings[attr] = str(value)
+        (attr, value) = self.scrolldistance.get_setting()
+        settings[attr] = str(value)
+        return settings
+
+class GuideWidget(QWidget):
+    def __init__(self, icon, info):
+        QWidget.__init__(self, None)
+        self.cwd = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons/ui")
+        self.setFixedSize(500, 70)
+        self.icon = QLabel()
+        self.icon.setFixedSize(40, 40)
+        self.icon.setPixmap(QPixmap(os.path.join(self.cwd, icon)))
+        self.icon.setScaledContents(True)
+        self.info = QLabel()
+        self.info.setFixedWidth(400)
+        self.info.setText(info)
+        self.info.setWordWrap(True)
+        layout = QHBoxLayout()
+        layout.setAlignment(Qt.AlignVCenter)
+        layout.addWidget(self.icon)
+        layout.addWidget(self.info)
+        group = QGroupBox()
+        group.setLayout(layout)
+        main = QVBoxLayout()
+        main.addWidget(group)
+        self.setLayout(main)
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    window = Pad()
+    buttons = {'ButtonC': {'bid': 'Button 3', 'orient': 'Left'}, 'ButtonB': {'bid': 'Button 2', 'orient': 'Left'}, 'ButtonA': {'bid': 'Button 1', 'orient': 'Left'}, 'ButtonG': {'bid': 'Button 11', 'orient': 'Left'}, 'ButtonF': {'bid': 'Button 10', 'orient': 'Left'}, 'ButtonE': {'bid': 'Button 9', 'orient': 'Left'}, 'ButtonD': {'bid': 'Button 8', 'orient': 'Left'}, 'RingUp': {'bid': 'AbsWheelUp', 'orient': 'Left'}, 'RingDown': {'bid': 'AbsWheelDown', 'orient': 'Left'}}
+    # window.init_keys('intuos4-4x6.svg', buttons, {})
+    window.show()
+    app.exec_()
+'''
+Config file layout
+{
+    config name: {
+        eraser: {},
+        stylus: {},
+        cursor: {},
+        pad: {
+            'Button 1': <bid string>,
+            'Button 2': <bid string>,
+            'Button 3': <bid string>,
+            ...
+            'Mode': 'Abosolute',
+        },
+        touch: {
+            'Touch': 'on'
+        }
+    }
+}
+
+
+'''

@@ -1,128 +1,387 @@
-# Loads settings on various models of tablets
-import xml.dom.minidom
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+############################################
+# load now gets device ids
+# references saved config file, ie. 1: default, 2: blah, 3: bleh
+# config file name loaded in order detected using ids
+#
+# tablet config now this format:
+#     <device name>
+############################################
+
+
+
+import subprocess
 import os
+import xml.etree.ElementTree as ET
+import math
+import copy
+import sys
 
-class tabletidentities:
+
+class Tablets:
     def __init__(self):
-        self.Tablets = []
-        self.Tablets.append(tablet("MODEL_PP_0405", "Wacom PenPartner", 0x00))
-        self.Tablets.append(tablet("ET_0405", "Wacom Graphire", 0x10))
-        self.Tablets.append(tablet("ET_0405", "Wacom Graphire2 4x5", 0x11))
-        self.Tablets.append(tablet("ET_0507", "Wacom Graphire2 5x7", 0x12))
-        self.Tablets.append(tablet("ET_0405", "Wacom Graphire3 4x5", 0x13))
-        self.Tablets.append(tablet("ET_0608", "Wacom Graphire3 6x8", 0x14))
-        self.Tablets.append(tablet("CTE_440", "Wacom Graphire4 4x5", 0x15))
-        self.Tablets.append(tablet("CTE_640", "Wacom Graphire4 6x8", 0x16))
-        self.Tablets.append(tablet("GD_0405-U", "Wacom Intuos 4x5", 0x20))
-        self.Tablets.append(tablet("GD_0608-U", "Wacom Intuos 6x8", 0x21))
-        self.Tablets.append(tablet("GD_0912-U", "Wacom Intuos 9x12", 0x22))
-        self.Tablets.append(tablet("GD_1212-U", "Wacom Intuos 12x12", 0x23))
-        self.Tablets.append(tablet("GD_1218-U", "Wacom Intuos 12x18", 0x24))
-        self.Tablets.append(tablet("MODEL_PL400",   "Wacom PL400", 0x30))
-        self.Tablets.append(tablet("MODEL_PL500",   "Wacom PL500", 0x31))
-        self.Tablets.append(tablet("MODEL_PL600",   "Wacom PL600", 0x32))
-        self.Tablets.append(tablet("MODEL_PL600SX", "Wacom PL600SX", 0x33))
-        self.Tablets.append(tablet("MODEL_PL550",   "Wacom PL550", 0x34))
-        self.Tablets.append(tablet("MODEL_PL800",   "Wacom PL800", 0x35))
-        self.Tablets.append(tablet("MODEL_PL700",   "Wacom PL700", 0x37))
-        self.Tablets.append(tablet("MODEL_PL510",   "Wacom PL510", 0x38))
-        self.Tablets.append(tablet("MODEL_DTU710",  "Wacom PL710", 0x39))
-        self.Tablets.append(tablet("MODEL_DTF720",  "Wacom DTF720", 0xC0))
-        self.Tablets.append(tablet("MODEL_DTF521",  "Wacom DTF521", 0xC4))
-        self.Tablets.append(tablet("MODEL_DTU1931", "Wacom DTU1931", 0xC7))
-        self.Tablets.append(tablet("XD-0405-U", "Wacom Intuos2 4x5", 0x41))
-        self.Tablets.append(tablet("XD-0608-U", "Wacom Intuos2 6x8", 0x42))
-        self.Tablets.append(tablet("XD-0912-U", "Wacom Intuos2 9x12", 0x43))
-        self.Tablets.append(tablet("XD-1212-U", "Wacom Intuos2 12x12", 0x44 ))
-        self.Tablets.append(tablet("XD-1218-U", "Wacom Intuos2 12x18", 0x45))
-        self.Tablets.append(tablet("XD-0608-U", "Wacom Intuos2 6x8", 0x47))
-        self.Tablets.append(tablet("MODEL-VOL", "Wacom Volito", 0x60))
-        self.Tablets.append(tablet("FT-0203-U", "Wacom PenStation", 0x61))
-        self.Tablets.append(tablet("CTF-420-U", "Wacom Volito2 4x5", 0x62))
-        self.Tablets.append(tablet("CTF-220-U", "Wacom Volito2 2x3", 0x63))
-        self.Tablets.append(tablet("CTF-421-U", "Wacom PenPartner2", 0x64))
-        self.Tablets.append(tablet("CTF_430-U", "Wacom Bamboo1", 0x69))
-        self.Tablets.append(tablet("MTE_450", "Wacom Bamboo", 0x65))
-        self.Tablets.append(tablet("CTE_450", "Wacom BambooFun 4x5", 0x17))
-        self.Tablets.append(tablet("CTE_650", "Wacom BambooFun 6x8", 0x18))
-        self.Tablets.append(tablet("CTE_631", "Wacom Bamboo1 Medium", 0x19))
-        self.Tablets.append(tablet("PTU-600", "Wacom Cintiq Partner", 0x03))
-        self.Tablets.append(tablet("TPC-090", "Wacom Tablet PC90", 0x90))
-        self.Tablets.append(tablet("TPC-093", "Wacom Tablet PC93", 0x93))
-        self.Tablets.append(tablet("TPC-09A", "Wacom Tablet PC9A", 0x9A))
-        self.Tablets.append(tablet("DTZ-21ux",  "Wacom Cintiq21UX", 0x3F))
-        self.Tablets.append(tablet("DTZ-20wsx", "Wacom Cintiq20WSX", 0xC5))
-        self.Tablets.append(tablet("DTK-22hd", "Wacom Cintiq 22HD", 0xFA))
-        self.Tablets.append(tablet("DTK-1300", "Wacom Cintiq 13HD", 0x304))
-        self.Tablets.append(tablet("DTK-1301", "Wacom Cintiq 13HD", 0x305))
-        self.Tablets.append(tablet("DTZ-12wx",  "Wacom Cintiq12WX", 0xC6))
-        self.Tablets.append(tablet("PTZ-430",   "Wacom Intuos3 4x5", 0xB0))
-        self.Tablets.append(tablet("PTZ-630",   "Wacom Intuos3 6x8", 0xB1))
-        self.Tablets.append(tablet("PTZ-930",   "Wacom Intuos3 9x12", 0xB2))
-        self.Tablets.append(tablet("PTZ-1230",  "Wacom Intuos3 12x12", 0xB3))
-        self.Tablets.append(tablet("PTZ-1231W", "Wacom Intuos3 12x19", 0xB4))
-        self.Tablets.append(tablet("PTZ-631W",  "Wacom Intuos3 6x11", 0xB5))
-        self.Tablets.append(tablet("PTZ-431W",  "Wacom Intuos3 4x6", 0xB7))
-        self.Tablets.append(tablet("PTK-440", "Wacom Intuos4 4x6", 0xB8))
-        self.Tablets.append(tablet("PTK-640", "Wacom Intuos4 6x9", 0xB9))
-        self.Tablets.append(tablet("PTK-840", "Wacom Intuos4 8x13", 0xBA))
-        self.Tablets.append(tablet("PTK-1240", "Wacom Intuos4 12x19", 0xBB))
-        self.Tablets.append(tablet("PTH-450", "Wacom Intuos5 touch S", 0x26))
-        self.Tablets.append(tablet("PTH-650", "Wacom Intuos5 touch M", 0x27))
-        self.Tablets.append(tablet("PTH-850", "Wacom Intuos5 touch L", 0x28))
-        self.Tablets.append(tablet("PTH-451", "Wacom Intuos Pro S", 0x314))
-        self.Tablets.append(tablet("PTH-651", "Wacom Intuos Pro M", 0x315))
-        self.Tablets.append(tablet("PTH-851", "Wacom Intuos Pro L", 0x317))
-        self.Tablets.append(tablet("PTH-660", "Wacom Intuos Pro 2 M", 0x357))
-        self.Tablets.append(tablet("PTH-860", "Wacom Intuos Pro 2 L", 0x358))
-        self.Tablets.append(tablet("CTH-460", "Wacom Bamboo Pen 6x4", 0xD1))
-        self.Tablets.append(tablet("CTH-661", "Wacom BambooFun 2FG 6x8", 0xD3))
-        self.Tablets.append(tablet("CTL-460", "Wacom BambooFun 2FG 4x5", 0xD4))
-        self.Tablets.append(tablet("CTH-460K", "Wacom BambooPT 2FG 4x5", 0xD6))
-        self.Tablets.append(tablet("DTH-1320", "Wacom Cintiq Pro 13", 0x34F))
-        self.Tablets.append(tablet("DTH-1620", "Wacom Cintiq Pro 16", 0x350))
-        self.Tablets.append(tablet("generic", "generic", 0xFF))
-		
-		#self.Tablets.append(tablet("PTK-540WL", "Wacom Intuos4 Wireless Bluetooth", 0x00)) # Stub, this needs special support
-		 
-class tablet:
-    def __init__(self,Model, Name, ProductId):
-        self.Name = Name
-        self.Model = Model
-        self.ProductId = ProductId
-        self.Buttons = []
-        self.GraphicWidth = -1
+        self.tablets = {}
+        self.device_data = {}
+        self.db_path = "%s/data" % os.path.dirname(os.path.realpath(__file__))
+        if not os.path.exists(self.db_path):
+            self.db_path = "/usr/share/libwacom"
+            if not os.path.exists(self.db_path):
+                sys.exit("Error: libwacom not installed")
+        self.get_connected_tablets()
 
-        opPath = os.path.dirname(os.path.realpath(__file__)) 
-
-        try:	# Attempt to load button map		
-            XML = xml.dom.minidom.parse(opPath + "/images/pad/"+self.Model+".xml")
-
-        except:
-            return
-            # Load Custom Pad Descriptions
+    def get_connected_tablets(self):
+        # check if tablet is actually detected
+        p = subprocess.Popen("xsetwacom --list devices", shell=True, stdout=subprocess.PIPE)
+        dev_names = p.communicate()[0].split('\n')
+        # all devices must have a pad, use this as unique identifier
+        detected = {}
+        attr = {'type: TOUCH': 'touch',
+                'type: STYLUS': 'stylus',
+                'type: ERASER': 'eraser',
+                'type: CURSOR': 'cursor',
+                'type: PAD': 'pad'}
         try:
-            XBase = XML.getElementsByTagName("padsettings")
-            self.GraphicWidth = int(XBase[0].attributes["graphicwidth"].value)
-            XPlateau = XBase[0].getElementsByTagName("button")
-            for item in XPlateau:
-                XName = item.attributes["name"].value
-                XNumber = item.attributes["number"].value
-                XCallsign = item.attributes["callsign"].value
-                X1 = item.getElementsByTagName("x1")[0].childNodes[0].data
-                Y1 = item.getElementsByTagName("y1")[0].childNodes[0].data
-                X2 = item.getElementsByTagName("x2")[0].childNodes[0].data
-                Y2 = item.getElementsByTagName("y2")[0].childNodes[0].data
-                self.Buttons.append(button(XName, XNumber, XCallsign, int(X1), int(Y1), int(X2), int(Y2)))
-        except:
-            print "Error loading " + opPath + "/images/pad/" + self.Model + ".xml"
+            for dev in dev_names:
+                dev_attr = dev.rstrip().split("\t")
+                name = dev.split(' %s' % attr[dev_attr[2]])[0]
+                if name[-3:] in ["Pen", "Pad"]:
+                    name = name[:-4]
+                elif "Finger" == name[-6:]:
+                        name = name[:-7]
+                if name not in detected:
+                    detected[name] = {attr[dev_attr[2]]: {'id': [dev_attr[1].split()[1]]}}
+                elif attr[dev_attr[2]] not in detected[name].keys():
+                    detected[name][attr[dev_attr[2]]] = {'id': [dev_attr[1].split()[1]]}
+                else:
+                    detected[name][attr[dev_attr[2]]]['id'].append(dev_attr[1].split()[1])
+        except Exception:
+            pass
+        self.__get_libwacom_data()
+        self.tablets = {}
+        for device in detected.keys():
+            if device[-4:] == '(WL)':
+                dev_type = device[:-5]
+            else:
+                dev_type = device
+            devID = self.device_data[dev_type]['devID']
+            if self.device_data[dev_type]['devID'] not in self.tablets.keys():
+                self.tablets[devID] = []
+            # assume if it's the same device it has the same inputs for all connected
+            dev_count = detected[device]['pad']['id'].__len__()
+            for x in range(0, dev_count):
+                idx = self.tablets[devID].__len__()
+                self.tablets[devID].append(copy.deepcopy(self.device_data[dev_type]))
+                self.tablets[devID][idx]['cname'] = device
+            for dev_input in detected[dev_type]:
+                idx = self.tablets[devID].__len__() - detected[device][dev_input]['id'].__len__()
+                for instance in sorted(detected[device][dev_input]['id']):
+                    self.tablets[devID][idx][dev_input]['id'] = instance
+                    idx = idx + 1
+        # remove devices that are not available
+        for dev in self.tablets.keys():
+            for device in self.tablets[dev]:
+                for id in ['touch', 'stylus', 'eraser', 'cursor', 'pad']:
+                    if id in device.keys():
+                        if 'id' not in device[id].keys():
+                            del device[id]
 
-class button:
-	def __init__(self, Name, Number, Callsign, X1, Y1, X2, Y2):
-		self.Name = Name
-		self.Number = Number
-		self.Callsign = Callsign
-		self.X1 = X1
-		self.Y1 = Y1
-		self.X2 = X2
-		self.Y2 = Y2
+
+    def __get_libwacom_data(self):
+        p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
+                             stdout=subprocess.PIPE)
+        output = p.communicate()[0].split('\n')
+        cur_device = None
+        buttons = False
+        for line in output:
+            if line == '[Device]':
+                cur_device = None
+                buttons = False
+            elif 'Name=' in line:
+                cur_device = line.split('=')[1]
+                if cur_device in self.device_data:
+                    cur_device = None
+                else:
+                    self.device_data[cur_device] = {
+                        'pad': {
+                            'attr': {},
+                            'buttons': {}},
+                        'stylus': {},
+                        'eraser': {},
+                        'touch': {},
+                        'cursor': {}}
+                # check if this is a duplicate device
+            elif cur_device is not None:
+                if not buttons:
+                    # get usb id; will use for BT as well to simplify mapping
+                    if "DeviceMatch=" in line:
+                        # don't include serial devices
+                        if 'serial' in line:
+                            del self.device_data[cur_device]
+                            cur_device = None
+                        else:
+                            self.device_data[cur_device]['devID'] = line.split('=')[1].split(';')[0][-4:]
+                    elif "Layout=" in line:
+                        self.device_data[cur_device]['svg'] = line.split('=')[1]
+                    # Reversible means it can be flipped
+                    elif "Reversible=" in line:
+                        if "true" in line:
+                            self.device_data[cur_device]['stylus']['rotate'] = True
+                        else:
+                            self.device_data[cur_device]['stylus']['rotate'] = False
+                    elif "Ring=true" in line:
+                        self.device_data[cur_device]['pad']['buttons']['RingUp'] = \
+                            {'bid': 'AbsWheelUp', 'orient': 'Left'}
+                        self.device_data[cur_device]['pad']['buttons']['RingDown'] = \
+                            {'bid': 'AbsWheelDown', 'orient': 'Left'}
+                    elif "Ring2=true" in line:
+                        self.device_data[cur_device]['pad']['buttons']['Ring2Up'] = \
+                            {'bid': 'AbsWheel2Up', 'orient': 'Right'}
+                        self.device_data[cur_device]['pad']['buttons']['Ring2Down'] = \
+                            {'bid': 'AbsWheel2Down', 'orient': 'Right'}
+                    # get button info now...
+                    elif '[Buttons]' == line:
+                        buttons = True
+                else:
+                    if line.split("=")[0] in ['Left', 'Right', 'Top', 'Bottom']:
+                        dir = line.split('=')[0]
+                        try:
+                            for but in line.split('=')[1].split(';'):
+                                butid = ord(but) - 64
+                                # buttons 4 - 7 are "reserved" for scroll, so we move these
+                                if butid > 3:
+                                    butid = butid + 4
+                                self.device_data[cur_device]['pad']['buttons']['Button%s' % but] = {
+                                    'bid': 'Button %d' % butid,
+                                    'orient': dir}
+                        except Exception:
+                            pass
+                    if 'Touchstrip' in line:
+                        touch_but = line.split("=")[1].split(';')
+                        try:
+                            for but in touch_but:
+                                side = self.device_data[cur_device]['pad']['buttons']['Button%s' % but]['orient']
+                                if line.split('=')[0][-1:] == '2':
+                                    self.device_data[cur_device]['pad']['buttons']['Strip2Up'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                                    self.device_data[cur_device]['pad']['buttons']['Strip2Down'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                                else:
+                                    self.device_data[cur_device]['pad']['buttons']['StripUp'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                                    self.device_data[cur_device]['pad']['buttons']['StripDown'] = {
+                                        'bid': "Strip%sUp" % side,
+                                        'orient': side}
+                        except Exception as e:
+                            pass
+
+        for device, data in self.device_data.items():
+            # get button svg info
+            if 'pad' in data.keys():
+                if data['pad']['buttons'].__len__() == 0:
+                    del data['pad']['buttons']
+                else:
+                    self.pretty_svg(device)
+
+
+    def pretty_svg(self, device):
+        try:  # Attempt to load button map from SVG
+                # trying to optimize SVG file
+                tree = ET.parse("%s/layouts/%s" % (self.db_path, self.device_data[device]['svg']))
+                root = tree.getroot()
+                svg = ''
+                xmin = 99999
+                ymin = 99999
+                xmax = 0
+                ymax = 0
+                for elem in root.iter():
+                    if elem.tag.split('}')[1] == 'g':
+                        if svg == '':
+                            svg = '\n\t<g>'
+                        else:
+                            svg = '%s\n\t</g>\n\t<g>' % svg
+                    elif elem.tag.split('}')[1] == 'rect':
+                        svg = '%s\n\t\t<rect' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                        if xmin > float(elem.attrib['x']):
+                            xmin = float(elem.attrib['x'])
+                        if ymin > float(elem.attrib['y']):
+                            ymin = float(elem.attrib['y'])
+                        if xmax < float(elem.attrib['x']) + float(elem.attrib['width']):
+                            xmax = float(elem.attrib['x']) + float(elem.attrib['width'])
+                        if ymax < float(elem.attrib['y']) + float(elem.attrib['height']):
+                            ymax = float(elem.attrib['y']) + float(elem.attrib['height'])
+                    elif elem.tag.split('}')[1] == 'path':
+                        svg = '%s\n\t\t<path' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s\n\t\t\tfill=\"none\" />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                    elif elem.tag.split('}')[1] == 'circle':
+                        svg = '%s\n\t\t<circle' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        svg = "%s />" % svg
+                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['cy'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                    "%06.f" % float(elem.attrib['cx'])
+                        if xmin > float(elem.attrib['cx']) - math.ceil(float(elem.attrib['r'])):
+                            xmin = float(elem.attrib['cx']) - math.ceil(float(elem.attrib['r']))
+                        if ymin > float(elem.attrib['cy']) - math.ceil(float(elem.attrib['r'])):
+                            ymin = float(elem.attrib['cy']) - math.ceil(float(elem.attrib['r']))
+                        if xmax < float(elem.attrib['cx']) + math.ceil(float(elem.attrib['r'])):
+                            xmax = float(elem.attrib['cx']) + math.ceil(float(elem.attrib['r']))
+                        if ymax < float(elem.attrib['cy']) + math.ceil(float(elem.attrib['r'])):
+                            ymax = float(elem.attrib['cy']) + math.ceil(float(elem.attrib['r']))
+                    elif elem.tag.split('}')[1] == 'text':
+                        svg = '%s\n\t\t<text' % svg
+                        # get attr
+                        for attr in elem.attrib:
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                        label = elem.attrib['id'].split('Label')[1]
+                        label = label.replace('CCW', "Up")
+                        label = label.replace('CW', "Down")
+                        if label in self.device_data[device]['pad']['buttons'].keys():
+                            but_info = self.device_data[device]['pad']['buttons'][label]
+                            if but_info['orient'] in ['Left', 'Right']:
+                                self.device_data[device]['pad']['buttons'][label]['pos'] = \
+                                    "%06.f" % float(elem.attrib['y'])
+                            else:
+                                self.device_data[device]['pad']['buttons'][label]['pos'] = \
+                                    "%06.f" % float(elem.attrib['x'])
+                        svg = """%s
+                            stroke="none"
+                            fill="#6DD7E8">%s</text>""" % (svg, label)
+                        if xmin > float(elem.attrib['x']):
+                            xmin = float(elem.attrib['x'])
+                        if ymin > float(elem.attrib['y']):
+                            ymin = float(elem.attrib['y'])
+                        if xmax < float(elem.attrib['x']):
+                            xmax = float(elem.attrib['x'])
+                        if ymax < float(elem.attrib['y']):
+                            ymax = float(elem.attrib['y'])
+                svg = '%s\n\t</g>\n</svg>' % svg
+                # TODO: fix this documentation
+                if True:
+                # if not os.path.isfile("/tmp/%s" % self.device_data[device]['svg']):
+                    # shift every line to eliminate extra vertical whitespace...
+                    yshift = ymin - 20
+                    if yshift > 0:
+                        svg_write = ''
+                        for line in svg.split('\n'):
+                            if 'y="' in line and 'ry' not in line:
+                                val = line.split('"')
+                                svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - yshift)
+                            elif 'd="' in line and 'id="' not in line:
+                                val = line.split('"')
+                                points = val[1].split()
+                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                d = "%s\"" % val[0]
+                                for sub in subs:
+                                    if sub[0] == 'M' or sub[0] == 'L':
+                                        attrs = sub.split()
+                                        attrs[2] = str(float(attrs[2]) - float(yshift))
+                                        d = "%s %s" % (d, " ".join(attrs))
+                                    else:
+                                        d = "%s %s" % (d, sub)
+                                d = "%s\"" % d
+                                svg_write = "%s\n%s" % (svg_write, d)
+                            else:
+                                svg_write = "%s\n%s" % (svg_write, line)
+                    svg = svg_write
+                    # shift x values if it is too wide
+                    if xmax >= 500:
+                        xshift = 300  # shift over by 200 units in the x coord
+                        svg_write = ''
+                        for line in svg.split('\n'):
+                            if 'x="' in line and 'rx' not in line:
+                                val = line.split('"')
+                                if float(val[1]) >= 500.0:
+                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - xshift)
+                                else:
+                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]))
+                            elif 'd="' in line and 'id="' not in line:
+                                val = line.split('"')
+                                points = val[1].split()
+                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                d = "%s\"" % val[0]
+                                for sub in subs:
+                                    if sub[0] == 'M' or sub[0] == 'L':
+                                        attrs = sub.split()
+                                        if float(attrs[1]) >= 500.0:
+                                            attrs[1] = str(float(attrs[1]) - float(xshift))
+                                        d = "%s %s" % (d, " ".join(attrs))
+                                    else:
+                                        d = "%s %s" % (d, sub)
+                                d = "%s\"" % d
+                                svg_write = "%s\n%s" % (svg_write, d)
+                            else:
+                                svg_write = "%s\n%s" % (svg_write, line)
+                    # write top of svg file
+                    if xmax >= 500:
+                        svg = """<svg
+                           style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
+                           width="%s"
+                           height="%s">
+                           <g>
+                               <rect
+                                   rx="0"
+                                   ry="0"
+                                   x="0"
+                                   y="0"
+                                   width="%s"
+                                   height="%s"
+                                   stroke="none"
+                                   fill="#111111"/>
+                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
+                    else:
+                        svg = """<svg
+                           style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
+                           width="%s"
+                           height="%s">
+                           <g>
+                               <rect
+                                   rx="0"
+                                   ry="0"
+                                   x="0"
+                                   y="0"
+                                   width="%s"
+                                   height="%s"
+                                   stroke="none"
+                                   fill="#111111"/>
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
+                    f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
+                    f.write(svg)
+                    f.close()
+
+        except Exception as e:
+            print (e)
