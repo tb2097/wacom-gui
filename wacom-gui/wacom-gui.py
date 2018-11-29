@@ -55,6 +55,10 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.initTabletButtons()
         # generate tool buttons
         self.initToolButtons()
+        # add/remove button functions
+        self.addConfig.setEnabled(True)
+        self.addConfig.clicked.connect(self.newConfig)
+        self.removeConfig.clicked.connect(self.verifyConfigRemove)
         # refresh tablet list, set tools, configs
         self.refreshTablets()
         self.controlBox.setContentsMargins(0, 0, 0, 0)
@@ -169,6 +173,36 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                             config['pad']['buttons'][button] = 'Default'
         return config
 
+    def verifyConfigRemove(self):
+        reply = QMessageBox.question(self, 'Remove Config',
+                                     "Delete \"%s\" config file?" % self.config,
+                                     QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            home = "%s/.wacom-gui" % expanduser("~")
+            conf_path = os.path.join(home, "%s/%s.json" % (self.dev, self.config))
+            # delete file
+            try:
+                os.remove(conf_path)
+            except Exception as e:
+                print e
+            del self.configs[self.dev][self.config]
+            self.getConfigs(0)
+
+    def newConfig(self):
+        config = AddConfig.add_config(self.configs[self.dev].keys())
+        if config is not None:
+            # empty config
+            self.configs[self.dev][config] = self.emptyConfig(self.dev, self.dev_id)
+            # add button
+            self.configLayout.addButton(
+                self.configButtons.addButton(config, 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
+            self.config = config
+            self.loadConfig(self.dev, self.dev_id, self.config)
+            for idx, button in enumerate(self.configButtons.btn_grp.buttons()):
+                if button.text() == self.config:
+                    self.configButtons.btn_grp.buttons()[idx].setChecked(True)
+            self.tablet_data.tablets[self.dev][self.dev_id]['config'] = self.config
+
     def getConfigs(self, idx):
         self.configLayout.removeButtons()
         self.configButtons.removeButton()
@@ -210,11 +244,14 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                     self.configLayout.addButton(
                         self.configButtons.addButton(config, 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
             # we are loading default config for now...
+            if self.config == 'default':
+                self.removeConfig.setEnabled(False)
+            else:
+                self.removeConfig.setEnabled(True)
             self.loadConfig(dev, dev_id, self.config)
             for idx, button in enumerate(self.configButtons.btn_grp.buttons()):
                 if button.text() == self.config:
                     self.configButtons.btn_grp.buttons()[idx].setChecked(True)
-            # TODO: save the selected config somewhere...
             self.tablet_data.tablets[dev][dev_id]['config'] = self.config
         else:
             os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
@@ -291,6 +328,11 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def configSelect(self, idx):
         config = str(self.configButtons.buttons[(idx, 0)].text())
         self.loadConfig(self.dev, self.dev_id, config)
+        if config == 'default':
+            self.removeConfig.setEnabled(False)
+        else:
+            self.removeConfig.setEnabled(True)
+
 
     def deleteItemsOfLayout(self, layout):
         if layout is not None:
@@ -398,14 +440,27 @@ class ButtonLayout:
     def addButton(self, button):
         self.layout.addWidget(button)
 
+
+    def deleteItemsOfLayout(self, layout):
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
+                else:
+                    self.deleteItemsOfLayout(item.layout())
+
+    def boxdelete(self, box):
+        for i in range(self.keys.count()):
+            layout_item = self.keys.itemAt(i)
+            if layout_item.layout() == box:
+                self.deleteItemsOfLayout(layout_item.layout())
+                self.vlayout.removeItem(layout_item)
+                break
+
     def removeButtons(self):
-        for i in reversed(range(self.layout.count())):
-            widgetToRemove = self.layout.itemAt(i).widget()
-            # remove it from the layout list
-            self.layout.removeWidget(widgetToRemove)
-            # remove it from the gui
-            widgetToRemove.setParent(None)
-        tmp = 1
+        self.deleteItemsOfLayout(self.layout.layout())
 
 class ButtonGroup(QObject):
     buttonClicked = pyqtSignal(int)
@@ -477,6 +532,59 @@ class ButtonGroup(QObject):
             if idx[1] == 0:
                 self.buttons[idx].setVisible(False)
 
+class AddConfig(QDialog):
+    def __init__(self, parent=None):
+        super(AddConfig, self).__init__(parent)
+        self.setFixedSize(300, 80)
+        self.setWindowTitle("Add Custom Config")
+        self.ok = False
+        self.cname = QLineEdit()
+        self.cname.setFixedWidth(180)
+        self.cname.setValidator(QRegExpValidator(QRegExp('[a-z0-9_-]{1,16}')))
+        self.lbl = QLabel("Config Name:")
+        self.btn_ok = QPushButton("Ok", self)
+        self.btn_ok.clicked.connect(self.button_press)
+        self.btn_cancel = QPushButton("Cancel", self)
+        self.btn_cancel.clicked.connect(self.button_press)
+        self.btns = QHBoxLayout()
+        self.btns.addWidget(self.btn_ok)
+        self.btns.addWidget(self.btn_cancel)
+        grid = QGridLayout()
+        grid.addWidget(self.lbl, 0, 0, Qt.AlignRight)
+        grid.addWidget(self.cname, 0, 1, Qt.AlignLeft)
+        grid.addLayout(self.btns, 1, 1, Qt.AlignRight)
+        self.setLayout(grid)
+
+    def cur_configs(self, configs):
+        self.configs = configs
+
+
+    def button_press(self):
+        if self.sender() == self.btn_ok:
+            # TODO: check if it is a valid name
+            self.ok = True
+            self.close()
+        elif self.sender() == self.btn_cancel:
+            self.close()
+
+    @staticmethod
+    def add_config(configs, parent=None):
+        while True:
+            dialog = AddConfig(parent)
+            result = dialog.exec_()
+            if dialog.ok is True:
+                if dialog.cname.text().__len__() < 1:
+                    warning = QMessageBox(QMessageBox.Warning, "No Config Name",
+                                          "You must enter a name for your config.")
+                    warning.exec_()
+                elif str(dialog.cname.text()) in configs:
+                    warning = QMessageBox(QMessageBox.Warning, "Config Exists",
+                                          "Config \"%s\" already exists." % dialog.cname.text())
+                    warning.exec_()
+                else:
+                    return str(dialog.cname.text())
+            else:
+                return None
 
 def parseArgs():
     parser = argparse.ArgumentParser()
