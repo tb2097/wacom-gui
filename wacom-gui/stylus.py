@@ -442,7 +442,7 @@ class Mapping(QWidget):
         self.eid = None
         self.cid = None
         self.settings = {}
-        self.displays = self.get_displays()
+        self.displays = None
         self.main = QVBoxLayout()
         self.lorient = QHBoxLayout()
         self.orient = QComboBox()
@@ -469,9 +469,6 @@ class Mapping(QWidget):
         self.main.addWidget(self.mode_box)
         self.lscreen = QGridLayout()
         self.screen = QComboBox()
-        # get display info
-        self.screen.addItems(sorted(self.displays.keys()))
-        self.screen.currentIndexChanged.connect(self.update_screen)
         self.screen_lbl = QLabel("Screen: ")
         self.forced = QCheckBox("Force Proportions")
         self.forced.stateChanged.connect(self.update_forced)
@@ -487,6 +484,11 @@ class Mapping(QWidget):
         self.eid = eraser_id
         if 'mapping' in settings.keys():
             self.settings = settings['mapping']
+        # load displays
+        self.displays = self.get_displays()
+        # get display info
+        self.screen.addItems(sorted(self.displays.keys()))
+        self.screen.currentIndexChanged.connect(self.update_screen)
         # set rotation value
         if 'rotate' in self.settings.keys():
             if self.settings['rotate'] == 'False':
@@ -526,14 +528,7 @@ class Mapping(QWidget):
             if self.settings['maptooutput'] in self.displays.keys():
                 idx = self.screen.findText(str(self.settings['maptooutput']))
                 self.screen.setCurrentIndex(idx)
-                self.update_screen()
                 self.screen.setToolTip('[%s]' % self.displays[self.settings['maptooutput']]['cmd'])
-            else:
-                # TODO: check if this is working properly..
-                self.displays['Partial...']['cmd'] = self.settings['maptooutput']
-                self.screen.setToolTip('[%s]' % self.settings['maptooutput'])
-                self.screen.setCurrentIndex(self.screen.findText('Partial...'))
-                self.update_screen()
         else:
             self.settings['maptooutput'] = 'Full'
         # hack note
@@ -609,13 +604,15 @@ class Mapping(QWidget):
 
     def toggle_next(self):
         idx = self.screen.currentIndex()
-        if idx == 3:
-            idx = 0
-        else:
+        if idx + 1 <= self.screen.__len__():
             idx = idx + 1
-        self.screen.setCurrentIndex(idx)
+            self.screen.setCurrentIndex(idx)
+            # if partial matches full screen, skip it
+            if str(self.screen.currentText()) == 'Partial...' and \
+                    self.displays['Full']['cmd'] == self.displays['Partial...']['cmd']:
+                        self.screen.setCurrentIndex(0)
         self.settings['maptooutput'] = str(self.screen.currentText())
-        self.update_screen()
+        # self.update_screen()
 
     def get_displays(self):
         displays = {}
@@ -642,7 +639,11 @@ class Mapping(QWidget):
                                                               'y': int(info[3]),
                                                               'xoff': int(info[4]),
                                                               'yoff': int(info[5])}
-        displays['Partial...'] = {'cmd': "%sx%s+0+0" % (full[0], full[1]),
+        if 'partial' in self.settings.keys():
+            displays['Partial...'] = {'cmd': self.settings['partial']}
+        else:
+            self.settings['partial'] = "%sx%s+0+0" % (full[0], full[1])
+            displays['Partial...'] = {'cmd': "%sx%s+0+0" % (full[0], full[1]),
                                   'x': full[0],
                                   'y': full[1],
                                   'xoff': 0,

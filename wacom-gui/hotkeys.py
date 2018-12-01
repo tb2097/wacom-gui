@@ -165,6 +165,9 @@ class Hotkey(QObject):
                             self.custom.addAction("* %s *" % user_custom[cmd]['label'],
                                                   partial(self.set_value, cmd, user_custom[cmd]['label']))
                         self.keys_custom_list[cmd] = user_custom[cmd]['label']
+                for key in self.keymap_custom.keys():
+                    if key in user_custom.keys():
+                        del user_custom[key]
                 self.keymap_custom.update(user_custom)
         except Exception as e:
             print (e)
@@ -176,7 +179,7 @@ class Hotkey(QObject):
         self.menu.exec_(QCursor.pos())
 
     def get_keystroke(self, runcmd):
-        ok, cmdstring, label, run = KeystrokeGui.get_keystrokes(runcmd, self.cmd)
+        ok, cmdstring, label, run, dconf = KeystrokeGui.get_keystrokes(runcmd, self.cmd)
         if ok == 1:
             # update custom keystroke db
             self.set_value(cmdstring, label)
@@ -184,9 +187,12 @@ class Hotkey(QObject):
                 if label == self.keymap_custom[key]['label'] or key == cmdstring:
                     del self.keymap_custom[key]
                     break
+            if dconf == False:
+                dconf = ''
             self.keymap_custom[cmdstring] = {'label': label,
-                                       'run': run,
-                                       'protected': 0}
+                                             'run': run,
+                                             'protected': 0,
+                                             'dconf': dconf}
             config = os.path.expanduser("~/.wacom-gui")
             if not os.path.exists(config):
                 os.mkdir(config)
@@ -217,6 +223,8 @@ class Hotkey(QObject):
                         xsetcmd = "key %s" % stroke
                     else:
                         xsetcmd = "%s key %s" % (xsetcmd, stroke)
+        if re.match(r'^button \d+', xsetcmd):
+            xsetcmd = xsetcmd.split(' ')[1]
         return xsetcmd
 
     def get_button_cmd(self):
@@ -239,6 +247,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
         self.setWindowTitle("Define Keystroke")
         self.keymap = None
         self.keymap_custom = None
+        self.dconf = None
         self.keys_list = {}
         self.keys_custom_list = {}
         self.menu = QMenu()
@@ -432,7 +441,7 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
         self.keystrokeinput.setText("%s%s" % (blah, cmd))
 
     def get_cmd(self):
-        return str(self.keystrokeinput.text()), str(self.shortcutinput.text()), str(self.runinput.text())
+        return str(self.keystrokeinput.text()), str(self.shortcutinput.text()), str(self.runinput.text()), self.dconf
 
     @staticmethod
     def cmd_path_search(cmd, mode=os.F_OK | os.X_OK, path=None):
@@ -529,10 +538,9 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
                         (entry, custom[entry]['action'], custom[entry]['binding'], custom[entry]['name']))
             f.close()
             os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
-            return True
+            return xbkbmap
         except Exception as e:
             print (e)
-
 
     def load_keyboard_shortcuts(self):
         custom = {}
@@ -573,7 +581,8 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
         elif ' '.join(strokes) in self.keys_custom_list.keys():
             if self.shortcutinput.text() != self.keys_custom_list[' '.join(strokes)]:
                 if self.runinput.text() != '':
-                    if self.run_hotkey_edit():
+                    self.dconf = self.run_hotkey_edit()
+                    if self.dconf != False:
                         super(KeystrokeGui, self).accept()
                     else:
                         warning = QMessageBox(QMessageBox.Warning, "Something happened...",
@@ -584,7 +593,8 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
         # shortcut name used for a different shortcut
         elif self.shortcutinput.text() in self.keys_custom_list.values():
             if self.runinput.text() != '':
-                if self.run_hotkey_edit():
+                self.dconf = self.run_hotkey_edit()
+                if self.dconf != False:
                     super(KeystrokeGui, self).accept()
                 else:
                     warning = QMessageBox(QMessageBox.Warning, "Something happened...",
@@ -605,7 +615,8 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
                 if self.runinput.text().__len__() == 0:
                     super(KeystrokeGui, self).accept()
                 elif self.cmd_path_search(runcmd.split(' ')[0]) is not None:
-                    if self.run_hotkey_edit():
+                    self.dconf = self.run_hotkey_edit()
+                    if self.dconf != False:
                         super(KeystrokeGui, self).accept()
                 else:
                     warning = QMessageBox(QMessageBox.Warning, "Invalid Command",
@@ -637,11 +648,11 @@ class KeystrokeGui(QDialog, keystroke.Ui_Dialog):
                 dialog.runinput.hide()
         result = dialog.exec_()
         if result == 1:
-            cmd, label, run = dialog.get_cmd()
+            cmd, label, run, dconf = dialog.get_cmd()
             cmd = ' '.join(filter(None, re.split('{|}| ', str(cmd))))
-            return QDialog.Accepted, cmd, label, run
+            return QDialog.Accepted, cmd, label, run, dconf
         else:
-            return QDialog.Rejected, None, None, None
+            return QDialog.Rejected, None, None, None, None
 
 
 class HotkeyWidget(QWidget):

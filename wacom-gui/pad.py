@@ -12,6 +12,7 @@ from stylus import WacomAttribSlider
 import pad_ui
 import os
 import json
+import subprocess
 
 # 880, 560
 
@@ -19,6 +20,9 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
     def __init__(self, parent = None):
         super(Pad, self).__init__(parent)
         self.setupUi(self)
+        self.cwd = os.path.dirname(os.path.abspath(__file__))
+        if self.cwd == '/usr/local/bin':
+            self.cwd = '/usr/local/wacom-gui'
         self.keysLayout.setAlignment(Qt.AlignCenter)
         self.reset = QPushButton("Set Defaults")
         self.reset.setMinimumSize(90, 20)
@@ -26,6 +30,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         self.reset.clicked.connect(self.set_default)
         self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
         self.setFocusPolicy(Qt.NoFocus)
+        self.load_dconf()
 
     def deleteItemsOfLayout(self, layout):
         if layout is not None:
@@ -44,6 +49,70 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                 self.deleteItemsOfLayout(layout_item.layout())
                 self.vlayout.removeItem(layout_item)
                 break
+
+    def load_dconf(self):
+        with open(os.path.join(self.cwd, 'custom.json'), 'r') as f:
+            hotkeys = json.load(f)
+        with open(os.path.expanduser("~/.wacom-gui/custom.json"), 'r') as f:
+            custom = json.load(f)
+        for key in hotkeys.keys():
+            if key in custom.keys():
+                del custom[key]
+        hotkeys.update(custom)
+        os_custom = self._load_keyboard_shortcuts()
+        for key, data in hotkeys.items():
+            if data['dconf'] != '':
+                idx = -1
+                found = False
+                for entry in os_custom.keys():
+                    if int(entry.split('custom')[1]) > idx:
+                        idx = int(entry.split('custom')[1])
+                    # name match
+                    if os_custom[entry]['name'] == "'%s'" % data['label'] or \
+                            os_custom[entry]['binding'] == "'%s'" % data['dconf'] or \
+                            os_custom[entry]['action'] == "'%s'" % data['run']:
+                        # update entry
+                        os_custom[entry]['name'] = "'%s'" % data['label']
+                        os_custom[entry]['binding'] = "'%s'" % data['dconf']
+                        os_custom[entry]['action'] = "'%s'" % data['run']
+                        found = True
+                        break
+                if not found:
+                    new_entry = 'custom%d' % (idx + 1)
+                    custom[new_entry] = {'name': "'%s'" % data['label'],
+                                         'binding': "'%s'" % data['dconf'],
+                                         'action': "'%s'" % data['run']}
+        # generate config file
+        try:
+            config = os.path.expanduser("~/.wacom-gui")
+            if not os.path.isdir(config):
+                os.mkdir(config)
+            config = os.path.join(config, "keybind.cfg")
+            f = open(config, "w")
+            for entry in os_custom:
+                f.write("[%s]\naction=%s\nbinding=%s\nname=%s\n\n" %
+                        (entry, os_custom[entry]['action'], os_custom[entry]['binding'], os_custom[entry]['name']))
+            f.close()
+            os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
+        except Exception as e:
+            print e
+
+    def _load_keyboard_shortcuts(self):
+        custom = {}
+        p = subprocess.Popen("dconf dump /org/mate/desktop/keybindings/", shell=True, stdout=subprocess.PIPE)
+        p.wait()
+        output = p.communicate()[0].split('\n')
+        for line in output:
+            if '[custom' in line:
+                entry = line[1:-1]
+                custom[entry] = {}
+            elif 'action' in line:
+                custom[entry]['action'] = line.split('=')[1]
+            elif 'binding' in line:
+                custom[entry]['binding'] = line.split('=')[1]
+            elif 'name' in line:
+                custom[entry]['name'] = line.split('=')[1]
+        return custom
 
     def init_keys(self, dev_id, image, buttons, cmds):
         # remove previous stuff

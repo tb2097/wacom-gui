@@ -626,6 +626,7 @@ https://www.flaticon.com/authors/mobiletuxedo
         dialog = About()
         result = dialog.exec_()
 
+
 def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--load", help="load configuration for device", action="store_true")
@@ -633,7 +634,22 @@ def parseArgs():
     return parser.parse_args()
 
 
+def loadToggleShortcut():
+    keys = os.popen("setxkbmap -query | grep options").read()
+    if keys.__len__() == 0:
+        os.popen("setxkbmap -option 'altwin:hyper_win'")
+    else:
+        keys = keys[8:].strip().split(',')
+        for idx, key in enumerate(keys):
+            if key.find('altwin') != -1 and key.find('hyper_win') == -1:
+                keys[idx] = "altwin:hyper_win"
+        keys = ",".join(map(str, keys))
+        os.popen("setxkbmap -option")
+        os.popen("setxkbmap -option '" + keys + "'")
+
+
 def main():
+    loadToggleShortcut()
     app = QApplication(sys.argv)
     form = WacomGui()
     opts = parseArgs()

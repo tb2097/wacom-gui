@@ -45,7 +45,7 @@ class Tablets:
         try:
             for dev in dev_names:
                 dev_attr = dev.rstrip().split("\t")
-                name = dev.split(' %s' % attr[dev_attr[2]])[0]
+                name = dev.rsplit(' %s' % attr[dev_attr[2]], 1)[0]
                 if name[-3:] in ["Pen", "Pad"]:
                     name = name[:-4]
                 elif "Finger" == name[-6:]:

@@ -2,6 +2,7 @@
 	"lhyper z": {
 		"label": "Toggle Screen (Wacom)",
 		"run": "/usr/local/bin/wacom-gui --toggle",
-		"protected": 1
+		"protected": 1,
+		"dconf": "<Mod4>z"
 	}
 }
