@@ -53,12 +53,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
     def load_dconf(self):
         with open(os.path.join(self.cwd, 'custom.json'), 'r') as f:
             hotkeys = json.load(f)
-        with open(os.path.expanduser("~/.wacom-gui/custom.json"), 'r') as f:
-            custom = json.load(f)
-        for key in hotkeys.keys():
-            if key in custom.keys():
-                del custom[key]
-        hotkeys.update(custom)
+        if os.path.exists(os.path.expanduser("~/.wacom-gui/custom.json")):
+            with open(os.path.expanduser("~/.wacom-gui/custom.json"), 'r') as f:
+                custom = json.load(f)
+            for key in hotkeys.keys():
+                if key in custom.keys():
+                    del custom[key]
+            hotkeys.update(custom)
         os_custom = self._load_keyboard_shortcuts()
         for key, data in hotkeys.items():
             if data['dconf'] != '':

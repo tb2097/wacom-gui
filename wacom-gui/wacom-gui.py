@@ -7,6 +7,8 @@ import sys
 import os
 from os.path import expanduser
 import json
+import subprocess
+import re
 import argparse
 from wacom_data import Tablets
 import wacom_menu
@@ -235,12 +237,12 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 with open("%s/device_default" % conf_path, 'r') as f:
                     device = json.load(f)
                 # config file exists, use it
-                if str(dev_id) in device.keys() and device[str(dev_id)] in self.configs[dev].keys():
-                    self.config = device[str(dev_id)]
+                if str(dev_id) in device.keys() and device[str(dev_id)]['config'] in self.configs[dev].keys():
+                    self.config = device[str(dev_id)]['config']
                 # set defaults in tablet_data, if it's detected
                 for idx in device.keys():
                     try:
-                        self.tablet_data.tablets[self.dev][int(idx)]['config'] = device[idx]
+                        self.tablet_data.tablets[self.dev][int(idx)]['config'] = device[idx]['config']
                     except Exception as e:
                         pass
             self.configLayout.addButton(
@@ -407,9 +409,18 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         if self.dev is not None:
             for idx, tablet in enumerate(self.tablet_data.tablets[self.dev]):
                 if 'config' in tablet.keys():
-                    default[idx] = tablet['config']
+                    # check if toggle enabled
+                    toggle = 0
+                    if 'pad' in self.configs[self.dev][tablet['config']]:
+                        for button in self.configs[self.dev][tablet['config']]['pad']['buttons'].keys():
+                            if self.configs[self.dev][tablet['config']]['pad']['buttons'][button] == 'lhyper z':
+                                toggle = 1
+                                break
+                    default[idx] = {'config': tablet['config'],
+                                    'toggle': toggle}
                 else:
-                    default[idx] = 'default'
+                    default[idx] = {'config': 'default',
+                                    'toggle': 0}
             conf_path = os.path.join("%s/.wacom-gui" % expanduser("~"), self.dev)
             conf_file = os.path.join(conf_path, 'device_default')
             with open(conf_file, 'w') as outfile:
@@ -420,15 +431,6 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.load = True
         for idx, button in enumerate(self.tabletButtons.btn_grp.buttons()):
             self.tabletSelect(idx)
-        sys.exit()
-
-    def toggleDisplay(self):
-        self.toggle = True
-        for idx, button in enumerate(self.tabletButtons.btn_grp.buttons()):
-            self.tabletSelect(idx)
-            if self.pad.is_toggle():
-                self.stylus.mapping.toggle_next()
-                self.updateConfigs()
         sys.exit()
 
     def closeEvent(self, event):
@@ -648,15 +650,89 @@ def loadToggleShortcut():
         os.popen("setxkbmap -option '" + keys + "'")
 
 
+def toggleDisplay():
+    # get tablets
+    tablet_data = Tablets()
+    # get displays
+    displays = {}
+    cmd = "xdpyinfo | grep 'dimensions:'"
+    p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p.communicate()[0]
+    pattern = r"\s+\S+\s+(\d+)x(\d+)"
+    full = re.match(pattern, output).groups()
+    displays['Full'] = {'cmd': "%sx%s+0+0" % (full[0], full[1]),
+                        'x': full[0],
+                        'y': full[1],
+                        'xoff': 0,
+                        'yoff': 0}
+    cmd = "xdpyinfo -ext all | grep head"
+    p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p.communicate()[0]
+    pattern = r"\s+(\S+)\s+#(\d+):\s+(\d+)x(\d+)\D+(\d+),(\d+)"
+    heads = re.findall(pattern, output)
+    for head in heads:
+        info = list(head)
+        displays['%s-%s' % (info[0].upper(), info[1])] = {'cmd': '%sx%s+%s+%s' %
+                                                                 (info[2], info[3], info[4], info[5]),
+                                                          'x': int(info[2]),
+                                                          'y': int(info[3]),
+                                                          'xoff': int(info[4]),
+                                                          'yoff': int(info[5])}
+        displays['Partial...'] = {'cmd': "%sx%s+0+0" % (full[0], full[1]),
+                                  'x': full[0],
+                                  'y': full[1],
+                                  'xoff': 0,
+                                  'yoff': 0}
+    for dev in tablet_data.tablets.keys():
+        path = os.path.join(expanduser("~"), ".wacom-gui/%s" % dev)
+        config_name = None
+        if os.path.exists(os.path.join(path, 'device_default')):
+            with open(os.path.join(path, 'device_default'), 'r') as f:
+                config_name = json.load(f)
+        if config_name is not None:
+            for dev_id, data in enumerate(tablet_data.tablets[dev]):
+                if config_name[str(dev_id)]['toggle'] == 1:
+                    if os.path.exists(os.path.join(path, "%s.json" % config_name[str(dev_id)]['config'])):
+                        with open(os.path.join(path, "%s.json" % config_name[str(dev_id)]['config']), 'r') as f:
+                            config = json.load(f)
+                            if 'mapping' in config['stylus'].keys():
+                                if 'maptooutput' in config['stylus']['mapping'].keys():
+                                    cur_display = config['stylus']['mapping']['maptooutput']
+                                    disp_list = sorted(displays.keys())
+                                    idx = disp_list.index(cur_display)
+                                    if idx + 1 <= displays.keys().__len__():
+                                        idx = idx + 1
+                                        if displays[disp_list[idx]]['cmd'] == displays[disp_list[0]]['cmd']:
+                                            idx = 0
+                                    else:
+                                        idx = 0
+                                    # update config
+                                    config['stylus']['mapping']['maptooutput'] = disp_list[idx]
+                                    conf_file = os.path.join(path, "%s.json" % config_name[str(dev_id)]['config'])
+                                    if os.path.exists(conf_file):
+                                        os.rename(conf_file, "%s.bak" % conf_file)
+                                    with open(conf_file, 'w') as outfile:
+                                        json.dump(config, outfile, sort_keys=True,
+                                                  indent=4, separators=(',', ': '))
+                                    # update mapping
+                                    sid = tablet_data.tablets[dev][dev_id]['stylus']['id']
+                                    eid = tablet_data.tablets[dev][dev_id]['eraser']['id']
+                                    coords = displays[disp_list[idx]]['cmd']
+                                    cmd = "xsetwacom --set %s maptooutput %s" % (sid, coords)
+                                    os.popen(cmd)
+                                    cmd = "xsetwacom --set %s maptooutput %s" % (eid, coords)
+                                    os.popen(cmd)
+    sys.exit()
+
 def main():
     loadToggleShortcut()
     app = QApplication(sys.argv)
-    form = WacomGui()
     opts = parseArgs()
+    if opts.toggle:
+        toggleDisplay()
+    form = WacomGui()
     if opts.load:
         form.quickLoad()
-    if opts.toggle:
-        form.toggleDisplay()
     form.show()
     sys.exit(app.exec_())
 
