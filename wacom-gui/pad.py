@@ -80,7 +80,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                         break
                 if not found:
                     new_entry = 'custom%d' % (idx + 1)
-                    custom[new_entry] = {'name': "'%s'" % data['label'],
+                    os_custom[new_entry] = {'name': "'%s'" % data['label'],
                                          'binding': "'%s'" % data['dconf'],
                                          'action': "'%s'" % data['run']}
         # generate config file
