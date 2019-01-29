@@ -60,12 +60,16 @@ class Tablets:
             pass
         self.__get_libwacom_data()
         self.tablets = {}
-        for device in detected.keys():
+        for device, inputs in detected.iteritems():
             if device[-4:] == '(WL)':
                 dev_type = device[:-5]
             else:
                 dev_type = device
-            devID = self.device_data[dev_type]['devID']
+            try:
+                devID = self.device_data[dev_type]['devID']
+            except:
+                dev_type = dev_type.replace("Pro", "Pro 2")
+                devID = self.device_data[dev_type]['devID']
             if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                 self.tablets[devID] = []
             # assume if it's the same device it has the same inputs for all connected
@@ -74,7 +78,7 @@ class Tablets:
                 idx = self.tablets[devID].__len__()
                 self.tablets[devID].append(copy.deepcopy(self.device_data[dev_type]))
                 self.tablets[devID][idx]['cname'] = device
-            for dev_input in detected[dev_type]:
+            for dev_input in inputs:
                 idx = self.tablets[devID].__len__() - detected[device][dev_input]['id'].__len__()
                 for instance in sorted(detected[device][dev_input]['id']):
                     self.tablets[devID][idx][dev_input]['id'] = instance
@@ -235,11 +239,30 @@ class Tablets:
                         if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
                             if but_info['orient'] in ['Left', 'Right']:
-                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
-                                    "%06.f" % float(elem.attrib['y'])
+                                if 'y' in elem.attrib.keys():
+                                    self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                        "%06.f" % float(elem.attrib['y'])
+                                elif 'd' in elem.attrib.keys():
+                                    d = elem.attrib['d'].split(' ')
+                                    if d[1].find(',') != -1:
+                                        elem.attrib['y'] = d[1].split(',')[1]
+                                    else:
+                                        elem.attrib['y'] = d[2]
+                                    self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                        "%06.f" % float(elem.attrib['y'])
                             else:
-                                self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
-                                    "%06.f" % float(elem.attrib['x'])
+                                if 'x' in elem.attrib.keys():
+                                    self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                        "%06.f" % float(elem.attrib['x'])
+                                elif 'd' in elem.attrib.keys():
+                                    d = elem.attrib['d'].split(' ')
+                                    if d[1].find(',') != -1:
+                                        elem.attrib['x'] = d[1].split(',')[0]
+                                    else:
+                                        elem.attrib['x'] = d[1]
+                                    elem.attrib['x'] = elem.attrib['d'].split(' ')[1]
+                                    self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
+                                        "%06.f" % float(elem.attrib['x'])
                     elif elem.tag.split('}')[1] == 'circle':
                         svg = '%s\n\t\t<circle' % svg
                         # get attr
@@ -298,54 +321,62 @@ class Tablets:
                     if yshift > 0:
                         svg_write = ''
                         for line in svg.split('\n'):
-                            if 'y="' in line and 'ry' not in line:
-                                val = line.split('"')
-                                svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - yshift)
-                            elif 'd="' in line and 'id="' not in line:
-                                val = line.split('"')
-                                points = val[1].split()
-                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
-                                d = "%s\"" % val[0]
-                                for sub in subs:
-                                    if sub[0] == 'M' or sub[0] == 'L':
-                                        attrs = sub.split()
-                                        attrs[2] = str(float(attrs[2]) - float(yshift))
-                                        d = "%s %s" % (d, " ".join(attrs))
-                                    else:
-                                        d = "%s %s" % (d, sub)
-                                d = "%s\"" % d
-                                svg_write = "%s\n%s" % (svg_write, d)
-                            else:
+                            if 'sodipodi' in line:
+                                line = "sodipodi:%s" % line.split('}')[1]
                                 svg_write = "%s\n%s" % (svg_write, line)
+                            else:
+                                if 'y="' in line and 'ry' not in line:
+                                    val = line.split('"')
+                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - yshift)
+                                elif 'd="' in line and 'id="' not in line:
+                                    val = line.split('"')
+                                    points = val[1].split()
+                                    subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                    d = "%s\"" % val[0]
+                                    for sub in subs:
+                                        if sub[0] == 'M' or sub[0] == 'L':
+                                            attrs = sub.split()
+                                            attrs[2] = str(float(attrs[2]) - float(yshift))
+                                            d = "%s %s" % (d, " ".join(attrs))
+                                        else:
+                                            d = "%s %s" % (d, sub)
+                                    d = "%s\"" % d
+                                    svg_write = "%s\n%s" % (svg_write, d)
+                                else:
+                                    svg_write = "%s\n%s" % (svg_write, line)
                     svg = svg_write
                     # shift x values if it is too wide
                     if xmax >= 500:
                         xshift = 300  # shift over by 200 units in the x coord
                         svg_write = ''
                         for line in svg.split('\n'):
-                            if 'x="' in line and 'rx' not in line:
-                                val = line.split('"')
-                                if float(val[1]) >= 500.0:
-                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - xshift)
-                                else:
-                                    svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]))
-                            elif 'd="' in line and 'id="' not in line:
-                                val = line.split('"')
-                                points = val[1].split()
-                                subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
-                                d = "%s\"" % val[0]
-                                for sub in subs:
-                                    if sub[0] == 'M' or sub[0] == 'L':
-                                        attrs = sub.split()
-                                        if float(attrs[1]) >= 500.0:
-                                            attrs[1] = str(float(attrs[1]) - float(xshift))
-                                        d = "%s %s" % (d, " ".join(attrs))
-                                    else:
-                                        d = "%s %s" % (d, sub)
-                                d = "%s\"" % d
-                                svg_write = "%s\n%s" % (svg_write, d)
-                            else:
+                            if 'sodipodi' in line:
+                                line = "sodipodi:%s" % line.split('}')[1]
                                 svg_write = "%s\n%s" % (svg_write, line)
+                            else:
+                                if 'x="' in line and 'rx' not in line:
+                                    val = line.split('"')
+                                    if float(val[1]) >= 500.0:
+                                        svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]) - xshift)
+                                    else:
+                                        svg_write = "%s\n%s\"%d\"" % (svg_write, val[0], float(val[1]))
+                                elif 'd="' in line and 'id="' not in line:
+                                    val = line.split('"')
+                                    points = val[1].split()
+                                    subs = [" ".join(points[i:i + 3]) for i in range(0, len(points), 3)]
+                                    d = "%s\"" % val[0]
+                                    for sub in subs:
+                                        if sub[0] == 'M' or sub[0] == 'L':
+                                            attrs = sub.split()
+                                            if float(attrs[1]) >= 500.0:
+                                                attrs[1] = str(float(attrs[1]) - float(xshift))
+                                            d = "%s %s" % (d, " ".join(attrs))
+                                        else:
+                                            d = "%s %s" % (d, sub)
+                                    d = "%s\"" % d
+                                    svg_write = "%s\n%s" % (svg_write, d)
+                                else:
+                                    svg_write = "%s\n%s" % (svg_write, line)
                     # write top of svg file
                     if xmax >= 500:
                         svg = """<svg
