@@ -18,6 +18,8 @@ import xml.etree.ElementTree as ET
 import math
 import copy
 import sys
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 
 class Tablets:
@@ -66,30 +68,33 @@ class Tablets:
             else:
                 dev_type = device
             try:
+                if dev_type not in self.device_data.keys():
+                    dev_type = dev_type.replace("Pro", "Pro 2")
                 devID = self.device_data[dev_type]['devID']
+                if self.device_data[dev_type]['devID'] not in self.tablets.keys():
+                    self.tablets[devID] = []
+                # assume if it's the same device it has the same inputs for all connected
+                dev_count = detected[device]['pad']['id'].__len__()
+                for x in range(0, dev_count):
+                    idx = self.tablets[devID].__len__()
+                    self.tablets[devID].append(copy.deepcopy(self.device_data[dev_type]))
+                    self.tablets[devID][idx]['cname'] = device
+                for dev_input in inputs:
+                    idx = self.tablets[devID].__len__() - detected[device][dev_input]['id'].__len__()
+                    for instance in sorted(detected[device][dev_input]['id']):
+                        self.tablets[devID][idx][dev_input]['id'] = instance
+                        idx = idx + 1
+                # remove devices that are not available
+                for dev in self.tablets.keys():
+                    for device in self.tablets[dev]:
+                        for id in ['touch', 'stylus', 'eraser', 'cursor', 'pad']:
+                            if id in device.keys():
+                                if 'id' not in device[id].keys():
+                                    del device[id]
             except:
-                dev_type = dev_type.replace("Pro", "Pro 2")
-                devID = self.device_data[dev_type]['devID']
-            if self.device_data[dev_type]['devID'] not in self.tablets.keys():
-                self.tablets[devID] = []
-            # assume if it's the same device it has the same inputs for all connected
-            dev_count = detected[device]['pad']['id'].__len__()
-            for x in range(0, dev_count):
-                idx = self.tablets[devID].__len__()
-                self.tablets[devID].append(copy.deepcopy(self.device_data[dev_type]))
-                self.tablets[devID][idx]['cname'] = device
-            for dev_input in inputs:
-                idx = self.tablets[devID].__len__() - detected[device][dev_input]['id'].__len__()
-                for instance in sorted(detected[device][dev_input]['id']):
-                    self.tablets[devID][idx][dev_input]['id'] = instance
-                    idx = idx + 1
-        # remove devices that are not available
-        for dev in self.tablets.keys():
-            for device in self.tablets[dev]:
-                for id in ['touch', 'stylus', 'eraser', 'cursor', 'pad']:
-                    if id in device.keys():
-                        if 'id' not in device[id].keys():
-                            del device[id]
+                warning = QMessageBox(QMessageBox.Warning, "Unknown Device",
+                                      "Device information for \"%s\" not found." % dev_type)
+                warning.exec_()
 
 
     def __get_libwacom_data(self):
