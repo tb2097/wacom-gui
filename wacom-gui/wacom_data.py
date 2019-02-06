@@ -68,8 +68,19 @@ class Tablets:
             else:
                 dev_type = device
             try:
-                if dev_type not in self.device_data.keys():
-                    dev_type = dev_type.replace("Pro", "Pro 2")
+                # Cintiq Pro 24 hack
+                if dev_type == 'Wacom Cintiq Pro 24':
+                    if 'Wacom Cintiq Pro 24 P' in self.device_data.keys():
+                        dev_type = 'Wacom Cintiq Pro 24 P'
+                    else:
+                        dev_type = 'Wacom Cintiq Pro 24 PT'
+                # ExpressKeys hack
+                if dev_type == 'Wacom Express Key Remote':
+                    dev_type = 'Wacom ExpressKey Remote'
+                # PTH-660/PTH-860 hack
+                if dev_type == 'Wacom Intuos Pro':
+                    if dev_type not in self.device_data.keys():
+                        dev_type = dev_type.replace("Pro", "Pro 2")
                 devID = self.device_data[dev_type]['devID']
                 if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                     self.tablets[devID] = []
@@ -191,10 +202,11 @@ class Tablets:
         for device, data in self.device_data.items():
             # get button svg info
             if 'pad' in data.keys():
-                if data['pad']['buttons'].__len__() == 0:
-                    del data['pad']['buttons']
-                else:
-                    self.pretty_svg(device)
+                if 'buttons' in data['pad'].keys():
+                    if data['pad']['buttons'].__len__() == 0:
+                        del data['pad']['buttons']
+                    else:
+                        self.pretty_svg(device)
 
 
     def pretty_svg(self, device):
