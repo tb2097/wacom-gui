@@ -361,7 +361,7 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
-                    svg = svg_write
+                        svg = svg_write
                     # shift x values if it is too wide
                     if xmax >= 500:
                         xshift = 300  # shift over by 200 units in the x coord
@@ -394,6 +394,7 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
+                        svg = svg_write
                     # write top of svg file
                     if xmax >= 500:
                         svg = """<svg
@@ -410,7 +411,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
+                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg)
                     else:
                         svg = """<svg
                            style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
@@ -426,7 +427,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg)
                     f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
                     f.write(svg)
                     f.close()
