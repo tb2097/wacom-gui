@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'keystroke_dialog.ui'
 #
 # Created: Wed Oct 24 15:09:24 2018
-#      by: PyQt4 UI code generator 4.10.1
+#      by: PyQt5 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
