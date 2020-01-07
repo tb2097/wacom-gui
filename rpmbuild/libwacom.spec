@@ -86,6 +86,9 @@ rm -rf %{buildroot}/usr/lib/udev
 %{_datadir}/libwacom/layouts/*.svg
 
 %changelog
+* Wed Jan 07 2020 Travis Best <travis.best@bronstudios.com> 1.2-1
+- libwacom 1.2
+
 * Fri May 18 2018 Peter Hutterer <peter.hutterer@redhat.com> 0.30-1
 - libwacom 0.30 (#1564606)
 
