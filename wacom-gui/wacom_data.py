@@ -20,6 +20,7 @@ import copy
 import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 
 class Tablets:
@@ -36,7 +37,7 @@ class Tablets:
     def get_connected_tablets(self):
         # check if tablet is actually detected
         p = subprocess.Popen("xsetwacom --list devices", shell=True, stdout=subprocess.PIPE)
-        dev_names = p.communicate()[0].split('\n')
+        dev_names = p.communicate()[0].decode('utf-8').split('\n')
         # all devices must have a pad, use this as unique identifier
         detected = {}
         attr = {'type: TOUCH': 'touch',
@@ -62,7 +63,7 @@ class Tablets:
             pass
         self.__get_libwacom_data()
         self.tablets = {}
-        for device, inputs in detected.iteritems():
+        for device, inputs in detected.items():
             if device[-4:] == '(WL)':
                 dev_type = device[:-5]
             else:
@@ -111,14 +112,14 @@ class Tablets:
     def __get_libwacom_data(self):
         p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
                              stdout=subprocess.PIPE)
-        output = p.communicate()[0].split('\n')
+        output = p.communicate()[0].decode('utf-8').split('\n')
         cur_device = None
         buttons = False
         for line in output:
             if line == '[Device]':
                 cur_device = None
                 buttons = False
-            elif 'Name=' in line:
+            elif line[0:5] == 'Name=':
                 cur_device = line.split('=')[1]
                 if cur_device in self.device_data:
                     cur_device = None

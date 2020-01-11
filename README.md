@@ -1,3 +1,9 @@
+# I've hacked this to run with Python 3 and PyQt5.
+
+I'm not a Python developer, so don't expect the migration to look pretty.
+
+Also fixed a bug in scanning for `Name=` key, which was preventing one of my tablets from being detected.
+
 # wacom-gui
 
 Python/PyQt Wacom GUI for MATE/KDE

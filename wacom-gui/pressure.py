@@ -89,7 +89,7 @@ class pressureSettings(QtGui.QWidget):
     def mouseReleaseEvent(self, event):
         self.tracking = None
         if self.sensor == None:
-            print "Need device to be set"
+            print ("Need device to be set")
         else:
             accuratePts = str((self.points[0][0] - 50)/2) + " " + str(100 - ((self.points[0][1] -50)/2)) + \
             " " + str((self.points[1][0] - 50)/2) + " " + str(100 - ((self.points[1][1] -50)/2))  

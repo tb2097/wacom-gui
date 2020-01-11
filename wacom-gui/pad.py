@@ -97,13 +97,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             f.close()
             os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
         except Exception as e:
-            print e
+            print(e)
 
     def _load_keyboard_shortcuts(self):
         custom = {}
         p = subprocess.Popen("dconf dump /org/mate/desktop/keybindings/", shell=True, stdout=subprocess.PIPE)
         p.wait()
-        output = p.communicate()[0].split('\n')
+        output = p.communicate()[0].decode('utf-8').split('\n')
         for line in output:
             if '[custom' in line:
                 entry = line[1:-1]
@@ -133,7 +133,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         but_loc = {}
         for bid in sorted(buttons.keys()):
             but_loc[bid] = buttons[bid]['pos']
-        for bid, value in sorted(but_loc.iteritems(), key=lambda (k, v): (v, k)):
+        for bid, value in sorted(but_loc.items(), key=lambda t: (t[1], t[0])):
             if cmds.__len__() == 0:
                 keystroke = "Default"
             else:
@@ -328,14 +328,14 @@ class Touch(QWidget):
                         text = "%s - %s" % (control, data[fingers][control]['text'])
                         self.guide.addWidget(GuideWidget(data[fingers][control]['icon'], text))
         except Exception as e:
-            print e
+            print (e)
         group = QGroupBox("Touch Controls")
         group.setFixedSize(290, 80)
         group.setLayout(touch)
         gesture = QGroupBox("Gesture Controls List")
         gesture.setLayout(self.guide)
         gesture.setContentsMargins(6, 6, 6, 6)
-        self.layout.setMargin(0)
+        # self.layout.setMargin(0)
         self.layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
         self.layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
         self.layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)

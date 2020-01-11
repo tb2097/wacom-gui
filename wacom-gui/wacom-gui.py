@@ -16,6 +16,9 @@ import wacom_menu
 from pad import Pad, Touch
 from stylus import Stylus
 
+def QString(s):
+	return s
+
 class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     buttonClicked = pyqtSignal(int)
     def __init__(self, parent=None):
@@ -192,7 +195,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             try:
                 os.remove(conf_path)
             except Exception as e:
-                print e
+                print(e)
             del self.configs[self.dev][self.config]
             self.getConfigs(0)
 
@@ -502,7 +505,7 @@ class ButtonGroup(QObject):
         self.buttons[(idx, 1)] = dev
         self.buttons[(idx, 2)] = wid
         self.buttons[(idx, 3)] = dev_id
-        self.buttons[(idx, 0)].clicked[()].connect(self.buttonMapper.map)
+        self.buttons[(idx, 0)].clicked.connect(self.buttonMapper.map)
         if label.split("Wacom ").__len__() == 2:
             self.buttons[(idx, 0)].setText(QString(label[6:]))
         else:
