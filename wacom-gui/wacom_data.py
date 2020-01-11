@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 ############################################
@@ -20,6 +20,7 @@ import copy
 import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 
 class Tablets:
@@ -36,7 +37,7 @@ class Tablets:
     def get_connected_tablets(self):
         # check if tablet is actually detected
         p = subprocess.Popen("xsetwacom --list devices", shell=True, stdout=subprocess.PIPE)
-        dev_names = p.communicate()[0].split('\n')
+        dev_names = p.communicate()[0].decode('utf-8').split('\n')
         # all devices must have a pad, use this as unique identifier
         detected = {}
         attr = {'type: TOUCH': 'touch',
@@ -46,8 +47,6 @@ class Tablets:
                 'type: PAD': 'pad'}
         try:
             for dev in dev_names:
-                if dev == '':
-                    break
                 dev_attr = dev.rstrip().split("\t")
                 name = dev.rsplit(' %s' % attr[dev_attr[2]], 1)[0]
                 if name[-3:] in ["Pen", "Pad"]:
@@ -64,7 +63,7 @@ class Tablets:
             pass
         self.__get_libwacom_data()
         self.tablets = {}
-        for device, inputs in detected.iteritems():
+        for device, inputs in detected.items():
             if device[-4:] == '(WL)':
                 dev_type = device[:-5]
             else:
@@ -83,14 +82,11 @@ class Tablets:
                 if dev_type.startswith('Wacom Intuos Pro') :
                     if dev_type not in self.device_data.keys():
                         dev_type = dev_type.replace("Pro", "Pro 2")
-                # One Wacom hack
-                if dev_type == 'Wacom One by Wacom S':
-                    dev_type = 'One by Wacom (small)'
                 devID = self.device_data[dev_type]['devID']
                 if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                     self.tablets[devID] = []
                 # assume if it's the same device it has the same inputs for all connected
-                if 'pad' in detected[device]:
+                if 'pad' in detected[device] :
                     dev_count = detected[device]['pad']['id'].__len__()
                 else :
                     dev_count = 1
@@ -119,7 +115,7 @@ class Tablets:
     def __get_libwacom_data(self):
         p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
                              stdout=subprocess.PIPE)
-        output = p.communicate()[0].split('\n')
+        output = p.communicate()[0].decode('utf-8').split('\n')
         cur_device = None
         buttons = False
         for line in output:
@@ -261,9 +257,7 @@ class Tablets:
                         svg = '%s\n\t\t<path' % svg
                         # get attr
                         for attr in elem.attrib:
-                            #TODO: this fix path problem?
-                            if not attr.startswith("{"):
-                                svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
                         svg = "%s\n\t\t\tfill=\"none\" />" % svg
                         if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
@@ -346,9 +340,9 @@ class Tablets:
                 if True:
                 # if not os.path.isfile("/tmp/%s" % self.device_data[device]['svg']):
                     # shift every line to eliminate extra vertical whitespace...
-                    svg_write = ''
                     yshift = ymin - 20
                     if yshift > 0:
+                        svg_write = ''
                         for line in svg.split('\n'):
                             if 'sodipodi' in line:
                                 line = "sodipodi:%s" % line.split('}')[1]
@@ -373,8 +367,7 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
-                    if svg_write != '':
-                        svg = svg_write
+                    svg = svg_write
                     # shift x values if it is too wide
                     if xmax >= 500:
                         xshift = 300  # shift over by 200 units in the x coord
@@ -425,8 +418,6 @@ class Tablets:
                                    fill="#111111"/>
                             </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
                     else:
-                        if not svg.strip().startswith("<g>"):
-                            svg = "<g>%s" % svg
                         svg = """<svg
                            style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
                            width="%s"
@@ -441,7 +432,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg)
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
                     f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
                     f.write(svg)
                     f.close()

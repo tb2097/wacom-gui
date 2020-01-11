@@ -662,7 +662,7 @@ class HotkeyWidget(QWidget):
         self.button = Hotkey(devid, blabel, bid, cmd)
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignLeft)
-        self.layout.setMargin(0)
+        # self.layout.setMargin(0)
         self.layout.addWidget(self.button.btn)
         self.layout.addWidget(self.button.label)
         self.setMaximumSize(120, 40)
