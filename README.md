@@ -1,8 +1,11 @@
-# I've hacked this to run with Python 3 and PyQt5.
+# Quick and dirty migration to python3 and PYQt5
 
-I'm not a Python developer, so don't expect the migration to look pretty.
+Originally performed by @cbsrobot.
 
 Also fixed a bug in scanning for `Name=` key, which was preventing one of my tablets from being detected.
+
+I've added a hack to make the Wacom CTE-630BT work (while over bluetooth using blutetoothctl). For the most part I only needed
+this software to set proportions properly for the active area.
 
 # wacom-gui
 
@@ -15,7 +18,7 @@ These instructions will help you get a copy of the project up and running on yor
 
 ### Prerequisites
 You will require a few packages to get this working on your system:
-- PyQt4
+- PyQt5
 
 ### Installing
 - Running from source
