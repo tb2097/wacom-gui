@@ -51,6 +51,10 @@ class Tablets:
                 name = dev.rsplit(' %s' % attr[dev_attr[2]], 1)[0]
                 if name[-3:] in ["Pen", "Pad"]:
                     name = name[:-4]
+                # The two different command line arguments return different names for the Wacom CTE-630BT
+                # Just mapping one to the other
+                if name == "Wacom Graphire BT":
+                    name = "Wacom Graphire Wireless"
                 elif "Finger" == name[-6:]:
                         name = name[:-7]
                 if name not in detected:

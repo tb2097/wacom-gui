@@ -132,7 +132,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         # add buttons
         but_loc = {}
         for bid in sorted(buttons.keys()):
-            but_loc[bid] = buttons[bid]['pos']
+            but_loc[bid] = buttons[bid].get('pos') or buttons[bid].get("orient")
         for bid, value in sorted(but_loc.items(), key=lambda t: (t[1], t[0])):
             if cmds.__len__() == 0:
                 keystroke = "Default"
@@ -170,19 +170,20 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         except Exception as e:
             print (e)
         # get spacing for final image
-        svg_size = svgWidget.sizeHint()
-        img_h = float(540 - vspace)
-        img_w = float(860 - hspace)
-        scale_w = float(img_w / svg_size.width())
-        scale_h = float(img_h / svg_size.height())
-        if scale_h < scale_w:
-            vspace = round(img_w - (scale_h * svg_size.width()))
-            svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-            svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
-        else:
-            hspace = round(img_h - (scale_w * svg_size.height()))
-            svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-            svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        if svgWidget is not None:
+            svg_size = svgWidget.sizeHint()
+            img_h = float(540 - vspace)
+            img_w = float(860 - hspace)
+            scale_w = float(img_w / svg_size.width())
+            scale_h = float(img_h / svg_size.height())
+            if scale_h < scale_w:
+                vspace = round(img_w - (scale_h * svg_size.width()))
+                svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            else:
+                hspace = round(img_h - (scale_w * svg_size.height()))
+                svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
         # start to build...
         # add top row
         if self.buttons['top'].__len__() != 0:
