@@ -78,14 +78,17 @@ class Tablets:
                 if dev_type == 'Wacom Express Key Remote':
                     dev_type = 'Wacom ExpressKey Remote'
                 # PTH-660/PTH-860 hack
-                if dev_type == 'Wacom Intuos Pro':
+                if dev_type.startswith('Wacom Intuos Pro') :
                     if dev_type not in self.device_data.keys():
                         dev_type = dev_type.replace("Pro", "Pro 2")
                 devID = self.device_data[dev_type]['devID']
                 if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                     self.tablets[devID] = []
                 # assume if it's the same device it has the same inputs for all connected
-                dev_count = detected[device]['pad']['id'].__len__()
+                if 'pad' in detected[device] :
+                    dev_count = detected[device]['pad']['id'].__len__()
+                else :
+                    dev_count = 1
                 for x in range(0, dev_count):
                     idx = self.tablets[devID].__len__()
                     self.tablets[devID].append(copy.deepcopy(self.device_data[dev_type]))
@@ -118,7 +121,7 @@ class Tablets:
             if line == '[Device]':
                 cur_device = None
                 buttons = False
-            elif 'Name=' in line:
+            elif line.startswith('Name=') :
                 cur_device = line.split('=')[1]
                 if cur_device in self.device_data:
                     cur_device = None
@@ -134,8 +137,10 @@ class Tablets:
                 # check if this is a duplicate device
             elif cur_device is not None:
                 if not buttons:
+                    if line.startswith('ModelName') :
+                        self.device_data[cur_device]['ModelName'] = line.split('=')[1]
                     # get usb id; will use for BT as well to simplify mapping
-                    if "DeviceMatch=" in line:
+                    elif "DeviceMatch=" in line:
                         # don't include serial devices
                         if 'serial' in line:
                             del self.device_data[cur_device]
@@ -361,7 +366,7 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
-                        svg = svg_write
+                    svg = svg_write
                     # shift x values if it is too wide
                     if xmax >= 500:
                         xshift = 300  # shift over by 200 units in the x coord
@@ -394,7 +399,6 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
-                        svg = svg_write
                     # write top of svg file
                     if xmax >= 500:
                         svg = """<svg
@@ -411,7 +415,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg)
+                            </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
                     else:
                         svg = """<svg
                            style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
@@ -427,7 +431,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg)
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
                     f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
                     f.write(svg)
                     f.close()
