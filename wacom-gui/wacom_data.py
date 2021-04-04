@@ -85,7 +85,7 @@ class Tablets:
                 if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                     self.tablets[devID] = []
                 # assume if it's the same device it has the same inputs for all connected
-                if 'pad' in detected[device] :
+                if 'pad' in detected[device]:
                     dev_count = detected[device]['pad']['id'].__len__()
                 else :
                     dev_count = 1
@@ -256,7 +256,9 @@ class Tablets:
                         svg = '%s\n\t\t<path' % svg
                         # get attr
                         for attr in elem.attrib:
-                            svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
+                            #TODO: this fix path problem?
+                            if not attr.startswith("{"):
+                                svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
                         svg = "%s\n\t\t\tfill=\"none\" />" % svg
                         if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
@@ -339,9 +341,9 @@ class Tablets:
                 if True:
                 # if not os.path.isfile("/tmp/%s" % self.device_data[device]['svg']):
                     # shift every line to eliminate extra vertical whitespace...
+                    svg_write = ''
                     yshift = ymin - 20
                     if yshift > 0:
-                        svg_write = ''
                         for line in svg.split('\n'):
                             if 'sodipodi' in line:
                                 line = "sodipodi:%s" % line.split('}')[1]
@@ -366,7 +368,8 @@ class Tablets:
                                     svg_write = "%s\n%s" % (svg_write, d)
                                 else:
                                     svg_write = "%s\n%s" % (svg_write, line)
-                    svg = svg_write
+                    if svg_write != '':
+                        svg = svg_write
                     # shift x values if it is too wide
                     if xmax >= 500:
                         xshift = 300  # shift over by 200 units in the x coord
@@ -417,6 +420,8 @@ class Tablets:
                                    fill="#111111"/>
                             </g>%s""" % (xmax - 290, (ymax -yshift) + 20, xmax - 290, (ymax -yshift) + 20, svg_write)
                     else:
+                        if not svg.strip().startswith("<g>"):
+                            svg = "<g>%s" % svg
                         svg = """<svg
                            style="color:#000000;stroke:#7f7f7f;fill:#222222;stroke-width:.5;font-size:8"
                            width="%s"
@@ -431,7 +436,7 @@ class Tablets:
                                    height="%s"
                                    stroke="none"
                                    fill="#111111"/>
-                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg_write)
+                            </g>%s""" % (xmax + 50, (ymax - yshift) + 20, xmax + 50, (ymax - yshift) + 20, svg)
                     f = open("/tmp/%s" % self.device_data[device]['svg'], "w")
                     f.write(svg)
                     f.close()

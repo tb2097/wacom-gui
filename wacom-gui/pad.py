@@ -166,22 +166,22 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             if os.path.exists(bkground):
                 svgWidget = QSvgWidget(bkground)
                 col = col + 1
+            # get spacing for final image
+            svg_size = svgWidget.sizeHint()
+            img_h = float(540 - vspace)
+            img_w = float(860 - hspace)
+            scale_w = float(img_w / svg_size.width())
+            scale_h = float(img_h / svg_size.height())
+            if scale_h < scale_w:
+                vspace = round(img_w - (scale_h * svg_size.width()))
+                svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            else:
+                hspace = round(img_h - (scale_w * svg_size.height()))
+                svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
         except Exception as e:
             print (e)
-        # get spacing for final image
-        svg_size = svgWidget.sizeHint()
-        img_h = float(540 - vspace)
-        img_w = float(860 - hspace)
-        scale_w = float(img_w / svg_size.width())
-        scale_h = float(img_h / svg_size.height())
-        if scale_h < scale_w:
-            vspace = round(img_w - (scale_h * svg_size.width()))
-            svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-            svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
-        else:
-            hspace = round(img_h - (scale_w * svg_size.height()))
-            svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-            svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
         # start to build...
         # add top row
         if self.buttons['top'].__len__() != 0:
