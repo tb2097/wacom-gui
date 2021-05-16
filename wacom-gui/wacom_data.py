@@ -46,6 +46,8 @@ class Tablets:
                 'type: PAD': 'pad'}
         try:
             for dev in dev_names:
+                if dev == '':
+                    break
                 dev_attr = dev.rstrip().split("\t")
                 name = dev.rsplit(' %s' % attr[dev_attr[2]], 1)[0]
                 if name[-3:] in ["Pen", "Pad"]:
@@ -81,6 +83,9 @@ class Tablets:
                 if dev_type.startswith('Wacom Intuos Pro') :
                     if dev_type not in self.device_data.keys():
                         dev_type = dev_type.replace("Pro", "Pro 2")
+                # One Wacom hack
+                if dev_type == 'Wacom One by Wacom S':
+                    dev_type = 'One by Wacom (small)'
                 devID = self.device_data[dev_type]['devID']
                 if self.device_data[dev_type]['devID'] not in self.tablets.keys():
                     self.tablets[devID] = []
