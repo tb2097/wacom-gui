@@ -1,7 +1,7 @@
 %global udevdir %(pkg-config --variable=udevdir udev)
 
 Name:           libwacom
-Version:        1.2
+Version:        1.10
 Release:        1%{?dist}
 Summary:        Tablet Information Client Library
 Requires:       %{name}-data
@@ -14,7 +14,11 @@ Source0:        https://github.com/linuxwacom/libwacom/releases/download/%{name}
 
 BuildRequires:  autoconf automake libtool doxygen
 BuildRequires:  glib2-devel libgudev1-devel
-BuildRequires:  systemd-devel
+BuildRequires:  systemd systemd-devel
+BuildRequires:  git
+BuildRequires:  libxml2-devel
+
+Requires:       %{name}-data = %{version}-%{release}
 
 %description
 %{name} is a library that provides information about Wacom tablets and
@@ -33,15 +37,21 @@ Tablet information client library library development package.
 Summary:        Tablet Information Client Library Library Data Files
 BuildArch:      noarch
 
+# 65-libwacom.rules moved from libwacom to libwacom-data. Conflict here
+# because there's no real use-case for having old libwacom and new
+# libwacom-data installed. libwacom-data doesn't require libwacom but it
+# does require the same version, so let's conflict with any older version
+Conflicts:      %{name} < %{version}
+
 %description data
 Tablet information client library library data files.
 
 %prep
-%setup -q -n %{name}-%{version}
+%autosetup -S git
 
 %build
 autoreconf --force -v --install || exit 1
-%configure --disable-static --disable-silent-rules
+%configure --disable-static --disable-silent-rules -with-udev-dir=%{udevdir}
 export CFLAGS="-std=gnu99"
 make %{?_smp_mflags}
 
@@ -49,25 +59,30 @@ make %{?_smp_mflags}
 make install DESTDIR=%{buildroot} INSTALL="install -p"
 install -d ${RPM_BUILD_ROOT}/%{udevdir}/rules.d
 # auto-generate the udev rule from the database entries
-pushd tools
-./generate-udev-rules > ${RPM_BUILD_ROOT}/%{udevdir}/rules.d/65-libwacom.rules
-popd
+#pushd tools
+#./generate-udev-rules > ${RPM_BUILD_ROOT}/%{udevdir}/rules.d/65-libwacom.rules
+#popd
 
 # We intentionally don't ship *.la files
 rm -f %{buildroot}%{_libdir}/*.la
 # We don't need the 32bit rules file
-rm -rf %{buildroot}/usr/lib/udev
+#rm -rf %{buildroot}/usr/lib/udev
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
 %files
-%doc COPYING README.md 
+%license COPYING
+%doc README.md
 %{_libdir}/libwacom.so.*
 #%{udevdir}/rules.d/65-libwacom.rules
-%{_libdir}/udev/rules.d/65-libwacom.rules
+#%{_libdir}/udev/rules.d/65-libwacom.rules
 %{_bindir}/libwacom-list-local-devices
+%{_bindir}/libwacom-list-devices
+%{_bindir}/libwacom-show-stylus
+%{_bindir}/libwacom-update-db
 %{_datadir}/man/man1/libwacom-list-local-devices.1.gz
+%{_datadir}/man/man1/libwacom-list-devices.1.gz
 
 %files devel
 %doc COPYING
@@ -79,6 +94,8 @@ rm -rf %{buildroot}/usr/lib/udev
 
 %files data
 %doc COPYING
+%{_udevrulesdir}/65-libwacom.rules
+%{_udevhwdbdir}/65-libwacom.hwdb
 %dir %{_datadir}/libwacom
 %{_datadir}/libwacom/*.tablet
 %{_datadir}/libwacom/*.stylus
@@ -86,7 +103,10 @@ rm -rf %{buildroot}/usr/lib/udev
 %{_datadir}/libwacom/layouts/*.svg
 
 %changelog
-* Wed Jan 07 2020 Travis Best <travis.best@bronstudios.com> 1.2-1
+* Thu Jun 10 2021 Ping Cheng <ping.cheng@wacom.com> 1.10-1
+- libwacom 1.10
+
+* Tue Jan 07 2020 Travis Best <travis.best@bronstudios.com> 1.2-1
 - libwacom 1.2
 
 * Fri May 18 2018 Peter Hutterer <peter.hutterer@redhat.com> 0.30-1
