@@ -1,8 +1,8 @@
-%global libwacom_ver 0.32
+%global libwacom_ver 1.11
 
 Name: wacom-gui
-Version: 0.3.0
-Release: rc13
+Version: 0.3.1
+Release: rc1
 Summary: Wacom PyQt4 GUI
 License: GPLv3
 BuildArch: noarch
@@ -19,7 +19,7 @@ Requires: usbutils
 Requires: python
 Requires: systemd
 BuildRequires: python
-Source0: %{name}-%{version}-%{release}.tar.gz
+Source0: %{name}-%{version}-%{release}.tar.xz
 # latest libwacom source can be downloaded from https://github.com/linuxwacom/libwacom/releases/latest
 # this is just to get the .tablet and svg data
 Source1: libwacom-%{libwacom_ver}.tar.bz2
@@ -29,8 +29,8 @@ Source2: wacom.desktop
 Wacom PyQt4 GUI
 
 %prep
-%setup -q -n wacom-gui-master
-%setup -q -T -D -a 1 -n wacom-gui-master
+%setup -q -n %{name}-%{version}-%{release}
+%setup -q -T -D -a 1 -n %{name}-%{version}-%{release}
 
 %build
 cd wacom-gui
@@ -39,8 +39,10 @@ rm -f *.ui
 python -m compileall .
 mv ../LICENSE .
 mv ../README.md .
-mv ../libwacom-%{libwacom_ver}/data .
-rm -f data/Makefile.*
+mkdir data
+cp ../libwacom-%{libwacom_ver}/data/*tablet data
+cp ../libwacom-%{libwacom_ver}/data/*stylus data
+mv ../libwacom-%{libwacom_ver}/data/layouts data
 rm -f data/layouts/Makefile.*
 
 %install
@@ -65,12 +67,15 @@ install -D -m 0644 wacom-gui.service %{buildroot}/etc/systemd/system/wacom-gui.s
 /etc/systemd/system/wacom-gui.service
 #/usr/share/applications/wacom.desktop
 
-
 %clean
 rm -rf %{buildroot}
 
 
 %changelog
+* Tue Jul 27 2021 Ping Cheng <ping.cheng@wacom.com> - 0.3.1-rc1
+- Supported new devices
+- Updated data and layouts files from libwacom-1.11
+- Included data and layouts files to wacom-gui.rpm
 * Fri Dec 07 2018 Travis Best <tb2097> - 0.3.0-rc13
 - Fixed: minor typo in pad.py (line 83)
 * Tue Dec 04 2018 Travis Best <tb2097> - 0.3.0-rc12
