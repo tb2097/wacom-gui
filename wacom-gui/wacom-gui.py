@@ -94,11 +94,16 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def initTabletButtons(self):
         for dev, data in self.tablet_data.tablets.items():
             for dev_id, tablet in enumerate(data):
-                icon = os.path.join(self.cwd, "icons/devices/%spng" % tablet['svg'][:-3])
-                if not os.path.isfile(os.path.join(os.getcwd(), icon)):
+                if 'svg' in tablet :
+                    icon = os.path.join(self.cwd, "icons/devices/%spng" % tablet['svg'][:-3])
+                    if not os.path.isfile(os.path.join(os.getcwd(), icon)):
+                        icon = os.path.join(self.cwd, 'icons/devices/generic.png')
+                    self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], tablet['pad']['id'],
+                                                                             str(dev), dev_id, icon))
+                else :
                     icon = os.path.join(self.cwd, 'icons/devices/generic.png')
-                self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], tablet['pad']['id'],
-                                                                         str(dev), dev_id, icon))
+                    self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], 0,
+                                                                             str(dev), dev_id, icon))
 
     def refreshTablets(self):
         self.tablet_data.get_connected_tablets()

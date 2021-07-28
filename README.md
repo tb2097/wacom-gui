@@ -21,6 +21,7 @@ You will require a few packages to get this working on your system:
 - Running from source
   - download the source, run wacom-gui.py from the wacom-gui directory
   - you can also build an RPM from the SPEC file in the wacom-gui directory
+  - libwacom-data-0.33 or newer
 - Running from RPM
   - download the RPM, install
   - RPM can be added to a repository for deployment
