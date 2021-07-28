@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'stylus_ui.ui'
 #
 # Created: Tue Nov 20 09:08:43 2018
-#      by: PyQt4 UI code generator 4.10.1
+#      by: PyQt5 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -16,18 +16,18 @@ except AttributeError:
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class Ui_StylusWidget(object):
     def setupUi(self, StylusWidget):
         StylusWidget.setObjectName(_fromUtf8("StylusWidget"))
         StylusWidget.resize(840, 520)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(StylusWidget.sizePolicy().hasHeightForWidth())
@@ -67,11 +67,11 @@ class Ui_StylusWidget(object):
 "}\n"
 "border-style: none;\n"
 "border-width: 0px;"))
-        self.keys = QtGui.QWidget()
+        self.keys = QtWidgets.QWidget()
         self.keys.setObjectName(_fromUtf8("keys"))
-        self.penImage = QtGui.QLabel(self.keys)
+        self.penImage = QtWidgets.QLabel(self.keys)
         self.penImage.setGeometry(QtCore.QRect(390, 20, 106, 440))
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.penImage.sizePolicy().hasHeightForWidth())
@@ -79,29 +79,29 @@ class Ui_StylusWidget(object):
         self.penImage.setMinimumSize(QtCore.QSize(106, 440))
         self.penImage.setMaximumSize(QtCore.QSize(106, 440))
         self.penImage.setObjectName(_fromUtf8("penImage"))
-        self.verticalLayoutWidget_4 = QtGui.QWidget(self.keys)
+        self.verticalLayoutWidget_4 = QtWidgets.QWidget(self.keys)
         self.verticalLayoutWidget_4.setGeometry(QtCore.QRect(0, 20, 301, 451))
         self.verticalLayoutWidget_4.setObjectName(_fromUtf8("verticalLayoutWidget_4"))
-        self.penToolLeft = QtGui.QVBoxLayout(self.verticalLayoutWidget_4)
+        self.penToolLeft = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_4)
         self.penToolLeft.setSpacing(0)
-        self.penToolLeft.setMargin(0)
+        # self.penToolLeft.setMargin(0)
         self.penToolLeft.setObjectName(_fromUtf8("penToolLeft"))
-        self.verticalLayoutWidget_5 = QtGui.QWidget(self.keys)
+        self.verticalLayoutWidget_5 = QtWidgets.QWidget(self.keys)
         self.verticalLayoutWidget_5.setGeometry(QtCore.QRect(530, 20, 301, 421))
         self.verticalLayoutWidget_5.setObjectName(_fromUtf8("verticalLayoutWidget_5"))
-        self.penToolRight = QtGui.QVBoxLayout(self.verticalLayoutWidget_5)
+        self.penToolRight = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_5)
         self.penToolRight.setSpacing(0)
-        self.penToolRight.setMargin(0)
+        # self.penToolRight.setMargin(0)
         self.penToolRight.setObjectName(_fromUtf8("penToolRight"))
-        self.penDefault = QtGui.QPushButton(self.keys)
+        self.penDefault = QtWidgets.QPushButton(self.keys)
         self.penDefault.setGeometry(QtCore.QRect(740, 450, 84, 25))
         self.penDefault.setObjectName(_fromUtf8("penDefault"))
         StylusWidget.addTab(self.keys, _fromUtf8(""))
-        self.tab = QtGui.QWidget()
+        self.tab = QtWidgets.QWidget()
         self.tab.setObjectName(_fromUtf8("tab"))
-        self.eraserImage = QtGui.QLabel(self.tab)
+        self.eraserImage = QtWidgets.QLabel(self.tab)
         self.eraserImage.setGeometry(QtCore.QRect(390, 20, 106, 440))
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.eraserImage.sizePolicy().hasHeightForWidth())
@@ -109,36 +109,36 @@ class Ui_StylusWidget(object):
         self.eraserImage.setMinimumSize(QtCore.QSize(106, 440))
         self.eraserImage.setMaximumSize(QtCore.QSize(106, 440))
         self.eraserImage.setObjectName(_fromUtf8("eraserImage"))
-        self.verticalLayoutWidget_6 = QtGui.QWidget(self.tab)
+        self.verticalLayoutWidget_6 = QtWidgets.QWidget(self.tab)
         self.verticalLayoutWidget_6.setGeometry(QtCore.QRect(0, 20, 301, 451))
         self.verticalLayoutWidget_6.setObjectName(_fromUtf8("verticalLayoutWidget_6"))
-        self.eraserToolLeft = QtGui.QVBoxLayout(self.verticalLayoutWidget_6)
+        self.eraserToolLeft = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_6)
         self.eraserToolLeft.setSpacing(0)
-        self.eraserToolLeft.setMargin(0)
+        # self.eraserToolLeft.setMargin(0)
         self.eraserToolLeft.setObjectName(_fromUtf8("eraserToolLeft"))
-        self.verticalLayoutWidget_7 = QtGui.QWidget(self.tab)
+        self.verticalLayoutWidget_7 = QtWidgets.QWidget(self.tab)
         self.verticalLayoutWidget_7.setGeometry(QtCore.QRect(530, 20, 301, 421))
         self.verticalLayoutWidget_7.setObjectName(_fromUtf8("verticalLayoutWidget_7"))
-        self.eraserToolRight = QtGui.QVBoxLayout(self.verticalLayoutWidget_7)
+        self.eraserToolRight = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_7)
         self.eraserToolRight.setSpacing(0)
-        self.eraserToolRight.setMargin(0)
+        # self.eraserToolRight.setMargin(0)
         self.eraserToolRight.setObjectName(_fromUtf8("eraserToolRight"))
-        self.eraserDefault = QtGui.QPushButton(self.tab)
+        self.eraserDefault = QtWidgets.QPushButton(self.tab)
         self.eraserDefault.setGeometry(QtCore.QRect(740, 450, 84, 25))
         self.eraserDefault.setObjectName(_fromUtf8("eraserDefault"))
         StylusWidget.addTab(self.tab, _fromUtf8(""))
-        self.tab_2 = QtGui.QWidget()
+        self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName(_fromUtf8("tab_2"))
-        self.verticalLayoutWidget_8 = QtGui.QWidget(self.tab_2)
+        self.verticalLayoutWidget_8 = QtWidgets.QWidget(self.tab_2)
         self.verticalLayoutWidget_8.setGeometry(QtCore.QRect(530, 20, 301, 421))
         self.verticalLayoutWidget_8.setObjectName(_fromUtf8("verticalLayoutWidget_8"))
-        self.mappingToolRight = QtGui.QVBoxLayout(self.verticalLayoutWidget_8)
+        self.mappingToolRight = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_8)
         self.mappingToolRight.setSpacing(0)
-        self.mappingToolRight.setMargin(0)
+        # self.mappingToolRight.setMargin(0)
         self.mappingToolRight.setObjectName(_fromUtf8("mappingToolRight"))
-        self.mappingImage = QtGui.QLabel(self.tab_2)
+        self.mappingImage = QtWidgets.QLabel(self.tab_2)
         self.mappingImage.setGeometry(QtCore.QRect(40, 20, 340, 440))
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mappingImage.sizePolicy().hasHeightForWidth())
@@ -146,7 +146,7 @@ class Ui_StylusWidget(object):
         self.mappingImage.setMinimumSize(QtCore.QSize(340, 440))
         self.mappingImage.setMaximumSize(QtCore.QSize(340, 440))
         self.mappingImage.setObjectName(_fromUtf8("mappingImage"))
-        self.mappingDefault = QtGui.QPushButton(self.tab_2)
+        self.mappingDefault = QtWidgets.QPushButton(self.tab_2)
         self.mappingDefault.setGeometry(QtCore.QRect(740, 450, 84, 25))
         self.mappingDefault.setObjectName(_fromUtf8("mappingDefault"))
         StylusWidget.addTab(self.tab_2, _fromUtf8(""))

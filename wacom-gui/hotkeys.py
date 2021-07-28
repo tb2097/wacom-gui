@@ -1,8 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from functools import partial
 import json
 import os
@@ -661,7 +662,7 @@ class HotkeyWidget(QWidget):
         self.button = Hotkey(devid, blabel, bid, cmd)
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignLeft)
-        self.layout.setMargin(0)
+        # self.layout.setMargin(0)
         self.layout.addWidget(self.button.btn)
         self.layout.addWidget(self.button.label)
         self.setMaximumSize(120, 40)

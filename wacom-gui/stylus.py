@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtSvg import *
 from hotkeys import HotkeyWidget
 import stylus_ui
 import os
@@ -618,7 +619,7 @@ class Mapping(QWidget):
         displays = {}
         cmd = "xdpyinfo | grep 'dimensions:'"
         p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        output = p.communicate()[0]
+        output = p.communicate()[0].decode('utf-8')
         pattern = r"\s+\S+\s+(\d+)x(\d+)"
         full = re.match(pattern, output).groups()
         displays['Full'] = {'cmd': "%sx%s+0+0" % (full[0], full[1]),
@@ -628,7 +629,7 @@ class Mapping(QWidget):
                             'yoff': 0}
         cmd = "xdpyinfo -ext all | grep head"
         p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        output = p.communicate()[0]
+        output = p.communicate()[0].decode('utf-8')
         pattern = r"\s+(\S+)\s+#(\d+):\s+(\d+)x(\d+)\D+(\d+),(\d+)"
         heads = re.findall(pattern, output)
         for head in heads:
