@@ -117,26 +117,16 @@ class Tablets:
 
 
     def __get_libwacom_data(self):
-        try:
-            # newer libwacom command
-            p = subprocess.Popen("libwacom-list-local-devices --database %s --format datafile" % self.db_path, shell=True,
-                                 stdout=subprocess.PIPE)
-            output = p.communicate()[0].split('\n')
-            if output[0].startswith("Unknown"):
-                # using libwacom < 1.x
-                p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
-                                     stdout=subprocess.PIPE)
-                output = p.communicate()[0].split('\n')
-        except:
-            output = []
-            # TODO: this is fail state...
+        p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
+                             stdout=subprocess.PIPE)
+        output = p.communicate()[0].split('\n')
         cur_device = None
         buttons = False
         for line in output:
             if line == '[Device]':
                 cur_device = None
                 buttons = False
-            elif line.startswith('Name='):
+            elif line.startswith('Name=') :
                 cur_device = line.split('=')[1]
                 if cur_device in self.device_data:
                     cur_device = None
