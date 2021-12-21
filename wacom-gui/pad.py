@@ -13,6 +13,7 @@ import pad_ui
 import os
 import json
 import subprocess
+from kde_shortcut import create, activate
 
 # 880, 560
 
@@ -30,7 +31,16 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         self.reset.clicked.connect(self.set_default)
         self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
         self.setFocusPolicy(Qt.NoFocus)
-        self.load_dconf()
+        desktop = os.environ["DESKTOP_SESSION"]
+        if (desktop == "mate"):
+            self.load_dconf()
+        elif (desktop == "1-kde-plasma-standard"):
+            self.load_kde()
+            #if the KDE shortcut doesn't exist in the two system files, create it
+            if create('Display toggle', 'wacom-gui --toggle', 'Meta+Z', 'This shortcut triggers display toggle for your Wacom tablet.'):
+                activate()
+        else:
+            print("unknown desktop environment")
 
     def deleteItemsOfLayout(self, layout):
         if layout is not None:
@@ -95,6 +105,19 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                         (entry, os_custom[entry]['action'], os_custom[entry]['binding'], os_custom[entry]['name']))
             f.close()
             os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
+        except Exception as e:
+            print e
+
+    # This doesn't actually 'load' kde, but merely replicates the logic of the
+    # load_dconf (MATE) path in the KDE path. This code that ensures
+    # the ".wacom-gui" directory exists could be factored out and called in a
+    # more appropriate place now that multiple desktop enviroments are supported.
+    def load_kde(self):
+        # generate config file
+        try:
+            config = os.path.expanduser("~/.wacom-gui")
+            if not os.path.isdir(config):
+                os.mkdir(config)
         except Exception as e:
             print e
 
