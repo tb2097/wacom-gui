@@ -13,6 +13,7 @@ import pad_ui
 import os
 import json
 import subprocess
+import xfce_shortcut
 from kde_shortcut import create, activate
 
 # 880, 560
@@ -39,6 +40,9 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             #if the KDE shortcut doesn't exist in the two system files, create it
             if create('Display toggle', 'wacom-gui --toggle', 'Meta+Z', 'This shortcut triggers display toggle for your Wacom tablet.'):
                 activate()
+        elif (desktop == "xfce"):
+            if not xfce_shortcut.createShortcut('wacom-gui --toggle', '<Super>Z'):
+                pass
         else:
             print("unknown desktop environment")
 
