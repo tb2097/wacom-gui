@@ -366,6 +366,9 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 break
 
     def updateConfigs(self):
+        # if there is no config don't try to update the configs
+        if (self.config == None):
+            return 
         write = False
         if not self.toolButtons.buttons[(0, 0)].isHidden():
             pad = self.pad.get_config()
