@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import * 
-from PyQt4.QtGui import *
+from Qt import QtCore, QtGui, QtWidgets 
 import sys
 import os
 from os.path import expanduser
@@ -15,8 +14,8 @@ import wacom_menu
 from pad import Pad, Touch
 from stylus import Stylus
 
-class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
-    buttonClicked = pyqtSignal(int)
+class WacomGui(QtWidgets.QMainWindow, wacom_menu.Ui_MainWindow):
+    buttonClicked = QtCore.Signal(int)
     def __init__(self, parent=None):
         super(WacomGui, self).__init__(parent)
         self.setupUi(self)
@@ -25,7 +24,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         if self.cwd == '/usr/local/bin':
             self.cwd = '/usr/local/wacom-gui'
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         # button instances
         self.tabletButtons = ButtonGroup()
         self.toolButtons = ButtonGroup()
@@ -51,7 +50,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.touch = Touch()
         self.touch.hide()
         # ui icon
-        self.tabletRefresh.setIcon(QIcon(os.path.join(self.cwd, os.path.join(self.cwd, 'icons/ui/refresh.png'))))
+        self.tabletRefresh.setIcon(QtGui.QIcon(os.path.join(self.cwd, os.path.join(self.cwd, 'icons/ui/refresh.png'))))
         # get connected tablet info
         self.tablet_data = Tablets()
         # attach function to refresh tablets
@@ -70,8 +69,8 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.refreshTablets()
         self.controlBox.setContentsMargins(0, 0, 0, 0)
         # add control widgets to control box
-        hbox = QHBoxLayout()
-        hbox.setAlignment(Qt.AlignHCenter)
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.setAlignment(QtCore.Qt.AlignHCenter)
         hbox.addWidget(self.pad)
         hbox.addWidget(self.stylus)
         hbox.addWidget(self.touch)
@@ -88,7 +87,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.configButtons.btn_grp.buttonClicked['int'].connect(self.configSelect)
 
     def initTabletButtons(self):
-        for dev, data in self.tablet_data.tablets.items():
+        for dev, data in list(self.tablet_data.tablets.items()):
             for dev_id, tablet in enumerate(data):
                 if 'svg' in tablet :
                     icon = os.path.join(self.cwd, "icons/devices/%spng" % tablet['svg'][:-3])
@@ -107,7 +106,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.tabletLayout.removeButtons()
         self.tabletButtons.removeButton()
         self.initTabletButtons()
-        if self.tabletButtons.buttons.items().__len__() == 0:
+        if list(self.tabletButtons.buttons.items()).__len__() == 0:
             self.toolButtons.hideButtons()
         else:
             self.tabletSelect(0)
@@ -122,7 +121,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def setToolsAvail(self, idx):
         self.dev = self.tabletButtons.buttons[(idx, 1)]
         self.dev_id = self.tabletButtons.buttons[(idx, 3)]
-        if 'pad' in self.tablet_data.tablets[self.dev][self.dev_id].keys():
+        if 'pad' in list(self.tablet_data.tablets[self.dev][self.dev_id].keys()):
             self.toolButtons.buttons[(0, 0)].setVisible(True)
             self.toolButtons.buttons[(0, 1)] = self.dev
             self.toolButtons.buttons[(0, 2)] = self.tablet_data.tablets[self.dev][self.dev_id]['pad']['id']
@@ -132,7 +131,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             self.toolButtons.buttons[(0, 1)] = 0
             self.toolButtons.buttons[(0, 2)] = 0
             self.toolButtons.buttons[(0, 3)] = 0
-        if 'stylus' in self.tablet_data.tablets[self.dev][self.dev_id].keys():
+        if 'stylus' in list(self.tablet_data.tablets[self.dev][self.dev_id].keys()):
             self.toolButtons.buttons[(1, 0)].setVisible(True)
             self.toolButtons.buttons[(1, 1)] = self.dev
             self.toolButtons.buttons[(1, 2)] = [self.tablet_data.tablets[self.dev][self.dev_id]['stylus']['id'],
@@ -143,7 +142,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             self.toolButtons.buttons[(1, 1)] = 0
             self.toolButtons.buttons[(1, 2)] = 0
             self.toolButtons.buttons[(1, 3)] = 0
-        if 'touch' in self.tablet_data.tablets[self.dev][self.dev_id].keys():
+        if 'touch' in list(self.tablet_data.tablets[self.dev][self.dev_id].keys()):
             self.toolButtons.buttons[(2, 0)].setVisible(True)
             self.toolButtons.buttons[(2, 1)] = self.dev
             self.toolButtons.buttons[(2, 2)] = self.tablet_data.tablets[self.dev][self.dev_id]['touch']['id']
@@ -153,7 +152,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             self.toolButtons.buttons[(2, 1)] = 0
             self.toolButtons.buttons[(2, 2)] = 0
             self.toolButtons.buttons[(2, 3)] = 0
-        if 'cursor' in self.tablet_data.tablets[self.dev][self.dev_id].keys():
+        if 'cursor' in list(self.tablet_data.tablets[self.dev][self.dev_id].keys()):
             self.toolButtons.buttons[(3, 0)].setVisible(True)
             self.toolButtons.buttons[(3, 1)] = self.dev
             self.toolButtons.buttons[(3, 2)] = self.tablet_data.tablets[self.dev][self.dev_id]['cursor']['id']
@@ -174,34 +173,34 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
 
     def emptyConfig(self, dev, dev_id):
         config = {}
-        for input in self.tablet_data.tablets[dev][dev_id].keys():
+        for input in list(self.tablet_data.tablets[dev][dev_id].keys()):
             if input in ['pad', 'stylus', 'eraser', 'touch', 'cursor']:
                 config[input] = {}
                 if input in ['pad', 'stylus', 'eraser']:
                     config[input]['buttons'] = {}
                     if input == 'pad':
                         buttons = self.tablet_data.tablets[dev][dev_id][input]['buttons']
-                        for button in buttons.keys():
+                        for button in list(buttons.keys()):
                             config['pad']['buttons'][button] = 'Default'
         return config
 
     def verifyConfigRemove(self):
-        reply = QMessageBox.question(self, 'Remove Config',
+        reply = QtWidgets.QMessageBox.question(self, 'Remove Config',
                                      "Delete \"%s\" config file?" % self.config,
-                                     QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
+                                     QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
             home = "%s/.wacom-gui" % expanduser("~")
             conf_path = os.path.join(home, "%s/%s.json" % (self.dev, self.config))
             # delete file
             try:
                 os.remove(conf_path)
             except Exception as e:
-                print e
+                print(str(e))
             del self.configs[self.dev][self.config]
             self.getConfigs(0)
 
     def newConfig(self):
-        config = AddConfig.add_config(self.configs[self.dev].keys())
+        config = AddConfig.add_config(list(self.configs[self.dev].keys()))
         if config is not None:
             # empty config
             self.configs[self.dev][config] = self.emptyConfig(self.dev, self.dev_id)
@@ -224,7 +223,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         home = "%s/.wacom-gui" % expanduser("~")
         conf_path = os.path.join(home, dev)
         self.tablet_data.tablets[dev][dev_id]['conf_path'] = os.path.join(home, dev)
-        if dev not in self.configs.keys():
+        if dev not in list(self.configs.keys()):
             self.configs[dev] = {}
         if not os.path.exists(conf_path):
             os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
@@ -236,7 +235,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                         self.configs[dev][os.path.splitext(config)[0]] = json.load(f)
             # TODO: allow user to sent alternate config to load by default
             # load default config, if it exists
-            if 'default' not in self.configs[dev].keys():
+            if 'default' not in list(self.configs[dev].keys()):
                 self.configs[dev]['default'] = self.emptyConfig(dev, dev_id)
             # get default config to load for given device, ie last selected config
             self.config = 'default'
@@ -244,10 +243,10 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 with open("%s/device_default" % conf_path, 'r') as f:
                     device = json.load(f)
                 # config file exists, use it
-                if str(dev_id) in device.keys() and device[str(dev_id)]['config'] in self.configs[dev].keys():
+                if str(dev_id) in list(device.keys()) and device[str(dev_id)]['config'] in list(self.configs[dev].keys()):
                     self.config = device[str(dev_id)]['config']
                 # set defaults in tablet_data, if it's detected
-                for idx in device.keys():
+                for idx in list(device.keys()):
                     try:
                         self.tablet_data.tablets[self.dev][int(idx)]['config'] = device[idx]['config']
                     except Exception as e:
@@ -394,11 +393,11 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         if write:
             reply = None
             if self.toggle is False and self.load is False:
-                reply = QMessageBox.question(self, 'Save Config',
+                reply = QtWidgets.QMessageBox.question(self, 'Save Config',
                                                    "Write \"%s\" config file?" % self.config,
-                                             QMessageBox.Yes, QMessageBox.No)
+                                             QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
             # update config if toggle is set or save is called
-            if self.toggle or reply == QMessageBox.Yes:
+            if self.toggle or reply == QtWidgets.QMessageBox.Yes:
                 home = "%s/.wacom-gui" % expanduser("~")
                 conf_path = os.path.join(home, self.dev)
                 conf_file = os.path.join(conf_path, "%s.json" % self.config)
@@ -416,11 +415,11 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         default = {}
         if self.dev is not None:
             for idx, tablet in enumerate(self.tablet_data.tablets[self.dev]):
-                if 'config' in tablet.keys():
+                if 'config' in list(tablet.keys()):
                     # check if toggle enabled
                     toggle = 0
                     if 'pad' in self.configs[self.dev][tablet['config']]:
-                        for button in self.configs[self.dev][tablet['config']]['pad']['buttons'].keys():
+                        for button in list(self.configs[self.dev][tablet['config']]['pad']['buttons'].keys()):
                             if self.configs[self.dev][tablet['config']]['pad']['buttons'][button] == 'lhyper z':
                                 toggle = 1
                                 break
@@ -449,9 +448,9 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
 
 class ButtonLayout:
     def __init__(self):
-        self.layout = QHBoxLayout()
-        self.layout.setAlignment(Qt.AlignLeft)
-        self.frame = QFrame()
+        self.layout = QtWidgets.QHBoxLayout()
+        self.layout.setAlignment(QtCore.Qt.AlignLeft)
+        self.frame = QtWidgets.QFrame()
         self.frame.setLayout(self.layout)
 
     def addButton(self, button):
@@ -479,17 +478,17 @@ class ButtonLayout:
     def removeButtons(self):
         self.deleteItemsOfLayout(self.layout.layout())
 
-class ButtonGroup(QObject):
-    buttonClicked = pyqtSignal(int)
+class ButtonGroup(QtCore.QObject):
+    buttonClicked = QtCore.Signal(int)
 
     def __init__(self):
         super(ButtonGroup, self).__init__()
         self.initUI()
 
     def initUI(self):
-        self.buttonMapper = QSignalMapper(self)
+        self.buttonMapper = QtCore.QSignalMapper(self)
         self.buttons = {}
-        self.btn_grp = QButtonGroup()
+        self.btn_grp = QtWidgets.QButtonGroup()
         self.btn_style = ("QToolButton {\n"
             "   background-color: rgb(220, 220, 220);\n"
             "   border-radius: 4px;\n"
@@ -504,22 +503,22 @@ class ButtonGroup(QObject):
     def addButton(self, label, wid=0, dev=0, dev_id=0, icon=None, isize=48, hide=False):
         select = False
         idx = self.buttons.__len__() / 4
-        self.buttons[(idx, 0)] = QToolButton()
+        self.buttons[(idx, 0)] = QtWidgets.QToolButton()
         self.btn_grp.addButton(self.buttons[(idx, 0)], idx)
         self.buttons[(idx, 1)] = dev
         self.buttons[(idx, 2)] = wid
         self.buttons[(idx, 3)] = dev_id
         self.buttons[(idx, 0)].clicked[()].connect(self.buttonMapper.map)
         if label.split("Wacom ").__len__() == 2:
-            self.buttons[(idx, 0)].setText(QString(label[6:]))
+            self.buttons[(idx, 0)].setText(str(label[6:]))
         else:
-            self.buttons[(idx, 0)].setText(QString(label))
+            self.buttons[(idx, 0)].setText(str(label))
         if icon is not None:
-            self.buttons[(idx, 0)].setIcon(QIcon(icon))
-            self.buttons[(idx, 0)].setIconSize(QSize(isize, isize))
-            self.buttons[(idx, 0)].setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.buttons[(idx, 0)].setMinimumSize(QSize(80, 70))
-        self.buttons[(idx, 0)].setMaximumSize(QSize(120, 90))
+            self.buttons[(idx, 0)].setIcon(QtGui.QIcon(icon))
+            self.buttons[(idx, 0)].setIconSize(QtCore.QSize(isize, isize))
+            self.buttons[(idx, 0)].setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.buttons[(idx, 0)].setMinimumSize(QtCore.QSize(80, 70))
+        self.buttons[(idx, 0)].setMaximumSize(QtCore.QSize(120, 90))
         self.buttonMapper.setMapping(self.buttons[(idx, 0)], idx)
         self.buttons[(idx, 0)].setCheckable(True)
         self.buttons[(idx, 0)].setStyleSheet(self.btn_style)
@@ -549,27 +548,27 @@ class ButtonGroup(QObject):
             if idx[1] == 0:
                 self.buttons[idx].setVisible(False)
 
-class AddConfig(QDialog):
+class AddConfig(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(AddConfig, self).__init__(parent)
         self.setFixedSize(300, 80)
         self.setWindowTitle("Add Custom Config")
         self.ok = False
-        self.cname = QLineEdit()
+        self.cname = QtWidgets.QLineEdit()
         self.cname.setFixedWidth(180)
-        self.cname.setValidator(QRegExpValidator(QRegExp('[a-z0-9_-]{1,16}')))
-        self.lbl = QLabel("Config Name:")
-        self.btn_ok = QPushButton("Ok", self)
+        self.cname.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp('[a-z0-9_-]{1,16}')))
+        self.lbl = QtWidgets.QLabel("Config Name:")
+        self.btn_ok = QtWidgets.QPushButton("Ok", self)
         self.btn_ok.clicked.connect(self.button_press)
-        self.btn_cancel = QPushButton("Cancel", self)
+        self.btn_cancel = QtWidgets.QPushButton("Cancel", self)
         self.btn_cancel.clicked.connect(self.button_press)
-        self.btns = QHBoxLayout()
+        self.btns = QtWidgets.QHBoxLayout()
         self.btns.addWidget(self.btn_ok)
         self.btns.addWidget(self.btn_cancel)
-        grid = QGridLayout()
-        grid.addWidget(self.lbl, 0, 0, Qt.AlignRight)
-        grid.addWidget(self.cname, 0, 1, Qt.AlignLeft)
-        grid.addLayout(self.btns, 1, 1, Qt.AlignRight)
+        grid = QtWidgets.QGridLayout()
+        grid.addWidget(self.lbl, 0, 0, QtCore.Qt.AlignRight)
+        grid.addWidget(self.cname, 0, 1, QtCore.Qt.AlignLeft)
+        grid.addLayout(self.btns, 1, 1, QtCore.Qt.AlignRight)
         self.setLayout(grid)
 
     def cur_configs(self, configs):
@@ -591,11 +590,11 @@ class AddConfig(QDialog):
             result = dialog.exec_()
             if dialog.ok is True:
                 if dialog.cname.text().__len__() < 1:
-                    warning = QMessageBox(QMessageBox.Warning, "No Config Name",
+                    warning = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "No Config Name",
                                           "You must enter a name for your config.")
                     warning.exec_()
                 elif str(dialog.cname.text()) in configs:
-                    warning = QMessageBox(QMessageBox.Warning, "Config Exists",
+                    warning = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "Config Exists",
                                           "Config \"%s\" already exists." % dialog.cname.text())
                     warning.exec_()
                 else:
@@ -603,13 +602,13 @@ class AddConfig(QDialog):
             else:
                 return None
 
-class About(QDialog):
+class About(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(About, self).__init__(parent)
         self.setFixedSize(360, 240)
         self.setWindowTitle("About")
-        self.text = QTextEdit()
-        self.text.setAlignment(Qt.AlignHCenter)
+        self.text = QtWidgets.QTextEdit()
+        self.text.setAlignment(QtCore.Qt.AlignHCenter)
         self.text.setReadOnly(True)
         self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.  
         
@@ -623,11 +622,11 @@ Travis Best (tb2097); Nov. 2018
 Hand Icons by: 
 https://www.flaticon.com/authors/mobiletuxedo 
 [CC 3.0]""")
-        self.text.setFrameShape(QFrame.WinPanel)
-        self.text.setFrameShadow(QFrame.Plain)
+        self.text.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.text.setFrameShadow(QtWidgets.QFrame.Plain)
         self.text.setStyleSheet("background-color:#23464c; color:#dddddd")
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignVCenter)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignVCenter)
         layout.addWidget(self.text)
         self.setLayout(layout)
 
@@ -691,7 +690,7 @@ def toggleDisplay():
                                   'y': full[1],
                                   'xoff': 0,
                                   'yoff': 0}
-    for dev in tablet_data.tablets.keys():
+    for dev in list(tablet_data.tablets.keys()):
         path = os.path.join(expanduser("~"), ".wacom-gui/%s" % dev)
         config_name = None
         if os.path.exists(os.path.join(path, 'device_default')):
@@ -703,12 +702,12 @@ def toggleDisplay():
                     if os.path.exists(os.path.join(path, "%s.json" % config_name[str(dev_id)]['config'])):
                         with open(os.path.join(path, "%s.json" % config_name[str(dev_id)]['config']), 'r') as f:
                             config = json.load(f)
-                            if 'mapping' in config['stylus'].keys():
-                                if 'maptooutput' in config['stylus']['mapping'].keys():
+                            if 'mapping' in list(config['stylus'].keys()):
+                                if 'maptooutput' in list(config['stylus']['mapping'].keys()):
                                     cur_display = config['stylus']['mapping']['maptooutput']
                                     disp_list = sorted(displays.keys())
                                     idx = disp_list.index(cur_display)
-                                    if idx + 1 <= displays.keys().__len__():
+                                    if idx + 1 <= list(displays.keys()).__len__():
                                         idx = idx + 1
                                         if displays[disp_list[idx]]['cmd'] == displays[disp_list[0]]['cmd']:
                                             idx = 0
@@ -734,7 +733,7 @@ def toggleDisplay():
 
 def main():
     loadToggleShortcut()
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     opts = parseArgs()
     if opts.toggle:
         toggleDisplay()
@@ -750,3 +749,4 @@ if __name__ == '__main__':
 
 
 # pyuic4 wacom_menu.ui -o wacom_menu.py
+

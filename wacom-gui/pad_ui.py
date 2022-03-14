@@ -7,27 +7,27 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtCompat, QtWidgets
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
+    _fromUtf8 = str
 except AttributeError:
     def _fromUtf8(s):
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtCompat.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtCompat.translate(context, text, disambig)
 
 class Ui_PadWidget(object):
     def setupUi(self, PadWidget):
         PadWidget.setObjectName(_fromUtf8("PadWidget"))
         PadWidget.resize(840, 520)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(PadWidget.sizePolicy().hasHeightForWidth())
@@ -46,12 +46,12 @@ class Ui_PadWidget(object):
 "                                }\n"
 "border-style: none;\n"
 "border-width: 0px;"))
-        self.keys = QtGui.QWidget()
+        self.keys = QtWidgets.QWidget()
         self.keys.setObjectName(_fromUtf8("keys"))
-        self.gridLayoutWidget = QtGui.QWidget(self.keys)
+        self.gridLayoutWidget = QtWidgets.QWidget(self.keys)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(0, 0, 831, 481))
         self.gridLayoutWidget.setObjectName(_fromUtf8("gridLayoutWidget"))
-        self.keysLayout = QtGui.QGridLayout(self.gridLayoutWidget)
+        self.keysLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.keysLayout.setMargin(0)
         self.keysLayout.setObjectName(_fromUtf8("keysLayout"))
         PadWidget.addTab(self.keys, _fromUtf8(""))

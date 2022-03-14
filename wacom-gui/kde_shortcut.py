@@ -150,8 +150,8 @@ $ kquitapp kglobalaccel && kglobalaccel
 
 from platform import python_version
 if python_version()[0] == '2':
-    import ConfigParser as configparser
-    from StringIO import StringIO
+    import configparser as configparser
+    from io import StringIO
 elif python_version()[0] == '3':
     import configparser
     from io import StringIO
@@ -260,9 +260,9 @@ class _KdeConfigParser(configparser.RawConfigParser):
 
     def read_dict(self, dictionary, source='<dict>'):
         self.clear()
-        for section, opts in dictionary.items():
+        for section, opts in list(dictionary.items()):
             self.add_section(section)
-            for option, value in opts.items():
+            for option, value in list(opts.items()):
                 self.set(section, option, value)
 
     def write(self, fileobj):
@@ -475,7 +475,7 @@ def _findShortcut(data, name = None, shortcut = None, uuid = None):
         False otherwise.
     """
     data_pattern = re.compile('Data_\d+(_\d+)*$')
-    for section, kvdata in data.items():
+    for section, kvdata in list(data.items()):
         if re.match(data_pattern, section):
             ident = section.split("_", 1)[1]
             shortcut_data = getShortcutData(data, ident)

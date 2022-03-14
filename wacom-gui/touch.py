@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtWidgets
 import sys, os, re
 
-class touch(QtGui.QWidget):
+class touch(QtWidgets.QWidget):
     def __init__(self, tabletName, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         if tabletName is None:
             return None
         self.tabletName = tabletName
@@ -14,9 +14,9 @@ class touch(QtGui.QWidget):
 
     def initUI(self):
         # self.devices = []
-        self.mainLayout = QtGui.QHBoxLayout()
+        self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setAlignment(QtCore.Qt.AlignLeft)
-        self.buttons = QtGui.QCheckBox("Enable Touch")
+        self.buttons = QtWidgets.QCheckBox("Enable Touch")
         self.getEnableStatus()
         self.buttons.stateChanged.connect(self.buttonChange)
         # layout code

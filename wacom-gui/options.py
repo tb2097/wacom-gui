@@ -1,14 +1,14 @@
 #!/usr/bin/python
 
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtWidgets
 import sys
 import os
 import re
 
 
-class otherOptions(QtGui.QWidget):
+class otherOptions(QtWidgets.QWidget):
     def __init__(self, deviceNames, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         #self.tabletName = tabletName.replace('Pad', 'Pen')
         # use the detected device names
         self.tabletStylus = deviceNames['stylus']
@@ -25,7 +25,7 @@ class otherOptions(QtGui.QWidget):
         self.tabletActiveArea = ""
         self.orient = ''
         # layout code
-        self.mainLayout = QtGui.QHBoxLayout()
+        self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setAlignment(QtCore.Qt.AlignLeft)
         screens = self.screenOptions()
         if screens:
@@ -36,21 +36,21 @@ class otherOptions(QtGui.QWidget):
 
 
     def screenOptions(self):
-        if QtGui.QDesktopWidget().numScreens() == 1:
+        if QtWidgets.QDesktopWidget().numScreens() == 1:
             self.screenFull = None
             return None
-        groupBox = QtGui.QGroupBox("Screen Area")
+        groupBox = QtWidgets.QGroupBox("Screen Area")
         groupBox.setAlignment(QtCore.Qt.AlignHCenter)
         groupBox.setFixedHeight(120)
-        self.screenGroup = QtGui.QButtonGroup(groupBox)
+        self.screenGroup = QtWidgets.QButtonGroup(groupBox)
         self.displays = []
-        for x in range(0, QtGui.QDesktopWidget().numScreens()):
-            self.displays.append(QtGui.QRadioButton("Monitor %d" % x))
-        self.screenFull = QtGui.QRadioButton("All Monitors")
+        for x in range(0, QtWidgets.QDesktopWidget().numScreens()):
+            self.displays.append(QtWidgets.QRadioButton("Monitor %d" % x))
+        self.screenFull = QtWidgets.QRadioButton("All Monitors")
         for screen in self.displays:
             self.screenGroup.addButton(screen)
         self.screenGroup.addButton(self.screenFull)
-        screenLayout = QtGui.QVBoxLayout()
+        screenLayout = QtWidgets.QVBoxLayout()
         for screen in self.displays:
             screenLayout.addWidget(screen)
         screenLayout.addWidget(self.screenFull)
@@ -61,15 +61,15 @@ class otherOptions(QtGui.QWidget):
 
 
     def flipOptions(self):
-        groupBox = QtGui.QGroupBox("Tablet Orientation")
+        groupBox = QtWidgets.QGroupBox("Tablet Orientation")
         groupBox.setAlignment(QtCore.Qt.AlignHCenter)
         groupBox.setFixedHeight(120)
-        self.tabletFlipGroup = QtGui.QButtonGroup(groupBox)
-        self.tabletRight = QtGui.QRadioButton("Right-Handed")
-        self.tabletLeft = QtGui.QRadioButton("Left-Handed")
+        self.tabletFlipGroup = QtWidgets.QButtonGroup(groupBox)
+        self.tabletRight = QtWidgets.QRadioButton("Right-Handed")
+        self.tabletLeft = QtWidgets.QRadioButton("Left-Handed")
         self.tabletFlipGroup.addButton(self.tabletRight)
         self.tabletFlipGroup.addButton(self.tabletLeft)
-        flipLayout = QtGui.QVBoxLayout()
+        flipLayout = QtWidgets.QVBoxLayout()
         flipLayout.addWidget(self.tabletRight)
         flipLayout.addWidget(self.tabletLeft)
         flipLayout.addStretch(1)
@@ -141,12 +141,12 @@ class otherOptions(QtGui.QWidget):
             self.screenFull.setChecked(1)
         # have to build array then compare... boo
         else:
-            for id in range(0, QtGui.QDesktopWidget().numScreens()):
-                screen = QtGui.QDesktopWidget().screenGeometry(id)
+            for id in range(0, QtWidgets.QDesktopWidget().numScreens()):
+                screen = QtWidgets.QDesktopWidget().screenGeometry(id)
                 cmd = "xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'"
                 totalResolution = os.popen(cmd).read()
                 totalResolution = totalResolution.split()
-                display = [[0 for x in xrange(3)] for x in xrange(3)]
+                display = [[0 for x in range(3)] for x in range(3)]
                 display[2][2] = 1.0
                 display[0][0] = float(screen.width()) / float(totalResolution[0])
                 # percent of screen height

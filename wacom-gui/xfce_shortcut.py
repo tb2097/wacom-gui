@@ -60,7 +60,7 @@ class XfconfInterface:
     itself returns an error.
     """
 
-    _QUERY_COMMAND = u"xfconf-query"
+    _QUERY_COMMAND = "xfconf-query"
 
     @staticmethod
     def _execute(args):
@@ -251,7 +251,7 @@ class XfceShortcut:
     arbitrary tuples.
     """
 
-    _CUSTOM_COMMAND_NAMESPACE = u"/commands/custom"
+    _CUSTOM_COMMAND_NAMESPACE = "/commands/custom"
 
     def __init__(self, namespace, sequence):
         # type: (Optional[Text], Text) -> None
@@ -354,7 +354,7 @@ class XfceShortcut:
 class XfceShortcutInterface:
     """Interface for setting shortcuts in XFCE."""
 
-    _KEYBOARD_SHORTCUT_CHANNEL = u"xfce4-keyboard-shortcuts"
+    _KEYBOARD_SHORTCUT_CHANNEL = "xfce4-keyboard-shortcuts"
 
     @staticmethod
     def _lookupShortcuts(shortcut):
