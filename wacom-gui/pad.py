@@ -4,9 +4,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
+from Qt import QtCore, QtGui, QtSvg, QtWidgets
 from hotkeys import HotkeyWidget
 from stylus import WacomAttribSlider
 import pad_ui
@@ -18,20 +16,20 @@ from kde_shortcut import create, activate
 
 # 880, 560
 
-class Pad(QTabWidget, pad_ui.Ui_PadWidget):
+class Pad(QtWidgets.QTabWidget, pad_ui.Ui_PadWidget):
     def __init__(self, parent = None):
         super(Pad, self).__init__(parent)
         self.setupUi(self)
         self.cwd = os.path.dirname(os.path.abspath(__file__))
         if self.cwd == '/usr/local/bin':
             self.cwd = '/usr/local/wacom-gui'
-        self.keysLayout.setAlignment(Qt.AlignCenter)
-        self.reset = QPushButton("Set Defaults")
+        self.keysLayout.setAlignment(QtCore.Qt.AlignCenter)
+        self.reset = QtWidgets.QPushButton("Set Defaults")
         self.reset.setMinimumSize(90, 20)
         self.reset.setMaximumSize(90, 20)
         self.reset.clicked.connect(self.set_default)
         self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         desktop = os.environ["DESKTOP_SESSION"]
         if (desktop == "mate"):
             self.load_dconf()
@@ -70,16 +68,16 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         if os.path.exists(os.path.expanduser("~/.wacom-gui/custom.json")):
             with open(os.path.expanduser("~/.wacom-gui/custom.json"), 'r') as f:
                 custom = json.load(f)
-            for key in hotkeys.keys():
-                if key in custom.keys():
+            for key in list(hotkeys.keys()):
+                if key in list(custom.keys()):
                     del custom[key]
             hotkeys.update(custom)
         os_custom = self._load_keyboard_shortcuts()
-        for key, data in hotkeys.items():
+        for key, data in list(hotkeys.items()):
             if data['dconf'] != '':
                 idx = -1
                 found = False
-                for entry in os_custom.keys():
+                for entry in list(os_custom.keys()):
                     if int(entry.split('custom')[1]) > idx:
                         idx = int(entry.split('custom')[1])
                     # name match
@@ -110,7 +108,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             f.close()
             os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
         except Exception as e:
-            print e
+            print(str(e))
 
     # This doesn't actually 'load' kde, but merely replicates the logic of the
     # load_dconf (MATE) path in the KDE path. This code that ensures
@@ -123,7 +121,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             if not os.path.isdir(config):
                 os.mkdir(config)
         except Exception as e:
-            print e
+            print(str(e))
 
     def _load_keyboard_shortcuts(self):
         custom = {}
@@ -147,19 +145,19 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         self.deleteItemsOfLayout(self.keysLayout.layout())
         self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
         # TODO: Bottom, Right
-        top = QHBoxLayout()
-        top.setAlignment(Qt.AlignHCenter)
-        left = QVBoxLayout()
-        left.setAlignment(Qt.AlignVCenter)
-        right = QVBoxLayout()
-        right.setAlignment(Qt.AlignVCenter)
-        bottom = QVBoxLayout()
-        bottom.setAlignment(Qt.AlignVCenter)
+        top = QtWidgets.QHBoxLayout()
+        top.setAlignment(QtCore.Qt.AlignHCenter)
+        QtCore.left = QtWidgets.QVBoxLayout()
+        QtCore.left.setAlignment(QtCore.Qt.AlignVCenter)
+        QtCore.right = QtWidgets.QVBoxLayout()
+        QtCore.right.setAlignment(QtCore.Qt.AlignVCenter)
+        bottom = QtWidgets.QVBoxLayout()
+        bottom.setAlignment(QtCore.Qt.AlignVCenter)
         # add buttons
         but_loc = {}
         for bid in sorted(buttons.keys()):
             but_loc[bid] = buttons[bid]['pos']
-        for bid, value in sorted(but_loc.iteritems(), key=lambda (k, v): (v, k)):
+        for bid, value in sorted(iter(list(but_loc.items())), key=lambda k_v: (k_v[1], k_v[0])):
             if cmds.__len__() == 0:
                 keystroke = "Default"
             else:
@@ -173,8 +171,8 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             elif buttons[bid]['orient'] == 'Bottom':
                 self.buttons['bottom'].append(HotkeyWidget(dev_id, bid, buttons[bid]['bid'], keystroke))
         svgWidget = None
-        svg_hspace = QSpacerItem(800, 80, QSizePolicy.Fixed, QSizePolicy.Fixed)
-        svg_vspace = QSpacerItem(80, 300, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        svg_hspace = QtWidgets.QSpacerItem(800, 80, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        svg_vspace = QtWidgets.QSpacerItem(80, 300, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         hspace = 0
         vspace = 20  # reset button
         row = 0
@@ -191,7 +189,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         try:
             bkground = os.path.join("/tmp", image)
             if os.path.exists(bkground):
-                svgWidget = QSvgWidget(bkground)
+                svgWidget = QtSvg.QSvgWidget(bkground)
                 col = col + 1
             # get spacing for final image
             svg_size = svgWidget.sizeHint()
@@ -201,14 +199,14 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             scale_h = float(img_h / svg_size.height())
             if scale_h < scale_w:
                 vspace = round(img_w - (scale_h * svg_size.width()))
-                svg_vspace.changeSize(vspace, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-                svg_hspace.changeSize(img_w, 0, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_vspace.changeSize(vspace, img_h, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, 0, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             else:
                 hspace = round(img_h - (scale_w * svg_size.height()))
-                svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
-                svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
+                svg_vspace.changeSize(0, img_h, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+                svg_hspace.changeSize(img_w, hspace, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         except Exception as e:
-            print (e)
+            print(str(e))
         # start to build...
         # add top row
         if self.buttons['top'].__len__() != 0:
@@ -219,11 +217,11 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         # add left row
         if self.buttons['left'].__len__() != 0:
             for button in self.buttons['left']:
-                left.addWidget(button)
+                QtCore.left.addWidget(button)
             if svgWidget is None:
-                self.keysLayout.addLayout(left, row, 0, 1, 1)
+                self.keysLayout.addLayout(QtCore.left, row, 0, 1, 1)
             else:
-                self.keysLayout.addLayout(left, row, 0, 2, 1)
+                self.keysLayout.addLayout(QtCore.left, row, 0, 2, 1)
         if svgWidget is not None:
             if self.buttons['left'].__len__() == 0:
                 self.keysLayout.addWidget(svgWidget, row, 0, 1, 1)
@@ -234,11 +232,11 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                 row = row + 1
         if self.buttons['right'].__len__() != 0:
             for button in self.buttons['right']:
-                right.addWidget(button)
+                QtCore.right.addWidget(button)
             if svgWidget is None:
-                self.keysLayout.addLayout(right, row, 2, 1, 1)
+                self.keysLayout.addLayout(QtCore.right, row, 2, 1, 1)
             else:
-                self.keysLayout.addLayout(right, row - 1, 3, 2, 1)
+                self.keysLayout.addLayout(QtCore.right, row - 1, 3, 2, 1)
         if self.buttons['left'].__len__() != 0 or self.buttons['right'].__len__() != 0:
             row = row + 1
         if self.buttons['bottom'].__len__() != 0:
@@ -246,13 +244,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                 top.addWidget(button)
             self.keysLayout.addLayout(top, row, 0, 1, col)
             row = row + 1
-        resetLayout = QHBoxLayout()
-        resetLayout.setAlignment(Qt.AlignRight)
+        resetLayout = QtWidgets.QHBoxLayout()
+        resetLayout.setAlignment(QtCore.Qt.AlignRight)
         resetLayout.addWidget(self.reset)
         self.keysLayout.addLayout(resetLayout, row, col, 1, col)
 
     def set_default(self):
-        for loc in self.buttons.keys():
+        for loc in list(self.buttons.keys()):
             for btn in self.buttons[loc]:
                 btn.reset()
 
@@ -265,7 +263,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
 
     def get_config(self):
         buttons = {}
-        for loc in self.buttons.keys():
+        for loc in list(self.buttons.keys()):
             for btn in self.buttons[loc]:
                 info = list(btn.button.get_button_cmd())
                 id = None
@@ -282,13 +280,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         return buttons
 
 
-class Touch(QWidget):
+class Touch(QtWidgets.QWidget):
     def __init__(self):
-        QWidget.__init__(self, None)
+        QtWidgets.QWidget.__init__(self, None)
         self.dev_id = None
         self.touch = None
         self.gesture = None
-        self.layout = QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.taptime = None
         self.rawsample = None
         self.zoomdistance = None
@@ -299,41 +297,41 @@ class Touch(QWidget):
         self.deleteItemsOfLayout(self.layout.layout())
         self.dev_id = dev_id
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.touch = QCheckBox("Enable Touch")
-        self.gesture = QCheckBox("Enable Gestures")
-        self.guide = QVBoxLayout()
-        self.guide.setAlignment(Qt.AlignLeft)
-        touch = QVBoxLayout()
+        self.touch = QtWidgets.QCheckBox("Enable Touch")
+        self.gesture = QtWidgets.QCheckBox("Enable Gestures")
+        self.guide = QtWidgets.QVBoxLayout()
+        self.guide.setAlignment(QtCore.Qt.AlignLeft)
+        touch = QtWidgets.QVBoxLayout()
         touch.addWidget(self.touch)
         touch.addWidget(self.gesture)
         self.touch.setChecked(False)
         self.gesture.setEnabled(False)
-        if 'touch' in settings.keys() and settings['touch'] == 'on':
+        if 'touch' in list(settings.keys()) and settings['touch'] == 'on':
             self.touch.setChecked(True)
             self.gesture.setEnabled(True)
         self.gesture.setChecked(False)
-        if 'gesture' in settings.keys() and settings['gesture'] == 'on' and self.gesture.isEnabled():
+        if 'gesture' in list(settings.keys()) and settings['gesture'] == 'on' and self.gesture.isEnabled():
             self.touch.setChecked(True)
-        if 'taptime' in settings.keys():
+        if 'taptime' in list(settings.keys()):
             self.taptime = WacomAttribSlider(self.dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(settings['taptime']))
         else:
             self.taptime = WacomAttribSlider(self.dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
         self.taptime.setToolTip("Time between taps in ms that will register as a double time")
-        if 'rawsample' in settings.keys():
+        if 'rawsample' in list(settings.keys()):
             self.rawsample = WacomAttribSlider(self.dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
                                                   int(settings['rawsample']))
         else:
             self.rawsample = WacomAttribSlider(self.dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4)
         self.rawsample.setToolTip("Set the sample window size (a sliding average sampling window) for\n"
                                      "incoming input tool raw data points.")
-        if 'zoomdistance' in settings.keys():
+        if 'zoomdistance' in list(settings.keys()):
             self.zoomdistance = WacomAttribSlider(self.dev_id, 'zoomdistance', 180, "Zoom Distance", 50, 500, 25,
                                                 int(settings['zoomdistance']))
         else:
             self.zoomdistance = WacomAttribSlider(self.dev_id, 'zoomdistance', 180, "Zoom Distance", 50, 500, 25)
         self.zoomdistance.setToolTip("A lower value increases the sensitivity when zooming")
-        if 'scrolldistance' in settings.keys():
+        if 'scrolldistance' in list(settings.keys()):
             self.scrolldistance = WacomAttribSlider(self.dev_id, 'scrolldistance', 80, "Scroll Distance", 10, 200, 20,
                                                 int(settings['scrolldistance']))
         else:
@@ -348,26 +346,26 @@ class Touch(QWidget):
                 data = None
                 with open(os.path.join(self.cwd, "icons/ui/touch.json"), 'r') as f:
                     data = json.load(f)
-                for fingers in data.keys():
-                    self.guide.addWidget(QLabel(fingers))
-                    for control in data[fingers].keys():
+                for fingers in list(data.keys()):
+                    self.guide.addWidget(QtWidgets.QLabel(fingers))
+                    for control in list(data[fingers].keys()):
                         text = "%s - %s" % (control, data[fingers][control]['text'])
                         self.guide.addWidget(GuideWidget(data[fingers][control]['icon'], text))
         except Exception as e:
-            print e
-        group = QGroupBox("Touch Controls")
+            print(str(e))
+        group = QtWidgets.QGroupBox("Touch Controls")
         group.setFixedSize(290, 80)
         group.setLayout(touch)
-        gesture = QGroupBox("Gesture Controls List")
+        gesture = QtWidgets.QGroupBox("Gesture Controls List")
         gesture.setLayout(self.guide)
         gesture.setContentsMargins(6, 6, 6, 6)
         self.layout.setMargin(0)
-        self.layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
-        self.layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
-        self.layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)
-        self.layout.addWidget(self.rawsample, 2, 0, 1, 1, Qt.AlignTop)
-        self.layout.addWidget(self.zoomdistance, 3, 0, 1, 1, Qt.AlignTop)
-        self.layout.addWidget(self.scrolldistance, 4, 0, 1, 1, Qt.AlignTop)
+        self.layout.addWidget(group, 0, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.layout.addWidget(gesture, 0, 1, 5, 1, QtCore.Qt.AlignVCenter)
+        self.layout.addWidget(self.taptime, 1, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.layout.addWidget(self.rawsample, 2, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.layout.addWidget(self.zoomdistance, 3, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.layout.addWidget(self.scrolldistance, 4, 0, 1, 1, QtCore.Qt.AlignTop)
         self.setLayout(self.layout)
 
     def deleteItemsOfLayout(self, layout):
@@ -447,32 +445,32 @@ class Touch(QWidget):
         settings[attr] = str(value)
         return settings
 
-class GuideWidget(QWidget):
+class GuideWidget(QtWidgets.QWidget):
     def __init__(self, icon, info):
-        QWidget.__init__(self, None)
+        QtWidgets.QWidget.__init__(self, None)
         self.cwd = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons/ui")
         self.setFixedSize(500, 70)
-        self.icon = QLabel()
+        self.icon = QtWidgets.QLabel()
         self.icon.setFixedSize(40, 40)
-        self.icon.setPixmap(QPixmap(os.path.join(self.cwd, icon)))
+        self.icon.setPixmap(QtGui.QPixmap(os.path.join(self.cwd, icon)))
         self.icon.setScaledContents(True)
-        self.info = QLabel()
+        self.info = QtWidgets.QLabel()
         self.info.setFixedWidth(400)
         self.info.setText(info)
         self.info.setWordWrap(True)
-        layout = QHBoxLayout()
-        layout.setAlignment(Qt.AlignVCenter)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignVCenter)
         layout.addWidget(self.icon)
         layout.addWidget(self.info)
-        group = QGroupBox()
+        group = QtWidgets.QGroupBox()
         group.setLayout(layout)
-        main = QVBoxLayout()
+        main = QtWidgets.QVBoxLayout()
         main.addWidget(group)
         self.setLayout(main)
 
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QtWidgets.QApplication([])
     window = Pad()
     buttons = {'ButtonC': {'bid': 'Button 3', 'orient': 'Left'}, 'ButtonB': {'bid': 'Button 2', 'orient': 'Left'}, 'ButtonA': {'bid': 'Button 1', 'orient': 'Left'}, 'ButtonG': {'bid': 'Button 11', 'orient': 'Left'}, 'ButtonF': {'bid': 'Button 10', 'orient': 'Left'}, 'ButtonE': {'bid': 'Button 9', 'orient': 'Left'}, 'ButtonD': {'bid': 'Button 8', 'orient': 'Left'}, 'RingUp': {'bid': 'AbsWheelUp', 'orient': 'Left'}, 'RingDown': {'bid': 'AbsWheelDown', 'orient': 'Left'}}
     # window.init_keys('intuos4-4x6.svg', buttons, {})

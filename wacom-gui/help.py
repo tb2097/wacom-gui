@@ -1,12 +1,11 @@
 #!/usr/bin/python
 
-from PyQt4 import QtWebKit
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtWidgets
 import sys, os, re
 
-class Help(QtGui.QWidget):
+class Help(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.initUI()
 
     def initUI(self):
@@ -15,6 +14,6 @@ class Help(QtGui.QWidget):
         local_url = QtCore.QUrl.fromLocalFile(file_path)
         self.browser.load(local_url)
 
-        self.mainLayout = QtGui.QHBoxLayout()
+        self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.addWidget(self.browser)
         self.setLayout(self.mainLayout)

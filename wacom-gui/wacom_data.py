@@ -18,8 +18,7 @@ import xml.etree.ElementTree as ET
 import math
 import copy
 import sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from Qt import QtWidgets
 
 
 class Tablets:
@@ -56,7 +55,7 @@ class Tablets:
                         name = name[:-7]
                 if name not in detected:
                     detected[name] = {attr[dev_attr[2]]: {'id': [dev_attr[1].split()[1]]}}
-                elif attr[dev_attr[2]] not in detected[name].keys():
+                elif attr[dev_attr[2]] not in list(detected[name].keys()):
                     detected[name][attr[dev_attr[2]]] = {'id': [dev_attr[1].split()[1]]}
                 else:
                     detected[name][attr[dev_attr[2]]]['id'].append(dev_attr[1].split()[1])
@@ -64,7 +63,7 @@ class Tablets:
             pass
         self.__get_libwacom_data()
         self.tablets = {}
-        for device, inputs in detected.iteritems():
+        for device, inputs in list(detected.items()):
             if device[-4:] == '(WL)':
                 dev_type = device[:-5]
             else:
@@ -72,7 +71,7 @@ class Tablets:
             try:
                 # Cintiq Pro 24 hack
                 if dev_type == 'Wacom Cintiq Pro 24':
-                    if 'Wacom Cintiq Pro 24 P' in self.device_data.keys():
+                    if 'Wacom Cintiq Pro 24 P' in list(self.device_data.keys()):
                         dev_type = 'Wacom Cintiq Pro 24 P'
                     else:
                         dev_type = 'Wacom Cintiq Pro 24 PT'
@@ -81,13 +80,13 @@ class Tablets:
                     dev_type = 'Wacom ExpressKey Remote'
                 # PTH-660/PTH-860 hack
                 if dev_type.startswith('Wacom Intuos Pro') :
-                    if dev_type not in self.device_data.keys():
+                    if dev_type not in list(self.device_data.keys()):
                         dev_type = dev_type.replace("Pro", "Pro 2")
                 # One Wacom hack
                 if dev_type == 'Wacom One by Wacom S':
                     dev_type = 'One by Wacom (small)'
                 devID = self.device_data[dev_type]['devID']
-                if self.device_data[dev_type]['devID'] not in self.tablets.keys():
+                if self.device_data[dev_type]['devID'] not in list(self.tablets.keys()):
                     self.tablets[devID] = []
                 # assume if it's the same device it has the same inputs for all connected
                 if 'pad' in detected[device]:
@@ -104,14 +103,14 @@ class Tablets:
                         self.tablets[devID][idx][dev_input]['id'] = instance
                         idx = idx + 1
                 # remove devices that are not available
-                for dev in self.tablets.keys():
+                for dev in list(self.tablets.keys()):
                     for device in self.tablets[dev]:
                         for id in ['touch', 'stylus', 'eraser', 'cursor', 'pad']:
-                            if id in device.keys():
-                                if 'id' not in device[id].keys():
+                            if id in list(device.keys()):
+                                if 'id' not in list(device[id].keys()):
                                     del device[id]
             except:
-                warning = QMessageBox(QMessageBox.Warning, "Unknown Device",
+                warning = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "Unknown Device",
                                       "Device information for \"%s\" not found." % dev_type)
                 warning.exec_()
 
@@ -209,10 +208,10 @@ class Tablets:
                         except Exception as e:
                             pass
 
-        for device, data in self.device_data.items():
+        for device, data in list(self.device_data.items()):
             # get button svg info
-            if 'pad' in data.keys():
-                if 'buttons' in data['pad'].keys():
+            if 'pad' in list(data.keys()):
+                if 'buttons' in list(data['pad'].keys()):
                     if data['pad']['buttons'].__len__() == 0:
                         del data['pad']['buttons']
                     else:
@@ -241,7 +240,7 @@ class Tablets:
                         for attr in elem.attrib:
                             svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
                         svg = "%s />" % svg
-                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                        if elem.attrib['id'] in list(self.device_data[device]['pad']['buttons'].keys()):
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
                             if but_info['orient'] in ['Left', 'Right']:
                                 self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
@@ -265,13 +264,13 @@ class Tablets:
                             if not attr.startswith("{"):
                                 svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
                         svg = "%s\n\t\t\tfill=\"none\" />" % svg
-                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                        if elem.attrib['id'] in list(self.device_data[device]['pad']['buttons'].keys()):
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
                             if but_info['orient'] in ['Left', 'Right']:
-                                if 'y' in elem.attrib.keys():
+                                if 'y' in list(elem.attrib.keys()):
                                     self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
                                         "%06.f" % float(elem.attrib['y'])
-                                elif 'd' in elem.attrib.keys():
+                                elif 'd' in list(elem.attrib.keys()):
                                     d = elem.attrib['d'].split(' ')
                                     if d[1].find(',') != -1:
                                         elem.attrib['y'] = d[1].split(',')[1]
@@ -280,10 +279,10 @@ class Tablets:
                                     self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
                                         "%06.f" % float(elem.attrib['y'])
                             else:
-                                if 'x' in elem.attrib.keys():
+                                if 'x' in list(elem.attrib.keys()):
                                     self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
                                         "%06.f" % float(elem.attrib['x'])
-                                elif 'd' in elem.attrib.keys():
+                                elif 'd' in list(elem.attrib.keys()):
                                     d = elem.attrib['d'].split(' ')
                                     if d[1].find(',') != -1:
                                         elem.attrib['x'] = d[1].split(',')[0]
@@ -298,7 +297,7 @@ class Tablets:
                         for attr in elem.attrib:
                             svg = "%s\n\t\t\t%s=\"%s\"" % (svg, attr, elem.attrib[attr])
                         svg = "%s />" % svg
-                        if elem.attrib['id'] in self.device_data[device]['pad']['buttons'].keys():
+                        if elem.attrib['id'] in list(self.device_data[device]['pad']['buttons'].keys()):
                             but_info = self.device_data[device]['pad']['buttons'][elem.attrib['id']]
                             if but_info['orient'] in ['Left', 'Right']:
                                 self.device_data[device]['pad']['buttons'][elem.attrib['id']]['pos'] = \
@@ -322,7 +321,7 @@ class Tablets:
                         label = elem.attrib['id'].split('Label')[1]
                         label = label.replace('CCW', "Up")
                         label = label.replace('CW', "Down")
-                        if label in self.device_data[device]['pad']['buttons'].keys():
+                        if label in list(self.device_data[device]['pad']['buttons'].keys()):
                             but_info = self.device_data[device]['pad']['buttons'][label]
                             if but_info['orient'] in ['Left', 'Right']:
                                 self.device_data[device]['pad']['buttons'][label]['pos'] = \

@@ -7,73 +7,73 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from Qt import QtCore, QtCompat, QtWidgets
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
+    _fromUtf8 = str
 except AttributeError:
     def _fromUtf8(s):
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtCompat.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtCompat.translate(context, text, disambig)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(625, 139)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
-        self.formLayoutWidget = QtGui.QWidget(Dialog)
+        self.formLayoutWidget = QtWidgets.QWidget(Dialog)
         self.formLayoutWidget.setGeometry(QtCore.QRect(10, 10, 601, 121))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
-        self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
-        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
+        self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        self.keystrokesLabel = QtGui.QLabel(self.formLayoutWidget)
+        self.keystrokesLabel = QtWidgets.QLabel(self.formLayoutWidget)
         self.keystrokesLabel.setObjectName(_fromUtf8("keystrokesLabel"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.keystrokesLabel)
-        self.keystrokeinput = QtGui.QLineEdit(self.formLayoutWidget)
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.keystrokesLabel)
+        self.keystrokeinput = QtWidgets.QLineEdit(self.formLayoutWidget)
         self.keystrokeinput.setReadOnly(True)
         self.keystrokeinput.setObjectName(_fromUtf8("keystrokeinput"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.keystrokeinput)
-        self.shortcutLabel = QtGui.QLabel(self.formLayoutWidget)
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.keystrokeinput)
+        self.shortcutLabel = QtWidgets.QLabel(self.formLayoutWidget)
         self.shortcutLabel.setObjectName(_fromUtf8("shortcutLabel"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.shortcutLabel)
-        self.shortcutinput = QtGui.QLineEdit(self.formLayoutWidget)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.shortcutLabel)
+        self.shortcutinput = QtWidgets.QLineEdit(self.formLayoutWidget)
         self.shortcutinput.setObjectName(_fromUtf8("shortcutinput"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.shortcutinput)
-        self.runLabel = QtGui.QLabel(self.formLayoutWidget)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.shortcutinput)
+        self.runLabel = QtWidgets.QLabel(self.formLayoutWidget)
         self.runLabel.setObjectName(_fromUtf8("runLabel"))
-        self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.runLabel)
-        self.runinput = QtGui.QLineEdit(self.formLayoutWidget)
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.runLabel)
+        self.runinput = QtWidgets.QLineEdit(self.formLayoutWidget)
         self.runinput.setObjectName(_fromUtf8("runinput"))
-        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.runinput)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.runinput)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.keystroke = QtGui.QPushButton(self.formLayoutWidget)
+        self.keystroke = QtWidgets.QPushButton(self.formLayoutWidget)
         self.keystroke.setMaximumSize(QtCore.QSize(100, 16777215))
         self.keystroke.setObjectName(_fromUtf8("keystroke"))
         self.horizontalLayout_2.addWidget(self.keystroke)
-        self.buttonBox = QtGui.QDialogButtonBox(self.formLayoutWidget)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self.formLayoutWidget)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.horizontalLayout_2.addWidget(self.buttonBox)
-        self.formLayout.setLayout(3, QtGui.QFormLayout.FieldRole, self.horizontalLayout_2)
+        self.formLayout.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2)
 
         self.retranslateUi(Dialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
+        self.buttonBox.accepted.connect(Dialog.accept)
+        self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):

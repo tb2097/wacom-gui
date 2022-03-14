@@ -1,9 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
+from Qt import QtCore, QtGui, QtWidgets
 from hotkeys import HotkeyWidget
 import stylus_ui
 import os
@@ -12,16 +10,16 @@ import re
 
 # 880, 560
 
-class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
+class Stylus(QtWidgets.QTabWidget, stylus_ui.Ui_StylusWidget):
     def __init__(self, parent = None):
         super(Stylus, self).__init__(parent)
         self.setupUi(self)
         self.cwd = os.path.dirname(os.path.abspath(__file__))
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
         # put pen images in GUI
-        self.penImage.setPixmap(QPixmap(os.path.join(self.cwd, "icons/ui/stylus_pen.png")))
+        self.penImage.setPixmap(QtGui.QPixmap(os.path.join(self.cwd, "icons/ui/stylus_pen.png")))
         self.penImage.setScaledContents(True)
-        self.eraserImage.setPixmap(QPixmap(os.path.join(self.cwd,"icons/ui/stylus_eraser.png")))
+        self.eraserImage.setPixmap(QtGui.QPixmap(os.path.join(self.cwd,"icons/ui/stylus_eraser.png")))
         self.eraserImage.setScaledContents(True)
         self.button1 = None
         self.button2 = None
@@ -32,7 +30,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.penTaptime = None
         self.penRawsample = None
         self.penSuppress = None
-        self.penTabletPC = QCheckBox("TabletPCButton")
+        self.penTabletPC = QtWidgets.QCheckBox("TabletPCButton")
         self.penTabletPC.setToolTip("When enabled, pen must touch screen for the stylus to work.")
         self.penTabletPC.stateChanged.connect(self.updateTabletPC)
         self.eraserPressure = None
@@ -41,7 +39,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.eraserRawsample = None
         self.eraserSuppress = None
         self.mapping = Mapping()
-        self.mappingImage.setPixmap(QPixmap(os.path.join(self.cwd, "icons/ui/mapping.png")))
+        self.mappingImage.setPixmap(QtGui.QPixmap(os.path.join(self.cwd, "icons/ui/mapping.png")))
         self.penImage.setScaledContents(True)
         self.mappingToolRight.addWidget(self.mapping)
         self.penDefault.clicked.connect(self.resetPen)
@@ -54,34 +52,34 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.deleteItemsOfLayout(self.penToolRight.layout())
     # TODO: button stuff
     # TODO: mapping stuff
-        if 'pressurecurve' in pen.keys():
+        if 'pressurecurve' in list(pen.keys()):
             self.penPressure = WacomPressure(dev_id, pen['pressurecurve'])
         else:
             self.penPressure = WacomPressure(dev_id)
         self.penPressure.setToolTip("Set pressure curve for input pressure.\n"
                                        "It is composed of two anchor points (0,0 and 100,100)")
         self.penPressure.gauge.installEventFilter(self)
-        if 'threshold' in pen.keys():
+        if 'threshold' in list(pen.keys()):
             self.penThreshold = WacomAttribSlider(dev_id, 'threshold', 26, "Threshold", 0, 2047, 50,
                                                   int(pen['threshold']))
         else:
             self.penThreshold = WacomAttribSlider(dev_id, 'threshold', 26, "Threshold", 0, 2047, 50)
         self.penThreshold.setToolTip("Set  the  minimum  pressure  necessary to generate a Button event\n"
                                      "for the stylus tip, eraser, or touch.")
-        if 'taptime' in pen.keys():
+        if 'taptime' in list(pen.keys()):
             self.penTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(pen['taptime']))
         else:
             self.penTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
         self.penTaptime.setToolTip("Time between taps in ms that will register as a double time")
-        if 'rawsample' in pen.keys():
+        if 'rawsample' in list(pen.keys()):
             self.penRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
                                                   int(pen['rawsample']))
         else:
             self.penRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4)
         self.penRawsample.setToolTip("Set the sample window size (a sliding average sampling window) for\n"
                                      "incoming input tool raw data points.")
-        if 'suppress' in pen.keys():
+        if 'suppress' in list(pen.keys()):
             self.penSuppress = WacomAttribSlider(dev_id, 'suppress', 2, "Tilt Sensitivity", 0, 100, 10,
                                                   int(pen['suppress']))
         else:
@@ -89,7 +87,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.penSuppress.setToolTip("Set the delta (difference) cutoff level for further processing of\n"
                                     "incoming input tool coordinate values.")
 
-        if 'buttons' in pen.keys():
+        if 'buttons' in list(pen.keys()):
             if 'Button2' in pen['buttons']:
                 self.button2 = HotkeyWidget(dev_id, 'Button2', 'Button 2', pen['buttons']['Button2'])
             else:
@@ -103,7 +101,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.penToolLeft.addWidget(self.penThreshold)
         self.penToolLeft.addWidget(self.penTaptime)
         self.penToolLeft.addWidget(self.penRawsample)
-        spacer = QSpacerItem(20, 200, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        spacer = QtWidgets.QSpacerItem(20, 200, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.penToolRight.addWidget(self.button3)
         self.penToolRight.addWidget(self.button2)
         self.penToolRight.addItem(spacer)
@@ -113,41 +111,41 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
     def init_eraser(self, dev_id, eraser):
         self.deleteItemsOfLayout(self.eraserToolLeft.layout())
         self.deleteItemsOfLayout(self.eraserToolRight.layout())
-        if 'pressurecurve' in eraser.keys():
+        if 'pressurecurve' in list(eraser.keys()):
             self.eraserPressure = WacomPressure(dev_id, eraser['pressurecurve'])
         else:
             self.eraserPressure = WacomPressure(dev_id)
         self.eraserPressure.gauge.installEventFilter(self)
         self.eraserPressure.setToolTip("Set pressure curve for input pressure.\n"
                                        "It is composed of two anchor points (0,0 and 100,100)")
-        if 'threshold' in eraser.keys():
+        if 'threshold' in list(eraser.keys()):
             self.eraserThreshold = WacomAttribSlider(dev_id, 'threshold', 26, "Threshold", 0, 2047, 50,
                                                   int(eraser['threshold']))
         else:
             self.eraserThreshold = WacomAttribSlider(dev_id, 'threshold', 26, "Threshold", 0, 2047, 50)
         self.eraserThreshold.setToolTip("Set  the  minimum  pressure  necessary to generate a Button event\n"
                                      "for the stylus tip, eraser, or touch.")
-        if 'taptime' in eraser.keys():
+        if 'taptime' in list(eraser.keys()):
             self.eraserTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(eraser['taptime']))
         else:
             self.eraserTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
         self.eraserTaptime.setToolTip("Time between taps in ms that will register as a double time")
-        if 'rawsample' in eraser.keys():
+        if 'rawsample' in list(eraser.keys()):
             self.eraserRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
                                                   int(eraser['rawsample']))
         else:
             self.eraserRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4)
         self.eraserRawsample.setToolTip("Set the sample window size (a sliding average sampling window) for\n"
                                      "incoming input tool raw data points.")
-        if 'suppress' in eraser.keys():
+        if 'suppress' in list(eraser.keys()):
             self.eraserSuppress = WacomAttribSlider(dev_id, 'suppress', 2, "Tilt Sensitivity", 0, 100, 10,
                                                   int(eraser['suppress']))
         else:
             self.eraserSuppress = WacomAttribSlider(dev_id, 'suppress', 2, "Tilt Sensitivity", 0, 100, 10)
         self.eraserSuppress.setToolTip("Set the delta (difference) cutoff level for further processing of\n"
                                     "incoming input tool coordinate values.")
-        if 'buttons' in eraser.keys():
+        if 'buttons' in list(eraser.keys()):
             if 'Button1' in eraser['buttons']:
                 self.button1 = HotkeyWidget(dev_id, 'Button1', 'Button 1', eraser['buttons']['Button1'])
             else:
@@ -157,7 +155,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.eraserToolLeft.addWidget(self.eraserThreshold)
         self.eraserToolLeft.addWidget(self.eraserTaptime)
         self.eraserToolLeft.addWidget(self.eraserRawsample)
-        spacer = QSpacerItem(20, 200, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        spacer = QtWidgets.QSpacerItem(20, 200, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.eraserToolRight.addWidget(self.button1)
         self.eraserToolRight.addItem(spacer)
         self.eraserToolRight.addWidget(self.eraserSuppress)
@@ -210,7 +208,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.eraserSuppress.set_defaults()
 
     def eventFilter(self, source, event):
-        if event.type() == QEvent.TabletMove:
+        if event.type() == QtCore.QEvent.TabletMove:
             if event.pointerType() == 1:
                 self.penPressure.update_gauge(event.pressure())
                 return True
@@ -262,18 +260,18 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
             data['stylus']['buttons'][info[0]] = info[2]
         return data
 
-class WacomAttribSlider(QWidget):
+class WacomAttribSlider(QtWidgets.QWidget):
     def __init__(self, dev_id, attr, default, label, x, y, ticks=1, setting=None, x_label=None, y_label=None):
-        QWidget.__init__(self, None)
+        QtWidgets.QWidget.__init__(self, None)
         self.dev_id = dev_id
         self.attr = attr
         self.default = default
-        self.group = QGroupBox(label)
+        self.group = QtWidgets.QGroupBox(label)
         self.group.setFixedSize(290, 80)
-        self.group.setAlignment(Qt.AlignTop)
+        self.group.setAlignment(QtCore.Qt.AlignTop)
         self.min = None
         self.max = None
-        self.slider = QSlider(Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         # self.slider.setFocusPolicy(Qt.NoFocus)
         self.slider.setMinimum(x)
         self.slider.setMaximum(y)
@@ -284,35 +282,35 @@ class WacomAttribSlider(QWidget):
             self.slider.setValue(self.default)
         self.slider.setTickInterval(ticks)
         self.slider.setTickPosition(self.slider.TicksBelow)
-        self.value = QLabel(str(self.slider.value()))
+        self.value = QtWidgets.QLabel(str(self.slider.value()))
         self.value.setStyleSheet("QLabel { "
                                  "font-weight: bold; color: #6DD7E8; "
                                  "background-color: #444444; "
                                  "padding-left: 1px; "
                                  "padding-right: 1px;}")
-        self.value.setAlignment(Qt.AlignRight)
+        self.value.setAlignment(QtCore.Qt.AlignRight)
         self.value.setFixedSize(46, 14)
         if x_label is not None:
-            self.min = QLabel(str(x_label))
+            self.min = QtWidgets.QLabel(str(x_label))
         else:
-            self.min = QLabel(str(x))
+            self.min = QtWidgets.QLabel(str(x))
         if y_label is not None:
-            self.max = QLabel(str(y_label))
+            self.max = QtWidgets.QLabel(str(y_label))
         else:
-            self.max = QLabel(str(y))
+            self.max = QtWidgets.QLabel(str(y))
         self.min.setFixedSize(40, 14)
         self.max.setFixedSize(40, 14)
-        self.min.setAlignment(Qt.AlignRight)
-        self.spread = QSpacerItem(240, 14, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.min.setAlignment(QtCore.Qt.AlignRight)
+        self.spread = QtWidgets.QSpacerItem(240, 14, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        grid = QGridLayout()
-        grid.addWidget(self.value, 0, 1, 1, 1, Qt.AlignRight)
-        grid.addWidget(self.slider, 1, 0, 1, 3, Qt.AlignHCenter)
-        grid.addWidget(self.min, 2, 0, 1, 1, Qt.AlignRight)
+        grid = QtWidgets.QGridLayout()
+        grid.addWidget(self.value, 0, 1, 1, 1, QtCore.Qt.AlignRight)
+        grid.addWidget(self.slider, 1, 0, 1, 3, QtCore.Qt.AlignHCenter)
+        grid.addWidget(self.min, 2, 0, 1, 1, QtCore.Qt.AlignRight)
         grid.addItem(self.spread, 2, 1, 1, 1)
-        grid.addWidget(self.max, 2, 2, 1, 1, Qt.AlignLeft)
+        grid.addWidget(self.max, 2, 2, 1, 1, QtCore.Qt.AlignLeft)
         self.group.setLayout(grid)
-        layout = QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.group)
         self.setLayout(layout)
 
@@ -334,9 +332,9 @@ class WacomAttribSlider(QWidget):
         self.value.setText(str(self.default))
         self.slider.setValue(self.default)
 
-class WacomPressure(QWidget):
+class WacomPressure(QtWidgets.QWidget):
     def __init__(self, dev_id, setting=None):
-        QWidget.__init__(self, None)
+        QtWidgets.QWidget.__init__(self, None)
         self.dev_id = dev_id
         self.attr = 'pressurecurve'
         self.defaults = [[0, 100, 0, 100],
@@ -354,18 +352,18 @@ class WacomPressure(QWidget):
             self.setting = setting
             #for value in values:
             #    self.setting.append(int(value))
-        group = QGroupBox('Tip Feel')
+        group = QtWidgets.QGroupBox('Tip Feel')
         group.setFixedSize(290, 148)
-        group.setAlignment(Qt.AlignTop)
-        self.gauge = QProgressBar()
+        group.setAlignment(QtCore.Qt.AlignTop)
+        self.gauge = QtWidgets.QProgressBar()
         self.gauge.setRange(0, 1000)
         self.gauge.setValue(0)
         self.gauge.setFixedSize(260, 18)
-        self.min = QLabel("Soft")
-        self.max = QLabel("Firm")
+        self.min = QtWidgets.QLabel("Soft")
+        self.max = QtWidgets.QLabel("Firm")
         self.min.setFixedSize(40, 14)
         self.max.setFixedSize(40, 14)
-        self.slider = QSlider(Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         # self.slider.setFocusPolicy(Qt.NoFocus)
         self.slider.setMinimum(0)
         self.slider.setMaximum(8)
@@ -377,7 +375,7 @@ class WacomPressure(QWidget):
             self.slider.setValue(0)
         self.slider.setTickInterval(1)
         self.slider.setTickPosition(self.slider.TicksBelow)
-        self.value = QLabel("[%s]" % ",".join(str(i) for i in self.setting))
+        self.value = QtWidgets.QLabel("[%s]" % ",".join(str(i) for i in self.setting))
         self.value.setStyleSheet("QLabel { font-weight: bold; color: #6DD7E8; "
                                  "background-color: #444444; padding-left: 1px; "
                                  "padding-right: 1px;}"
@@ -394,20 +392,20 @@ class WacomPressure(QWidget):
                                  "border-radius: 1px;"
                                  "border: 1px solid black;"
                                  "}")
-        self.value.setAlignment(Qt.AlignRight)
+        self.value.setAlignment(QtCore.Qt.AlignRight)
         self.value.setFixedSize(144, 14)
-        self.min.setAlignment(Qt.AlignRight)
-        self.spread = QSpacerItem(240, 14, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.min.setAlignment(QtCore.Qt.AlignRight)
+        self.spread = QtWidgets.QSpacerItem(240, 14, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
-        grid = QGridLayout()
-        grid.addWidget(self.value, 0, 1, 1, 1, Qt.AlignRight)
-        grid.addWidget(self.slider, 1, 0, 1, 3, Qt.AlignHCenter)
-        grid.addWidget(self.min, 2, 0, 1, 1, Qt.AlignRight)
+        grid = QtWidgets.QGridLayout()
+        grid.addWidget(self.value, 0, 1, 1, 1, QtCore.Qt.AlignRight)
+        grid.addWidget(self.slider, 1, 0, 1, 3, QtCore.Qt.AlignHCenter)
+        grid.addWidget(self.min, 2, 0, 1, 1, QtCore.Qt.AlignRight)
         grid.addItem(self.spread, 2, 1, 1, 1)
-        grid.addWidget(self.max, 2, 2, 1, 1, Qt.AlignLeft)
-        grid.addWidget(self.gauge, 3, 0, 1, 3, Qt.AlignHCenter)
+        grid.addWidget(self.max, 2, 2, 1, 1, QtCore.Qt.AlignLeft)
+        grid.addWidget(self.gauge, 3, 0, 1, 3, QtCore.Qt.AlignHCenter)
         group.setLayout(grid)
-        layout = QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(group)
         self.setLayout(layout)
 
@@ -433,9 +431,9 @@ class WacomPressure(QWidget):
     def update_gauge(self, val):
         self.gauge.setValue(int(val * 1000))
 
-class Mapping(QWidget):
+class Mapping(QtWidgets.QWidget):
     def __init__(self):
-        QWidget.__init__(self, None)
+        QtWidgets.QWidget.__init__(self, None)
         # TODO: orient, mode, screen, forced proportions, tablet area
         # TODO: return values function
         self.sid = None
@@ -443,34 +441,34 @@ class Mapping(QWidget):
         self.cid = None
         self.settings = {}
         self.displays = None
-        self.main = QVBoxLayout()
-        self.lorient = QHBoxLayout()
-        self.orient = QComboBox()
+        self.main = QtWidgets.QVBoxLayout()
+        self.lorient = QtWidgets.QHBoxLayout()
+        self.orient = QtWidgets.QComboBox()
         self.orient.addItems(['ExpressKeys Left', 'ExpressKeys Right', 'ExpressKeys Up', 'ExpressKeys Down'])
         self.orient.currentIndexChanged.connect(self.update_orient)
-        self.orient_lbl = QLabel("Orientation:")
+        self.orient_lbl = QtWidgets.QLabel("Orientation:")
         self.lorient.addWidget(self.orient_lbl)
         self.lorient.addWidget(self.orient)
-        self.mode_group = QButtonGroup()
-        self.mode_pen = QRadioButton('Pen')
-        self.mode_mouse = QRadioButton("Mouse")
-        self.mode_lbl = QLabel("Mode: ")
+        self.mode_group = QtWidgets.QButtonGroup()
+        self.mode_pen = QtWidgets.QRadioButton('Pen')
+        self.mode_mouse = QtWidgets.QRadioButton("Mouse")
+        self.mode_lbl = QtWidgets.QLabel("Mode: ")
         self.mode_group.addButton(self.mode_pen)
         self.mode_group.addButton(self.mode_mouse)
         self.mode_group.buttonClicked['QAbstractButton *'].connect(self.update_mode)
-        self.mode_box = QGroupBox()
+        self.mode_box = QtWidgets.QGroupBox()
         self.mode_box.setFixedSize(290, 40)
-        self.lmode = QHBoxLayout()
+        self.lmode = QtWidgets.QHBoxLayout()
         self.lmode.addWidget(self.mode_lbl)
         self.lmode.addWidget(self.mode_pen)
         self.lmode.addWidget(self.mode_mouse)
         self.mode_box.setLayout(self.lmode)
         self.main.addLayout(self.lorient)
         self.main.addWidget(self.mode_box)
-        self.lscreen = QGridLayout()
-        self.screen = QComboBox()
-        self.screen_lbl = QLabel("Screen: ")
-        self.forced = QCheckBox("Force Proportions")
+        self.lscreen = QtWidgets.QGridLayout()
+        self.screen = QtWidgets.QComboBox()
+        self.screen_lbl = QtWidgets.QLabel("Screen: ")
+        self.forced = QtWidgets.QCheckBox("Force Proportions")
         self.forced.stateChanged.connect(self.update_forced)
         self.lscreen.addWidget(self.screen_lbl, 0, 0)
         self.lscreen.addWidget(self.screen, 0, 1)
@@ -482,7 +480,7 @@ class Mapping(QWidget):
     def initUI(self, stylus_id, eraser_id, settings={}):
         self.sid = stylus_id
         self.eid = eraser_id
-        if 'mapping' in settings.keys():
+        if 'mapping' in list(settings.keys()):
             self.settings = settings['mapping']
         # load displays
         self.displays = self.get_displays()
@@ -490,7 +488,7 @@ class Mapping(QWidget):
         self.screen.addItems(sorted(self.displays.keys()))
         self.screen.currentIndexChanged.connect(self.update_screen)
         # set rotation value
-        if 'rotate' in self.settings.keys():
+        if 'rotate' in list(self.settings.keys()):
             if self.settings['rotate'] == 'False':
                 self.orient.hide()
                 self.orient_lbl.hide()
@@ -507,7 +505,7 @@ class Mapping(QWidget):
             self.orient.setCurrentIndex(0)
         self.update_orient()
         # set mode
-        if 'mode' in self.settings.keys() and self.settings['mode'] == 'relative':
+        if 'mode' in list(self.settings.keys()) and self.settings['mode'] == 'relative':
             self.mode_mouse.setChecked(True)
             self.screen.setDisabled(True)
             self.update_mode(self.mode_mouse)
@@ -516,7 +514,7 @@ class Mapping(QWidget):
             self.screen.setDisabled(False)
             self.update_mode(self.mode_pen)
         # set forced
-        if 'forcedproportion' in self.settings.keys():
+        if 'forcedproportion' in list(self.settings.keys()):
             if self.settings['forcedproportion'] == 'True':
                 self.forced.setChecked(True)
             else:
@@ -524,8 +522,8 @@ class Mapping(QWidget):
         else:
             self.settings['forcedproportion'] = 'False'
         # TODO: figure out partial...
-        if 'maptooutput' in self.settings.keys():
-            if self.settings['maptooutput'] in self.displays.keys():
+        if 'maptooutput' in list(self.settings.keys()):
+            if self.settings['maptooutput'] in list(self.displays.keys()):
                 idx = self.screen.findText(str(self.settings['maptooutput']))
                 self.screen.setCurrentIndex(idx)
                 self.screen.setToolTip('[%s]' % self.displays[self.settings['maptooutput']]['cmd'])
@@ -533,7 +531,7 @@ class Mapping(QWidget):
             self.settings['maptooutput'] = 'Full'
         # hack note
         idx = self.screen.findText('Partial...')
-        self.screen.setItemData(idx, "Just sets display to Full Screen (for now)", Qt.ToolTipRole)
+        self.screen.setItemData(idx, "Just sets display to Full Screen (for now)", QtCore.Qt.ToolTipRole)
 
     def update_orient(self):
         opt = self.orient.currentIndex()
@@ -639,7 +637,7 @@ class Mapping(QWidget):
                                                               'y': int(info[3]),
                                                               'xoff': int(info[4]),
                                                               'yoff': int(info[5])}
-        if 'partial' in self.settings.keys():
+        if 'partial' in list(self.settings.keys()):
             displays['Partial...'] = {'cmd': self.settings['partial']}
         else:
             self.settings['partial'] = "%sx%s+0+0" % (full[0], full[1])
