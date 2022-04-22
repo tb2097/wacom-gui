@@ -124,7 +124,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             if not os.path.isdir(config):
                 os.mkdir(config)
         except Exception as e:
-            print e
+            print(e)
 
     def _load_keyboard_shortcuts(self):
         custom = {}
@@ -209,7 +209,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                 svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
                 svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
         except Exception as e:
-            print (e)
+            print(e)
         # start to build...
         # add top row
         if self.buttons['top'].__len__() != 0:
@@ -355,7 +355,7 @@ class Touch(QWidget):
                         text = "%s - %s" % (control, data[fingers][control]['text'])
                         self.guide.addWidget(GuideWidget(data[fingers][control]['icon'], text))
         except Exception as e:
-            print (e)
+            print(e)
         group = QGroupBox("Touch Controls")
         group.setFixedSize(290, 80)
         group.setLayout(touch)

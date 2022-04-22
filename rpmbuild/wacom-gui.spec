@@ -2,7 +2,7 @@
 
 Name: wacom-gui
 Version: 0.4.0
-Release: rc1
+Release: rc2
 Summary: Wacom PyQt5 GUI
 License: GPLv3
 BuildArch: noarch
@@ -46,7 +46,7 @@ rm -f data/layouts/Makefile.*
 
 %install
 %__rm -rf %{buildroot}
-cd wacom-gui
+cd wacom-gui/wacom-gui
 install -m 0755 -d %{buildroot}/usr/local/%{name}
 cp -r * %{buildroot}/usr/local/%{name}
 cd ../rpmbuild
