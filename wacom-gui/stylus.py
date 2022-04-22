@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from PyQt5.QtCore import *
@@ -582,7 +582,7 @@ class Mapping(QWidget):
         os.popen(cmd)
         cmd = "xsetwacom --get %s area" % (self.sid)
         p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        output = p.communicate()[0].rstrip()
+        output = str(p.communicate()[0].rstrip())
         self.settings['area'] = output
         if self.forced.isChecked():
             self.settings['forcedproportion'] = 'True'

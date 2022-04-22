@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # SPDX-FileCopyrightText: Copyright © 2021 Jason Gerecke <jason.gerecke@wacom.com>
 # SPDX-License-Identifier: MIT
@@ -181,7 +181,7 @@ def _kde5ConfigPath():
 def _kdeConfigPath(version=None):
     """
     Return a configuration path for an arbitrary KDE version.
-    
+
     This function tries to be clever about detecting the most likely
     path intended. You can request a specific version by providing it
     as an argument. This function will raise an exception if no version
@@ -232,11 +232,11 @@ def _dumpKhotkeysRc():
 class _KdeConfigParser(configparser.RawConfigParser):
     """
     Custom configuration parser designed for KDE files.
-    
+
     This parser extends the RawConfigParser with necessary default options
     and some convenience functions.
     """
-    
+
     def __init__(self):
         configparser.RawConfigParser.__init__(self, allow_no_value = True)
         self.optionxform = str
@@ -272,7 +272,7 @@ class _KdeConfigParser(configparser.RawConfigParser):
 def _addShortcutSection(data, parent, value):
     """
     Create a new "Data_{N}" section for a khotkeys shortcut.
-    
+
     This function takes a dictionary of values and assigns them to a
     new "Data_{N}" section of the khotkeys configuration. This function
     takes care of updating the number of declared data sections and
@@ -315,7 +315,7 @@ def _addShortcutSection(data, parent, value):
 def _addShortcutSubsection(data, ident, subsection, value):
     """
     Create a new "Data_{N}{Foo}" subsection for a khotkeys shortcut.
-    
+
     This function takes a dictionary of values and assigns them to a
     new "Data_{N}{Foo}" section of the khotkeys configuration. This
     function takes care of updating the number of declared {Foo}
@@ -352,7 +352,7 @@ def _addShortcutSubsection(data, ident, subsection, value):
 def _addShortcut(data, parent, name, command, shortcut, comment):
     """
     Add a new shortcut into the khotkeys configuration.
-    
+
     This function creates the multiple sections of khotkeys configuration
     which define a keyboard shortcut that launches a command. No validation
     is performed to check for other conflicting shortcuts; you should
@@ -393,7 +393,7 @@ def _addShortcut(data, parent, name, command, shortcut, comment):
 def getShortcutData(data, ident):
     """
     Try to return basic information about the requested khotkeys shortcut.
-    
+
     Looks for the provided identifier in the khotkeys configuration and
     returns information about the shortcut, if possible. If the identifier
     could not be found or it does not correspond to a simple command-launching
@@ -418,7 +418,7 @@ def getShortcutData(data, ident):
     actions_name = "{}Actions".format(section_name)
     triggers_name = "{}Triggers".format(section_name)
     conditions_name = "{}Conditions".format(section_name)
-    
+
     if section_name not in data:
         return None
     section_data = data[section_name]
@@ -451,7 +451,7 @@ def getShortcutData(data, ident):
 def _findShortcut(data, name = None, shortcut = None, uuid = None):
     """
     Search the provided khotkeys dict for a matching shortcut.
-    
+
     This function searches through the khotkeys configuration for any
     shortcut which matches all of the provided paramters. Any parameter
     may be ignored by providing 'None' as its value.
@@ -503,7 +503,7 @@ def _findShortcut(data, name = None, shortcut = None, uuid = None):
 def _createShortcut(name, command, shortcut, comment=''):
     """
     Create a new shortcut in the khotkeys configuration.
-    
+
     This function will attempt to add a new shortcut into the khotkeys
     file. It will check to ensure the shortcut does not already exist
     first (no other shortcut may share its name or keyboard sequence).
@@ -538,7 +538,7 @@ def _createShortcut(name, command, shortcut, comment=''):
 
     uuid = _addShortcut(data, '', name, command, shortcut, comment)
     parser.read_dict(data)
-    
+
     with open(config_path + ".tmp", 'w') as output:
         parser.write(output)
     return uuid
@@ -546,7 +546,7 @@ def _createShortcut(name, command, shortcut, comment=''):
 def _createGlobal(shortcut_uuid, name, shortcut):
     """
     Create a new hotkey shortcut in the kglobalshortcutsrc config file.
-    
+
     This function will attempt to add a new khotkeys shortcut into the
     kglobalshortcutsrc file. It does not perform any checking if the
     shortcut is already in use.
@@ -572,7 +572,7 @@ def _createGlobal(shortcut_uuid, name, shortcut):
 def create(name, command, shortcut, comment):
     """
     Create a new shortcut in the necessary KDE config files.
-    
+
     This function will attempt to add a new shortcut into the two config
     files that control custom user shortcuts.
 
@@ -603,7 +603,7 @@ def create(name, command, shortcut, comment):
 def activate():
     """
     Cause changes to the shortcut configuration files to become active.
-    
+
     This function will replace the live config files with the temporary
     versions constructed by other functions and cause KDE to re-read its
     configuration files.

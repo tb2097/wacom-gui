@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 from PyQt5 import QtWebKit
 from PyQt5 import QtCore, QtGui

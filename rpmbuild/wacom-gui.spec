@@ -1,32 +1,31 @@
-%global libwacom_ver 1.11
+%global libwacom_ver 2.2.0
 
 Name: wacom-gui
-Version: 0.3.1
+Version: 0.4.0
 Release: rc1
-Summary: Wacom PyQt4 GUI
+Summary: Wacom PyQt5 GUI
 License: GPLv3
 BuildArch: noarch
 URL: https://github.com/tb2097/wacom-gui
-Requires: PyQt4 
-Requires: PyQt4-webkit 
-Requires: qtwebkit
+Requires: PyQt5 
+Requires: libwacom
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-drv-wacom
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-utils
 Requires: dconf
 Requires: usbutils
-Requires: python
+Requires: python3
 Requires: systemd
-BuildRequires: python
-Source0: %{name}-%{version}-%{release}.tar.xz
+BuildRequires: python3
+Source0: %{name}-%{version}-%{release}.tar.gz
 # latest libwacom source can be downloaded from https://github.com/linuxwacom/libwacom/releases/latest
 # this is just to get the .tablet and svg data
-Source1: libwacom-%{libwacom_ver}.tar.bz2
+Source1: libwacom-%{libwacom_ver}.tar.xz
 Source2: wacom.desktop
 
 %description
-Wacom PyQt4 GUI
+Wacom PyQt5 GUI
 
 %prep
 %setup -q -n %{name}-%{version}-%{release}
@@ -36,7 +35,7 @@ Wacom PyQt4 GUI
 cd wacom-gui
 rm -f *.pyc
 rm -f *.ui
-python -m compileall .
+python3 -m compileall .
 mv ../LICENSE .
 mv ../README.md .
 mkdir data

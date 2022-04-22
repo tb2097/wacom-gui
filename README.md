@@ -15,7 +15,7 @@ These instructions will help you get a copy of the project up and running on yor
 
 ### Prerequisites
 You will require a few packages to get this working on your system:
-- PyQt4
+- PyQt5
 
 ### Installing
 - Running from source

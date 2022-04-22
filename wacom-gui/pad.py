@@ -1,7 +1,7 @@
 # TODO: mapping to specific
 
 
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from PyQt5.QtCore import *

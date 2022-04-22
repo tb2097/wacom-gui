@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from PyQt5.QtCore import *
@@ -204,7 +204,7 @@ class Hotkey(QObject):
                 json.dump(self.keymap_custom, fout, sort_keys=True, indent=4, separators=(',', ": "))
 
     def xsetcmd_gen(self, cmdstring):
-        strokes = filter(None, re.split('{|}| ', str(cmdstring)))
+        strokes = [i for i in re.split('{|}| ', str(cmdstring)) if i]
         self.cmd = ' '.join(strokes)
         xsetcmd = ''
         button = False

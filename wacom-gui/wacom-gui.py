@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from PyQt5.QtCore import *
@@ -372,11 +372,11 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def updateConfigs(self):
         # if there is no config don't try to update the configs
         if (self.config == None):
-            return 
+            return
         write = False
         if not self.toolButtons.buttons[(0, 0)].isHidden():
             pad = self.pad.get_config()
-            if pad != self.configs[self.dev][self.config]['pad']['buttons']:
+            if pad != self.configs[self.dev][self.config]['pad'].get('buttons'):
                 write = True
                 self.configs[self.dev][self.config]['pad']['buttons'] = pad
         if not self.toolButtons.buttons[(1, 0)].isHidden():
@@ -507,7 +507,7 @@ class ButtonGroup(QObject):
 
     def addButton(self, label, wid=0, dev=0, dev_id=0, icon=None, isize=48, hide=False):
         select = False
-        idx = self.buttons.__len__() / 4
+        idx = int(self.buttons.__len__() / 4)
         self.buttons[(idx, 0)] = QToolButton()
         self.btn_grp.addButton(self.buttons[(idx, 0)], idx)
         self.buttons[(idx, 1)] = dev
@@ -615,17 +615,17 @@ class About(QDialog):
         self.text = QTextEdit()
         self.text.setAlignment(Qt.AlignHCenter)
         self.text.setReadOnly(True)
-        self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.  
-        
+        self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.
+
 For support, please open a support ticket:
 https://github.com/tb2097/wacom-gui/issues
 
-GUI written by:    
+GUI written by:
 Travis Best (tb2097); Nov. 2018
 [GPL 3.0]
-    
-Hand Icons by: 
-https://www.flaticon.com/authors/mobiletuxedo 
+
+Hand Icons by:
+https://www.flaticon.com/authors/mobiletuxedo
 [CC 3.0]""")
         self.text.setFrameShape(QFrame.WinPanel)
         self.text.setFrameShadow(QFrame.Plain)
