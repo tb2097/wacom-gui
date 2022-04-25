@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from PyQt4 import QtWebKit
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtWebKit
+from PyQt5 import QtCore, QtGui
 import sys, os, re
 
 class Help(QtGui.QWidget):

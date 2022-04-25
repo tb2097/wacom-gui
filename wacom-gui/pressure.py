@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-#from PyQt4.QtGui import QWidget, QPolygonF, QPainter, QPen, QBrush, QColor, \
+#from PyQt5.QtGui import QWidget, QPolygonF, QPainter, QPen, QBrush, QColor, \
 #    QApplication, QIcon, QVBoxLayout, QHBoxLayout, QPushButton, QPainterPath,\
 #    QFont, QLayout, QGraphicsScene, QGraphicsView, QPixmap, QGraphicsPixmapItem, \
 #    QTabletEvent, QLabel, QSplitter, QRadialGradient, QImage
-#from PyQt4.QtCore import QObject, SIGNAL, SLOT, QPointF, Qt, QRectF, QPointF, QString, QRect
-from PyQt4 import QtCore,QtGui
+#from PyQt5.QtCore import QObject, SIGNAL, SLOT, QPointF, Qt, QRectF, QPointF, QString, QRect
+from PyQt5 import QtCore,QtGui
 import sys, os
 
 class pressureSettings(QtGui.QWidget):
@@ -76,11 +76,11 @@ class pressureSettings(QtGui.QWidget):
             y = event.y()
             if event.x() < 50:
                 x = 50
-            elif event.x() > 250: 
-                x = 250    
+            elif event.x() > 250:
+                x = 250
             if event.y() < 50:
                 y = 50
-            elif event.y() > 250: 
+            elif event.y() > 250:
                 y = 250
 
             self.tracking([x, y])
@@ -89,17 +89,17 @@ class pressureSettings(QtGui.QWidget):
     def mouseReleaseEvent(self, event):
         self.tracking = None
         if self.sensor == None:
-            print "Need device to be set"
+            print ("Need device to be set")
         else:
             accuratePts = str((self.points[0][0] - 50)/2) + " " + str(100 - ((self.points[0][1] -50)/2)) + \
-            " " + str((self.points[1][0] - 50)/2) + " " + str(100 - ((self.points[1][1] -50)/2))  
+            " " + str((self.points[1][0] - 50)/2) + " " + str(100 - ((self.points[1][1] -50)/2))
             self.setCommand = "xsetwacom --set \""+self.tabletName+" "+self.sensor.lower() + "\" PressureCurve \"" + accuratePts + "\""
             os.system(self.setCommand)
 
     def getSetCommand(self):
         if self.setCommand != None:
             return self.setCommand
-    
+
     def setCurPoints(self,pressure):
         self.points[0][0] = (2 * pressure[0][0]) + 50
         self.points[0][1] = 250 - (2 * pressure[0][1])
@@ -224,7 +224,7 @@ class penOptions(QtGui.QWidget):
         self.mainLayout.addWidget(self.tiptouch)
         self.mainLayout.setAlignment(QtCore.Qt.AlignCenter)
         self.setLayout(self.mainLayout)
-       
+
     def buttonChange(self):
         if self.buttons.isChecked():
             but1 = os.popen("xsetwacom --set \"%s %s\" Button 2 3" % (self.tabletName, self.sensor.lower()))
@@ -250,7 +250,7 @@ class penOptions(QtGui.QWidget):
 
         self.penGroup.addButton(self.penAbs)
         self.penGroup.addButton(self.penRel)
-        
+
         penLayout = QtGui.QHBoxLayout()
         penLayout.addWidget(self.penAbs)
         penLayout.addWidget(self.penRel)

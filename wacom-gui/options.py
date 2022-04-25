@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 import sys
 import os
 import re
@@ -146,7 +146,7 @@ class otherOptions(QtGui.QWidget):
                 cmd = "xdpyinfo | grep dimensions | awk '{print $2}' | awk -Fx '{print $1, $2}'"
                 totalResolution = os.popen(cmd).read()
                 totalResolution = totalResolution.split()
-                display = [[0 for x in xrange(3)] for x in xrange(3)]
+                display = [[0 for x in range(3)] for x in range(3)]
                 display[2][2] = 1.0
                 display[0][0] = float(screen.width()) / float(totalResolution[0])
                 # percent of screen height

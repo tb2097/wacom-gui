@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from functools import partial
 import json
 import os
@@ -203,7 +204,7 @@ class Hotkey(QObject):
                 json.dump(self.keymap_custom, fout, sort_keys=True, indent=4, separators=(',', ": "))
 
     def xsetcmd_gen(self, cmdstring):
-        strokes = filter(None, re.split('{|}| ', str(cmdstring)))
+        strokes = [i for i in re.split('{|}| ', str(cmdstring)) if i]
         self.cmd = ' '.join(strokes)
         xsetcmd = ''
         button = False
@@ -661,7 +662,7 @@ class HotkeyWidget(QWidget):
         self.button = Hotkey(devid, blabel, bid, cmd)
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignLeft)
-        self.layout.setMargin(0)
+        # self.layout.setMargin(0)
         self.layout.addWidget(self.button.btn)
         self.layout.addWidget(self.button.label)
         self.setMaximumSize(120, 40)

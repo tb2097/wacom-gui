@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import * 
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 import sys
 import os
 from os.path import expanduser
@@ -14,6 +15,9 @@ from wacom_data import Tablets
 import wacom_menu
 from pad import Pad, Touch
 from stylus import Stylus
+
+def QString(s):
+	return s
 
 class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     buttonClicked = pyqtSignal(int)
@@ -196,7 +200,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
             try:
                 os.remove(conf_path)
             except Exception as e:
-                print e
+                print(e)
             del self.configs[self.dev][self.config]
             self.getConfigs(0)
 
@@ -368,11 +372,11 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def updateConfigs(self):
         # if there is no config don't try to update the configs
         if (self.config == None):
-            return 
+            return
         write = False
         if not self.toolButtons.buttons[(0, 0)].isHidden():
             pad = self.pad.get_config()
-            if pad != self.configs[self.dev][self.config]['pad']['buttons']:
+            if pad != self.configs[self.dev][self.config]['pad'].get('buttons'):
                 write = True
                 self.configs[self.dev][self.config]['pad']['buttons'] = pad
         if not self.toolButtons.buttons[(1, 0)].isHidden():
@@ -503,13 +507,13 @@ class ButtonGroup(QObject):
 
     def addButton(self, label, wid=0, dev=0, dev_id=0, icon=None, isize=48, hide=False):
         select = False
-        idx = self.buttons.__len__() / 4
+        idx = int(self.buttons.__len__() / 4)
         self.buttons[(idx, 0)] = QToolButton()
         self.btn_grp.addButton(self.buttons[(idx, 0)], idx)
         self.buttons[(idx, 1)] = dev
         self.buttons[(idx, 2)] = wid
         self.buttons[(idx, 3)] = dev_id
-        self.buttons[(idx, 0)].clicked[()].connect(self.buttonMapper.map)
+        self.buttons[(idx, 0)].clicked.connect(self.buttonMapper.map)
         if label.split("Wacom ").__len__() == 2:
             self.buttons[(idx, 0)].setText(QString(label[6:]))
         else:
@@ -611,17 +615,17 @@ class About(QDialog):
         self.text = QTextEdit()
         self.text.setAlignment(Qt.AlignHCenter)
         self.text.setReadOnly(True)
-        self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.  
-        
+        self.text.insertPlainText("""This utility is designed to help you easily configure your wacom tablet under linux.
+
 For support, please open a support ticket:
 https://github.com/tb2097/wacom-gui/issues
 
-GUI written by:    
+GUI written by:
 Travis Best (tb2097); Nov. 2018
 [GPL 3.0]
-    
-Hand Icons by: 
-https://www.flaticon.com/authors/mobiletuxedo 
+
+Hand Icons by:
+https://www.flaticon.com/authors/mobiletuxedo
 [CC 3.0]""")
         self.text.setFrameShape(QFrame.WinPanel)
         self.text.setFrameShadow(QFrame.Plain)
