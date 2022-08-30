@@ -94,11 +94,16 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
     def initTabletButtons(self):
         for dev, data in self.tablet_data.tablets.items():
             for dev_id, tablet in enumerate(data):
-                icon = os.path.join(self.cwd, "icons/devices/%spng" % tablet['svg'][:-3])
-                if not os.path.isfile(os.path.join(os.getcwd(), icon)):
+                if 'svg' in tablet :
+                    icon = os.path.join(self.cwd, "icons/devices/%spng" % tablet['svg'][:-3])
+                    if not os.path.isfile(os.path.join(os.getcwd(), icon)):
+                        icon = os.path.join(self.cwd, 'icons/devices/generic.png')
+                    self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], tablet['pad']['id'],
+                                                                             str(dev), dev_id, icon))
+                else :
                     icon = os.path.join(self.cwd, 'icons/devices/generic.png')
-                self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], tablet['pad']['id'],
-                                                                         str(dev), dev_id, icon))
+                    self.tabletLayout.addButton(self.tabletButtons.addButton(tablet['cname'], 0,
+                                                                             str(dev), dev_id, icon))
 
     def refreshTablets(self):
         self.tablet_data.get_connected_tablets()
@@ -225,6 +230,8 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.tablet_data.tablets[dev][dev_id]['conf_path'] = os.path.join(home, dev)
         if dev not in self.configs.keys():
             self.configs[dev] = {}
+        if not os.path.exists(conf_path):
+            os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
         if os.path.exists(conf_path):
             # get configs in path
             for config in os.listdir(conf_path):
@@ -266,9 +273,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                     self.configButtons.btn_grp.buttons()[idx].setChecked(True)
             self.tablet_data.tablets[dev][dev_id]['config'] = self.config
         else:
-            os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
-            self.configLayout.addButton(
-                self.configButtons.addButton("default", 0, 0, 0, os.path.join(self.cwd, 'icons/ui/config.png'), 48))
+            pass
 
     def loadConfig(self, dev, dev_id, config):
         # TODO: load cursor configs
@@ -365,6 +370,9 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
                 break
 
     def updateConfigs(self):
+        # if there is no config don't try to update the configs
+        if (self.config == None):
+            return 
         write = False
         if not self.toolButtons.buttons[(0, 0)].isHidden():
             pad = self.pad.get_config()

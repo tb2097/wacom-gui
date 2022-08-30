@@ -14,6 +14,8 @@ import pad_ui
 import os
 import json
 import subprocess
+import xfce_shortcut
+from kde_shortcut import create, activate
 
 # 880, 560
 
@@ -31,7 +33,19 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         self.reset.clicked.connect(self.set_default)
         self.buttons = {'left': [], 'right': [], 'top': [], 'bottom': []}
         self.setFocusPolicy(Qt.NoFocus)
-        self.load_dconf()
+        desktop = os.environ["DESKTOP_SESSION"]
+        if (desktop == "mate"):
+            self.load_dconf()
+        elif (desktop == "1-kde-plasma-standard"):
+            self.load_kde()
+            #if the KDE shortcut doesn't exist in the two system files, create it
+            if create('Display toggle', 'wacom-gui --toggle', 'Meta+Z', 'This shortcut triggers display toggle for your Wacom tablet.'):
+                activate()
+        elif (desktop == "xfce"):
+            if not xfce_shortcut.createShortcut('wacom-gui --toggle', '<Super>Z'):
+                pass
+        else:
+            print("unknown desktop environment")
 
     def deleteItemsOfLayout(self, layout):
         if layout is not None:
@@ -167,10 +181,7 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             if os.path.exists(bkground):
                 svgWidget = QSvgWidget(bkground)
                 col = col + 1
-        except Exception as e:
-            print (e)
-        # get spacing for final image
-        if svgWidget is not None:
+            # get spacing for final image
             svg_size = svgWidget.sizeHint()
             img_h = float(540 - vspace)
             img_w = float(860 - hspace)
@@ -184,6 +195,8 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
                 hspace = round(img_h - (scale_w * svg_size.height()))
                 svg_vspace.changeSize(0, img_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
                 svg_hspace.changeSize(img_w, hspace, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        except Exception as e:
+            print (e)
         # start to build...
         # add top row
         if self.buttons['top'].__len__() != 0:
