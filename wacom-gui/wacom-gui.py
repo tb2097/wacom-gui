@@ -499,7 +499,7 @@ class ButtonGroup(QObject):
 
     def addButton(self, label, wid=0, dev=0, dev_id=0, icon=None, isize=48, hide=False):
         select = False
-        idx = self.buttons.__len__() / 4
+        idx = self.buttons.__len__() // 4
         self.buttons[(idx, 0)] = QToolButton()
         self.btn_grp.addButton(self.buttons[(idx, 0)], idx)
         self.buttons[(idx, 1)] = dev
