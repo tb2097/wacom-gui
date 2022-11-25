@@ -231,7 +231,7 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         if dev not in self.configs.keys():
             self.configs[dev] = {}
         if not os.path.exists(conf_path):
-            os.mkdir(self.tablet_data.tablets[dev][dev_id]['conf_path'])
+            os.makedirs(self.tablet_data.tablets[dev][dev_id]['conf_path'])
         if os.path.exists(conf_path):
             # get configs in path
             for config in os.listdir(conf_path):
