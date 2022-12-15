@@ -90,6 +90,9 @@ class WacomGui(QMainWindow, wacom_menu.Ui_MainWindow):
         self.tabletButtons.btn_grp.buttonClicked['int'].connect(self.tabletSelect)
         self.toolButtons.btn_grp.buttonClicked['int'].connect(self.toolSelect)
         self.configButtons.btn_grp.buttonClicked['int'].connect(self.configSelect)
+        # set window icon
+        windowIconPath = os.path.join(self.cwd, 'icons/devices/generic.png')
+        self.setWindowIcon(QIcon(windowIconPath))
 
     def initTabletButtons(self):
         for dev, data in self.tablet_data.tablets.items():
