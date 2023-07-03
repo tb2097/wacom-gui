@@ -1,12 +1,3 @@
-# Quick and dirty migration to python3 and PYQt5
-
-Originally performed by @cbsrobot.
-
-Also fixed a bug in scanning for `Name=` key, which was preventing one of my tablets from being detected.
-
-I've added a hack to make the Wacom CTE-630BT work (while over bluetooth using blutetoothctl). For the most part I only needed
-this software to set proportions properly for the active area.
-
 # wacom-gui
 
 Python/PyQt Wacom GUI for MATE/KDE
