@@ -4,9 +4,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSvg import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtSvg import *
 from hotkeys import HotkeyWidget
 from stylus import WacomAttribSlider
 import pad_ui
@@ -110,26 +111,13 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
             f.close()
             os.popen("dconf load /org/mate/desktop/keybindings/ < %s" % config)
         except Exception as e:
-            print e
-
-    # This doesn't actually 'load' kde, but merely replicates the logic of the
-    # load_dconf (MATE) path in the KDE path. This code that ensures
-    # the ".wacom-gui" directory exists could be factored out and called in a
-    # more appropriate place now that multiple desktop enviroments are supported.
-    def load_kde(self):
-        # generate config file
-        try:
-            config = os.path.expanduser("~/.wacom-gui")
-            if not os.path.isdir(config):
-                os.mkdir(config)
-        except Exception as e:
-            print e
+            print(e)
 
     def _load_keyboard_shortcuts(self):
         custom = {}
         p = subprocess.Popen("dconf dump /org/mate/desktop/keybindings/", shell=True, stdout=subprocess.PIPE)
         p.wait()
-        output = p.communicate()[0].split('\n')
+        output = p.communicate()[0].decode('utf-8').split('\n')
         for line in output:
             if '[custom' in line:
                 entry = line[1:-1]
@@ -158,8 +146,8 @@ class Pad(QTabWidget, pad_ui.Ui_PadWidget):
         # add buttons
         but_loc = {}
         for bid in sorted(buttons.keys()):
-            but_loc[bid] = buttons[bid]['pos']
-        for bid, value in sorted(but_loc.iteritems(), key=lambda (k, v): (v, k)):
+            but_loc[bid] = buttons[bid].get('pos') or buttons[bid].get("orient")
+        for bid, value in sorted(but_loc.items(), key=lambda t: (t[1], t[0])):
             if cmds.__len__() == 0:
                 keystroke = "Default"
             else:
@@ -354,14 +342,14 @@ class Touch(QWidget):
                         text = "%s - %s" % (control, data[fingers][control]['text'])
                         self.guide.addWidget(GuideWidget(data[fingers][control]['icon'], text))
         except Exception as e:
-            print e
+            print (e)
         group = QGroupBox("Touch Controls")
         group.setFixedSize(290, 80)
         group.setLayout(touch)
         gesture = QGroupBox("Gesture Controls List")
         gesture.setLayout(self.guide)
         gesture.setContentsMargins(6, 6, 6, 6)
-        self.layout.setMargin(0)
+        # self.layout.setMargin(0)
         self.layout.addWidget(group, 0, 0, 1, 1, Qt.AlignTop)
         self.layout.addWidget(gesture, 0, 1, 5, 1, Qt.AlignVCenter)
         self.layout.addWidget(self.taptime, 1, 0, 1, 1, Qt.AlignTop)

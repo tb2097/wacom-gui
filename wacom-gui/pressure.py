@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-#from PyQt4.QtGui import QWidget, QPolygonF, QPainter, QPen, QBrush, QColor, \
+#from PyQt5.QtGui import QWidget, QPolygonF, QPainter, QPen, QBrush, QColor, \
 #    QApplication, QIcon, QVBoxLayout, QHBoxLayout, QPushButton, QPainterPath,\
 #    QFont, QLayout, QGraphicsScene, QGraphicsView, QPixmap, QGraphicsPixmapItem, \
 #    QTabletEvent, QLabel, QSplitter, QRadialGradient, QImage
-#from PyQt4.QtCore import QObject, SIGNAL, SLOT, QPointF, Qt, QRectF, QPointF, QString, QRect
-from PyQt4 import QtCore,QtGui
+#from PyQt5.QtCore import QObject, SIGNAL, SLOT, QPointF, Qt, QRectF, QPointF, QString, QRect
+from PyQt5 import QtCore,QtGui
 import sys, os
 
 class pressureSettings(QtGui.QWidget):
@@ -89,7 +89,7 @@ class pressureSettings(QtGui.QWidget):
     def mouseReleaseEvent(self, event):
         self.tracking = None
         if self.sensor == None:
-            print "Need device to be set"
+            print ("Need device to be set")
         else:
             accuratePts = str((self.points[0][0] - 50)/2) + " " + str(100 - ((self.points[0][1] -50)/2)) + \
             " " + str((self.points[1][0] - 50)/2) + " " + str(100 - ((self.points[1][1] -50)/2))  
