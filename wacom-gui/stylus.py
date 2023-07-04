@@ -73,7 +73,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
             self.penTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(pen['taptime']))
         else:
-            self.penTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
+            self.penTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tape Time (ms)", 0, 500, 25)
         self.penTaptime.setToolTip("Time between taps in ms that will register as a double time")
         if 'rawsample' in pen.keys():
             self.penRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
@@ -132,7 +132,7 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
             self.eraserTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(eraser['taptime']))
         else:
-            self.eraserTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Threshold", 0, 500, 25)
+            self.eraserTaptime = WacomAttribSlider(dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25)
         self.eraserTaptime.setToolTip("Time between taps in ms that will register as a double time")
         if 'rawsample' in eraser.keys():
             self.eraserRawsample = WacomAttribSlider(dev_id, 'rawsample', 4, "Sample Size", 1, 20, 4,
@@ -210,15 +210,16 @@ class Stylus(QTabWidget, stylus_ui.Ui_StylusWidget):
         self.eraserRawsample.set_defaults()
         self.eraserSuppress.set_defaults()
 
-    def eventFilter(self, source, event):
-        if event.type() == QEvent.TabletMove:
+    #def eventFilter(self, source, event):
+    #    print (f"Event ID: {event.type()}")
+    #    if event.type() == QTabletEvent.Type.TabletPress:
+    #        print (f"Event ID: {event.pointerType()}")
+    def tabletEvent(self, event: QTabletEvent):
+        if event.type() in [QTabletEvent.TabletMove]:
             if event.pointerType() == 1:
                 self.penPressure.update_gauge(event.pressure())
-                return True
             elif event.pointerType() == 3:
                 self.eraserPressure.update_gauge(event.pressure())
-                return True
-        return False
 
     def get_config(self):
         data = {'stylus': {'buttons': {}}, 'eraser': {'buttons': {}}}
@@ -356,6 +357,7 @@ class WacomPressure(QWidget):
             #for value in values:
             #    self.setting.append(int(value))
         group = QGroupBox('Tip Feel')
+        # Testing fixing boarders
         group.setFixedSize(290, 148)
         group.setAlignment(Qt.AlignTop)
         self.gauge = QProgressBar()

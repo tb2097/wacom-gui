@@ -624,9 +624,19 @@ For support, please open a support ticket:
 https://github.com/tb2097/wacom-gui/issues
 
 GUI written by:    
-Travis Best (tb2097); Nov. 2018
+Travis Best (tb2097); Nov. 2018 - 2023
 [GPL 3.0]
-    
+
+Additional Support from:
+skomra: https://github.com/skomra
+battlesnake: https://github.com/battlesnake
+ElementalWarrior: https://github.com/ElementalWarrior
+Origami404: https://github.com/Origami404
+Julien-Haudegond: https://github.com/Julien-Haudegond
+aoblet: https://github.com/aoblet
+Pinglinux: https://github.com/Pinglinux
+RafaelGSS: https://github.com/RafaelGSS
+
 Hand Icons by: 
 https://www.flaticon.com/authors/mobiletuxedo 
 [CC 3.0]""")

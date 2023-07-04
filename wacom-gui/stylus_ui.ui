@@ -67,7 +67,7 @@ border-style: none;
 border-width: 0px;</string>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>2</number>
   </property>
   <widget class="QWidget" name="keys">
    <attribute name="title">
@@ -109,7 +109,7 @@ border-width: 0px;</string>
      <rect>
       <x>0</x>
       <y>20</y>
-      <width>301</width>
+      <width>321</width>
       <height>451</height>
      </rect>
     </property>
@@ -122,9 +122,9 @@ border-width: 0px;</string>
    <widget class="QWidget" name="verticalLayoutWidget_5">
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>520</x>
       <y>20</y>
-      <width>301</width>
+      <width>311</width>
       <height>421</height>
      </rect>
     </property>
@@ -188,7 +188,7 @@ border-width: 0px;</string>
      <rect>
       <x>0</x>
       <y>20</y>
-      <width>301</width>
+      <width>311</width>
       <height>451</height>
      </rect>
     </property>
@@ -201,9 +201,9 @@ border-width: 0px;</string>
    <widget class="QWidget" name="verticalLayoutWidget_7">
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>520</x>
       <y>20</y>
-      <width>301</width>
+      <width>311</width>
       <height>421</height>
      </rect>
     </property>
@@ -234,9 +234,9 @@ border-width: 0px;</string>
    <widget class="QWidget" name="verticalLayoutWidget_8">
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>520</x>
       <y>20</y>
-      <width>301</width>
+      <width>311</width>
       <height>421</height>
      </rect>
     </property>
