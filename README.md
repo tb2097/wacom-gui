@@ -15,7 +15,7 @@ You will require a few packages to get this working on your system:
 - Running from source
   - download the source, run wacom-gui.py from the wacom-gui directory
   - you can also build an RPM from the SPEC file in the wacom-gui directory
-  - libwacom-data-0.33 or newer
+  - libwacom-data-1.11 or newer
 - Running from RPM
   - download the RPM, install
   - RPM can be added to a repository for deployment
@@ -53,4 +53,4 @@ This project is licensed under the GPL 3.0 License - See the [LICENSE.nd](LICENS
 ## Acknowledgements
 touch icons: <div>Icons made by <a href="https://www.flaticon.com/authors/mobiletuxedo" title="Mobiletuxedo">Mobiletuxedo</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 
-All testing has been done on CentOS => 7.3.  Due to major reworks from v0.2.x, it may not work on CentOS 6.x but it should, in theory, work.
+All testing has been done on Rocky => 8.7.  If you still require the GUI for CentOS 7, please use the last release (<a href="https://github.com/tb2097/wacom-gui/releases/tag/v0.3.1">v0.3.1</a>). Once some additional development is completed I will release an "official" Py3/Qt5 RPM but the current code release should be functional for use.
