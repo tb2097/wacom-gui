@@ -122,7 +122,7 @@ class Tablets:
 
 
     def __get_libwacom_data(self):
-        p = subprocess.Popen("libwacom-list-local-devices --database %s" % self.db_path, shell=True,
+        p = subprocess.Popen("libwacom-list-local-devices --database '%s' --format=datafile" % self.db_path, shell=True,
                              stdout=subprocess.PIPE)
         output = p.communicate()[0].decode('utf-8').split('\n')
         cur_device = None
