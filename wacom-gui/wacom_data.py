@@ -121,10 +121,25 @@ class Tablets:
                 warning.exec_()
 
 
+    def __list_local_devices(self):
+        def aux(format_arg):
+            """aux calls libwacom-list-local-devices with an optional format argument.
+
+            Returns the contents of the child's stdout, and its numeric exit code."""
+            p = subprocess.Popen(
+                "libwacom-list-local-devices --database '%s' %s" % (self.db_path, format_arg), shell=True, stdout=subprocess.PIPE
+            )
+            return p.communicate()[0], p.returncode
+
+        # This will fail for libwacom <1.10, which doesn't have the
+        # --format option.
+        stdout, returncode = aux("--format=datafile")
+        if returncode != 0: # Retry in <1.10 syntax
+            stdout, returncode = aux("")
+        return stdout.decode('utf-8').split('\n')
+
     def __get_libwacom_data(self):
-        p = subprocess.Popen("libwacom-list-local-devices --database '%s' --format=datafile" % self.db_path, shell=True,
-                             stdout=subprocess.PIPE)
-        output = p.communicate()[0].decode('utf-8').split('\n')
+        output = self.__list_local_devices()
         cur_device = None
         buttons = False
         for line in output:
