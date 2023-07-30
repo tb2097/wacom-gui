@@ -301,7 +301,7 @@ class Touch(QWidget):
             self.gesture.setEnabled(True)
         self.gesture.setChecked(False)
         if 'gesture' in settings.keys() and settings['gesture'] == 'on' and self.gesture.isEnabled():
-            self.touch.setChecked(True)
+            self.gesture.setChecked(True)
         if 'taptime' in settings.keys():
             self.taptime = WacomAttribSlider(self.dev_id, 'taptime', 250, "Double Tap Time (ms)", 0, 500, 25,
                                                 int(settings['taptime']))
